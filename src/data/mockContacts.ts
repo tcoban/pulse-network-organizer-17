@@ -21,6 +21,7 @@ export const mockContacts: Contact[] = [
     currentProjects: 'Leading AI-powered user analytics platform launch',
     mutualBenefit: 'Access to enterprise AI/ML insights and potential partnership opportunities',
     cooperationRating: 4,
+    potentialScore: 5,
     affiliation: 'KOF Alumni',
     interactionHistory: [
       {
@@ -55,6 +56,7 @@ export const mockContacts: Contact[] = [
     currentProjects: 'Building fintech API platform with focus on developer experience',
     mutualBenefit: 'Technical expertise in fintech and potential integration opportunities',
     cooperationRating: 5,
+    potentialScore: 4,
     affiliation: 'Dataservice Customer',
     interactionHistory: [
       {
@@ -87,6 +89,7 @@ export const mockContacts: Contact[] = [
     currentProjects: 'Redesigning mobile banking experience for major financial institution',
     mutualBenefit: 'Design expertise and access to enterprise design processes',
     cooperationRating: 3,
+    potentialScore: 3,
     affiliation: 'Survey Participant Contact',
     interactionHistory: [
       {
@@ -119,6 +122,7 @@ export const mockContacts: Contact[] = [
     currentProjects: 'Leading Series A investments in AI startups and developer tools',
     mutualBenefit: 'Funding opportunities and connections to portfolio companies',
     cooperationRating: 2,
+    potentialScore: 2,
     affiliation: 'CIRET Member',
     interactionHistory: []
   }

@@ -228,10 +228,14 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails }: ContactCardPr
             </div>
           )}
 
-          <div className="flex items-center justify-between">
+          <div className="grid grid-cols-2 gap-4">
             <div className="flex items-center text-sm">
               <span className="font-medium text-foreground mr-2">Cooperation level:</span>
               {renderCooperationRating(contact.cooperationRating)}
+            </div>
+            <div className="flex items-center text-sm">
+              <span className="font-medium text-foreground mr-2">Potential score:</span>
+              {renderCooperationRating(contact.potentialScore)}
             </div>
           </div>
         </div>

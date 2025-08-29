@@ -22,6 +22,7 @@ export interface Contact {
   currentProjects?: string; // What they're working on
   mutualBenefit?: string; // Potential benefits for us
   cooperationRating: number; // 1-5 rating of willingness to cooperate
+  potentialScore: number; // 1-5 potential value score based on past collaborations
   affiliation?: string; // KOF Alumni, Dataservice Customer, etc.
 }
 
