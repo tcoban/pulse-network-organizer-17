@@ -15,7 +15,10 @@ import {
   Users,
   Target,
   Star,
-  Briefcase
+  Briefcase,
+  Shield,
+  Clock,
+  User
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -46,6 +49,11 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails }: ContactCardPr
       Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
       'day'
     );
+  };
+
+  const getLastInteraction = () => {
+    if (contact.interactionHistory.length === 0) return null;
+    return contact.interactionHistory.sort((a, b) => b.date.getTime() - a.date.getTime())[0];
   };
 
   const renderCooperationRating = (rating: number) => {
@@ -109,7 +117,7 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails }: ContactCardPr
           </DropdownMenu>
         </div>
 
-        <div className="space-y-2 mb-4">
+         <div className="space-y-2 mb-4">
           {contact.email && (
             <div className="flex items-center text-sm text-muted-foreground">
               <Mail className="h-4 w-4 mr-2" />
@@ -128,7 +136,52 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails }: ContactCardPr
               <span>{contact.company}</span>
             </div>
           )}
+          {contact.affiliation && (
+            <div className="flex items-center text-sm">
+              <Shield className="h-4 w-4 mr-2 text-accent-foreground" />
+              <Badge variant="outline" className="text-xs font-medium">
+                {contact.affiliation}
+              </Badge>
+            </div>
+          )}
         </div>
+
+        {/* Last Contact Details */}
+        {(() => {
+          const lastInteraction = getLastInteraction();
+          return lastInteraction && (
+            <div className="bg-muted/30 rounded-lg p-3 mb-4">
+              <div className="flex items-center text-sm font-medium text-foreground mb-2">
+                <Clock className="h-4 w-4 mr-2 text-accent-foreground" />
+                Last Contact Details
+              </div>
+              <div className="space-y-2 text-xs">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <span className="font-medium text-foreground">Contacted by:</span>
+                    <span className="ml-1 text-muted-foreground">{lastInteraction.contactedBy || 'Unknown'}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-foreground">Channel:</span>
+                    <span className="ml-1 text-muted-foreground">{lastInteraction.channel || 'N/A'}</span>
+                  </div>
+                </div>
+                {lastInteraction.outcome && (
+                  <div>
+                    <span className="font-medium text-foreground">Outcome:</span>
+                    <span className="ml-1 text-muted-foreground">{lastInteraction.outcome}</span>
+                  </div>
+                )}
+                {lastInteraction.evaluation && (
+                  <div>
+                    <span className="font-medium text-foreground">Evaluation:</span>
+                    <span className="ml-1 text-muted-foreground">{lastInteraction.evaluation}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Networking Intelligence Section */}
         <div className="space-y-3 mb-4 border-t pt-4">

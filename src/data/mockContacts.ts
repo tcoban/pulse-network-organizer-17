@@ -21,13 +21,17 @@ export const mockContacts: Contact[] = [
     currentProjects: 'Leading AI-powered user analytics platform launch',
     mutualBenefit: 'Access to enterprise AI/ML insights and potential partnership opportunities',
     cooperationRating: 4,
+    affiliation: 'KOF Alumni',
     interactionHistory: [
       {
         id: '1',
         type: 'meeting',
         date: new Date('2024-01-15'),
         description: 'Coffee meeting to discuss product strategy',
-        outcome: 'Agreed to share user research insights'
+        outcome: 'Agreed to share user research insights',
+        contactedBy: 'John Smith',
+        channel: 'In-person',
+        evaluation: 'Very productive meeting, high potential for collaboration'
       }
     ]
   },
@@ -51,13 +55,17 @@ export const mockContacts: Contact[] = [
     currentProjects: 'Building fintech API platform with focus on developer experience',
     mutualBenefit: 'Technical expertise in fintech and potential integration opportunities',
     cooperationRating: 5,
+    affiliation: 'Dataservice Customer',
     interactionHistory: [
       {
         id: '2',
         type: 'call',
         date: new Date('2024-01-20'),
         description: 'Technical discussion about API integration',
-        outcome: 'Scheduled follow-up meeting for next week'
+        outcome: 'Scheduled follow-up meeting for next week',
+        contactedBy: 'Maria Garcia',
+        channel: 'Phone',
+        evaluation: 'Excellent technical discussion, very cooperative and enthusiastic'
       }
     ]
   },
@@ -79,7 +87,19 @@ export const mockContacts: Contact[] = [
     currentProjects: 'Redesigning mobile banking experience for major financial institution',
     mutualBenefit: 'Design expertise and access to enterprise design processes',
     cooperationRating: 3,
-    interactionHistory: []
+    affiliation: 'Survey Participant Contact',
+    interactionHistory: [
+      {
+        id: '3',
+        type: 'email',
+        date: new Date('2024-01-18'),
+        description: 'Follow-up on design collaboration proposal',
+        outcome: 'Interested but currently busy with current project',
+        contactedBy: 'Alex Thompson',
+        channel: 'Email',
+        evaluation: 'Positive response but limited availability in short term'
+      }
+    ]
   },
   {
     id: '4',
@@ -99,6 +119,7 @@ export const mockContacts: Contact[] = [
     currentProjects: 'Leading Series A investments in AI startups and developer tools',
     mutualBenefit: 'Funding opportunities and connections to portfolio companies',
     cooperationRating: 2,
+    affiliation: 'CIRET Member',
     interactionHistory: []
   }
 ];

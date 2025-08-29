@@ -22,6 +22,7 @@ export interface Contact {
   currentProjects?: string; // What they're working on
   mutualBenefit?: string; // Potential benefits for us
   cooperationRating: number; // 1-5 rating of willingness to cooperate
+  affiliation?: string; // KOF Alumni, Dataservice Customer, etc.
 }
 
 export interface Interaction {
@@ -30,6 +31,9 @@ export interface Interaction {
   date: Date;
   description: string;
   outcome?: string;
+  contactedBy?: string; // Who from our side had the contact
+  channel?: string; // LinkedIn, Phone, In-person, etc.
+  evaluation?: string; // Short evaluation of the meeting
 }
 
 export interface ContactStats {
