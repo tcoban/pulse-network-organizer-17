@@ -16,6 +16,11 @@ export const mockContacts: Contact[] = [
       linkedin: 'https://linkedin.com/in/sarahchen',
       twitter: 'https://twitter.com/sarahchen'
     },
+    referredBy: 'Alex Thompson',
+    linkedinConnections: ['John Davis', 'Maria Garcia', 'Alex Thompson'],
+    currentProjects: 'Leading AI-powered user analytics platform launch',
+    mutualBenefit: 'Access to enterprise AI/ML insights and potential partnership opportunities',
+    cooperationRating: 4,
     interactionHistory: [
       {
         id: '1',
@@ -41,6 +46,11 @@ export const mockContacts: Contact[] = [
       linkedin: 'https://linkedin.com/in/marcusrodriguez',
       github: 'https://github.com/marcusrod'
     },
+    referredBy: 'Sarah Chen',
+    linkedinConnections: ['David Kim', 'Sarah Chen', 'Lisa Park'],
+    currentProjects: 'Building fintech API platform with focus on developer experience',
+    mutualBenefit: 'Technical expertise in fintech and potential integration opportunities',
+    cooperationRating: 5,
     interactionHistory: [
       {
         id: '2',
@@ -64,6 +74,11 @@ export const mockContacts: Contact[] = [
     socialLinks: {
       linkedin: 'https://linkedin.com/in/emilywatson'
     },
+    referredBy: 'LinkedIn Connection',
+    linkedinConnections: ['Marcus Rodriguez', 'Tom Wilson'],
+    currentProjects: 'Redesigning mobile banking experience for major financial institution',
+    mutualBenefit: 'Design expertise and access to enterprise design processes',
+    cooperationRating: 3,
     interactionHistory: []
   },
   {
@@ -79,6 +94,11 @@ export const mockContacts: Contact[] = [
     socialLinks: {
       linkedin: 'https://linkedin.com/in/davidkim'
     },
+    referredBy: 'Emily Watson',
+    linkedinConnections: ['Marcus Rodriguez', 'Sarah Chen', 'Jessica Liu'],
+    currentProjects: 'Leading Series A investments in AI startups and developer tools',
+    mutualBenefit: 'Funding opportunities and connections to portfolio companies',
+    cooperationRating: 2,
     interactionHistory: []
   }
 ];

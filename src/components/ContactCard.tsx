@@ -10,7 +10,12 @@ import {
   Calendar,
   MoreHorizontal,
   Linkedin,
-  MessageSquare
+  MessageSquare,
+  UserCheck,
+  Users,
+  Target,
+  Star,
+  Briefcase
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -40,6 +45,24 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails }: ContactCardPr
     return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(
       Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
       'day'
+    );
+  };
+
+  const renderCooperationRating = (rating: number) => {
+    return (
+      <div className="flex items-center">
+        {[...Array(5)].map((_, i) => (
+          <Star
+            key={i}
+            className={`h-3 w-3 ${
+              i < rating
+                ? 'fill-primary text-primary'
+                : 'text-muted-foreground/30'
+            }`}
+          />
+        ))}
+        <span className="ml-1 text-xs text-muted-foreground">({rating}/5)</span>
+      </div>
     );
   };
 
@@ -105,6 +128,59 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails }: ContactCardPr
               <span>{contact.company}</span>
             </div>
           )}
+        </div>
+
+        {/* Networking Intelligence Section */}
+        <div className="space-y-3 mb-4 border-t pt-4">
+          {contact.referredBy && (
+            <div className="flex items-start text-sm">
+              <UserCheck className="h-4 w-4 mr-2 mt-0.5 text-accent-foreground" />
+              <div>
+                <span className="font-medium text-foreground">Referred by: </span>
+                <span className="text-muted-foreground">{contact.referredBy}</span>
+              </div>
+            </div>
+          )}
+
+          {contact.linkedinConnections && contact.linkedinConnections.length > 0 && (
+            <div className="flex items-start text-sm">
+              <Users className="h-4 w-4 mr-2 mt-0.5 text-accent-foreground" />
+              <div>
+                <span className="font-medium text-foreground">LinkedIn connections: </span>
+                <span className="text-muted-foreground">
+                  {contact.linkedinConnections.slice(0, 2).join(', ')}
+                  {contact.linkedinConnections.length > 2 && ` +${contact.linkedinConnections.length - 2} more`}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {contact.currentProjects && (
+            <div className="flex items-start text-sm">
+              <Briefcase className="h-4 w-4 mr-2 mt-0.5 text-accent-foreground" />
+              <div>
+                <span className="font-medium text-foreground">Current focus: </span>
+                <span className="text-muted-foreground">{contact.currentProjects}</span>
+              </div>
+            </div>
+          )}
+
+          {contact.mutualBenefit && (
+            <div className="flex items-start text-sm">
+              <Target className="h-4 w-4 mr-2 mt-0.5 text-accent-foreground" />
+              <div>
+                <span className="font-medium text-foreground">Mutual benefit: </span>
+                <span className="text-muted-foreground">{contact.mutualBenefit}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-sm">
+              <span className="font-medium text-foreground mr-2">Cooperation level:</span>
+              {renderCooperationRating(contact.cooperationRating)}
+            </div>
+          </div>
         </div>
 
         {contact.tags.length > 0 && (

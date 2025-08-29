@@ -17,6 +17,11 @@ export interface Contact {
   };
   customFields?: Record<string, string>;
   interactionHistory: Interaction[];
+  referredBy?: string; // Who brought in this contact
+  linkedinConnections?: string[]; // Mutual LinkedIn connections
+  currentProjects?: string; // What they're working on
+  mutualBenefit?: string; // Potential benefits for us
+  cooperationRating: number; // 1-5 rating of willingness to cooperate
 }
 
 export interface Interaction {
