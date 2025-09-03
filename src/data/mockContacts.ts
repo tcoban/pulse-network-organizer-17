@@ -23,6 +23,8 @@ export const mockContacts: Contact[] = [
     cooperationRating: 4,
     potentialScore: 5,
     affiliation: 'KOF Alumni',
+    offering: 'AI/ML expertise, user research methodologies, enterprise connections',
+    lookingFor: 'Technical partnerships, early-stage startup insights, developer talent',
     interactionHistory: [
       {
         id: '1',
@@ -58,6 +60,8 @@ export const mockContacts: Contact[] = [
     cooperationRating: 5,
     potentialScore: 4,
     affiliation: 'Dataservice Customer',
+    offering: 'Fintech API development, startup mentorship, technical architecture advice',
+    lookingFor: 'Investment opportunities, enterprise clients, regulatory compliance expertise',
     interactionHistory: [
       {
         id: '2',
@@ -91,6 +95,8 @@ export const mockContacts: Contact[] = [
     cooperationRating: 3,
     potentialScore: 3,
     affiliation: 'Survey Participant Contact',
+    offering: 'UX/UI design services, design system expertise, creative consulting',
+    lookingFor: 'Product management insights, technical development partners, client referrals',
     interactionHistory: [
       {
         id: '3',
@@ -124,6 +130,8 @@ export const mockContacts: Contact[] = [
     cooperationRating: 2,
     potentialScore: 2,
     affiliation: 'CIRET Member',
+    offering: 'Investment capital, portfolio company connections, strategic guidance',
+    lookingFor: 'High-growth B2B SaaS startups, AI/ML innovations, market expansion opportunities',
     interactionHistory: []
   }
 ];

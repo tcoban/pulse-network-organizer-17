@@ -18,7 +18,9 @@ import {
   Briefcase,
   Shield,
   Clock,
-  User
+  User,
+  Gift,
+  Search
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -224,6 +226,26 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails }: ContactCardPr
               <div>
                 <span className="font-medium text-foreground">Mutual benefit: </span>
                 <span className="text-muted-foreground">{contact.mutualBenefit}</span>
+              </div>
+            </div>
+          )}
+
+          {contact.offering && (
+            <div className="flex items-start text-sm">
+              <Gift className="h-4 w-4 mr-2 mt-0.5 text-accent-foreground" />
+              <div>
+                <span className="font-medium text-foreground">Offering: </span>
+                <span className="text-muted-foreground">{contact.offering}</span>
+              </div>
+            </div>
+          )}
+
+          {contact.lookingFor && (
+            <div className="flex items-start text-sm">
+              <Search className="h-4 w-4 mr-2 mt-0.5 text-accent-foreground" />
+              <div>
+                <span className="font-medium text-foreground">Looking for: </span>
+                <span className="text-muted-foreground">{contact.lookingFor}</span>
               </div>
             </div>
           )}

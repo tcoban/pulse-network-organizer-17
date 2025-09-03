@@ -24,6 +24,8 @@ export interface Contact {
   cooperationRating: number; // 1-5 rating of willingness to cooperate
   potentialScore: number; // 1-5 potential value score based on past collaborations
   affiliation?: string; // KOF Alumni, Dataservice Customer, etc.
+  offering?: string; // What they can offer to help others
+  lookingFor?: string; // What they are looking for from others
 }
 
 export interface Interaction {
