@@ -56,6 +56,14 @@ const Index = () => {
           return bDate - aDate;
         case 'added':
           return b.addedDate.getTime() - a.addedDate.getTime();
+        case 'cooperationRating':
+          return b.cooperationRating - a.cooperationRating; // Higher ratings first
+        case 'potentialScore':
+          return b.potentialScore - a.potentialScore; // Higher scores first
+        case 'tag':
+          const aTag = a.tags[0] || '';
+          const bTag = b.tags[0] || '';
+          return aTag.localeCompare(bTag);
         default:
           return 0;
       }
@@ -214,7 +222,7 @@ const Index = () => {
 
           <div className="flex items-center space-x-3">
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -222,6 +230,9 @@ const Index = () => {
                 <SelectItem value="company">Sort by Company</SelectItem>
                 <SelectItem value="lastContact">Last Contact</SelectItem>
                 <SelectItem value="added">Recently Added</SelectItem>
+                <SelectItem value="cooperationRating">Cooperation Level</SelectItem>
+                <SelectItem value="potentialScore">Potential Score</SelectItem>
+                <SelectItem value="tag">Sort by Tag</SelectItem>
               </SelectContent>
             </Select>
 
