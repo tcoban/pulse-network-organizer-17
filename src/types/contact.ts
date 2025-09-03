@@ -44,4 +44,5 @@ export interface ContactStats {
   recentContacts: number;
   companies: number;
   tags: number;
+  openMatches: number;
 }

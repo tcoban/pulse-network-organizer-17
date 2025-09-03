@@ -13,7 +13,8 @@ import {
   Tag,
   Filter,
   Grid,
-  List
+  List,
+  Network
 } from 'lucide-react';
 import {
   Select,
@@ -81,11 +82,44 @@ const Index = () => {
 
     const companies = new Set(contacts.map(c => c.company).filter(Boolean)).size;
 
+    // Calculate potential matches (basic keyword matching for now)
+    const contactsWithData = contacts.filter(c => c.offering && c.lookingFor);
+    let matchCount = 0;
+    
+    for (let i = 0; i < contactsWithData.length; i++) {
+      for (let j = i + 1; j < contactsWithData.length; j++) {
+        const contact1 = contactsWithData[i];
+        const contact2 = contactsWithData[j];
+        
+        // Simple keyword matching - check if what one offers matches what the other is looking for
+        const offering1Words = contact1.offering!.toLowerCase().split(/[\s,]+/);
+        const looking1Words = contact1.lookingFor!.toLowerCase().split(/[\s,]+/);
+        const offering2Words = contact2.offering!.toLowerCase().split(/[\s,]+/);
+        const looking2Words = contact2.lookingFor!.toLowerCase().split(/[\s,]+/);
+        
+        // Check if contact1's offering matches contact2's looking for OR vice versa
+        const hasMatch = offering1Words.some(word => 
+          word.length > 3 && looking2Words.some(lookingWord => 
+            lookingWord.includes(word) || word.includes(lookingWord)
+          )
+        ) || offering2Words.some(word => 
+          word.length > 3 && looking1Words.some(lookingWord => 
+            lookingWord.includes(word) || word.includes(lookingWord)
+          )
+        );
+        
+        if (hasMatch) {
+          matchCount += 2; // Count both contacts as having a match
+        }
+      }
+    }
+
     return {
       total: contacts.length,
       recentContacts,
       companies,
-      tags: allTags.length
+      tags: allTags.length,
+      openMatches: matchCount
     };
   }, [contacts, allTags]);
 
@@ -118,7 +152,7 @@ const Index = () => {
 
       <main className="p-6">
         {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           <StatsCard
             title="Total Contacts"
             value={stats.total}
@@ -140,6 +174,12 @@ const Index = () => {
             title="Tags"
             value={stats.tags}
             icon={Tag}
+          />
+          <StatsCard
+            title="Open Matches"
+            value={stats.openMatches}
+            icon={Network}
+            description="Potential connections"
           />
         </div>
 
