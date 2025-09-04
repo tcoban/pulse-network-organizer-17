@@ -179,6 +179,18 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails }: ContactCardPr
                   <span className="ml-1 text-muted-foreground">{lastInteraction.channel || 'N/A'}</span>
                 </div>
               </div>
+              {lastInteraction.outcome && (
+                <div>
+                  <span className="font-medium text-foreground">Outcome:</span>
+                  <span className="ml-1 text-muted-foreground">{lastInteraction.outcome}</span>
+                </div>
+              )}
+              {lastInteraction.evaluation && (
+                <div>
+                  <span className="font-medium text-foreground">Evaluation:</span>
+                  <span className="ml-1 text-muted-foreground">{lastInteraction.evaluation}</span>
+                </div>
+              )}
             </div>
           </div>
         );
