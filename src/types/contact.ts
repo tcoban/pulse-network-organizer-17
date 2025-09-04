@@ -26,6 +26,7 @@ export interface Contact {
   affiliation?: string; // KOF Alumni, Dataservice Customer, etc.
   offering?: string; // What they can offer to help others
   lookingFor?: string; // What they are looking for from others
+  upcomingOpportunities?: ContactOpportunity[]; // Registered events, appointments, etc.
 }
 
 export interface Interaction {
@@ -37,6 +38,16 @@ export interface Interaction {
   contactedBy?: string; // Who from our side had the contact
   channel?: string; // LinkedIn, Phone, In-person, etc.
   evaluation?: string; // Short evaluation of the meeting
+}
+
+export interface ContactOpportunity {
+  id: string;
+  type: 'event' | 'meeting' | 'appointment' | 'conference' | 'other';
+  title: string;
+  date: Date;
+  location?: string;
+  description?: string;
+  registrationStatus?: 'registered' | 'considering' | 'confirmed';
 }
 
 export interface ContactStats {

@@ -1,4 +1,4 @@
-import { Contact } from '@/types/contact';
+import { Contact, ContactOpportunity } from '@/types/contact';
 
 export const mockContacts: Contact[] = [
   {
@@ -25,6 +25,24 @@ export const mockContacts: Contact[] = [
     affiliation: 'KOF Alumni',
     offering: 'AI/ML expertise, user research methodologies, enterprise connections',
     lookingFor: 'Technical partnerships, early-stage startup insights, developer talent',
+    upcomingOpportunities: [
+      {
+        id: 'opp-1',
+        type: 'conference',
+        title: 'AI Summit 2024',
+        date: new Date('2024-10-15'),
+        location: 'Zurich Convention Center',
+        registrationStatus: 'confirmed'
+      },
+      {
+        id: 'opp-2',
+        type: 'meeting',
+        title: 'Golf Meeting',
+        date: new Date('2024-09-20'),
+        location: 'Zurich Golf Club',
+        description: 'Discussing potential AI collaboration over golf'
+      }
+    ],
     interactionHistory: [
       {
         id: '1',
@@ -62,6 +80,16 @@ export const mockContacts: Contact[] = [
     affiliation: 'Dataservice Customer',
     offering: 'Fintech API development, startup mentorship, technical architecture advice',
     lookingFor: 'Investment opportunities, enterprise clients, regulatory compliance expertise',
+    upcomingOpportunities: [
+      {
+        id: 'opp-3',
+        type: 'event',
+        title: 'Blockchain Networking Event',
+        date: new Date('2024-09-25'),
+        location: 'Basel Tech Hub',
+        registrationStatus: 'registered'
+      }
+    ],
     interactionHistory: [
       {
         id: '2',
@@ -97,6 +125,16 @@ export const mockContacts: Contact[] = [
     affiliation: 'Survey Participant Contact',
     offering: 'UX/UI design services, design system expertise, creative consulting',
     lookingFor: 'Product management insights, technical development partners, client referrals',
+    upcomingOpportunities: [
+      {
+        id: 'opp-4',
+        type: 'appointment',
+        title: 'Coffee & Design Discussion',
+        date: new Date('2024-09-18'),
+        location: 'Café Central, Zurich',
+        description: 'Discussing UX collaboration opportunities over coffee'
+      }
+    ],
     interactionHistory: [
       {
         id: '3',
