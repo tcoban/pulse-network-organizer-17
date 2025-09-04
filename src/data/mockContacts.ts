@@ -29,18 +29,28 @@ export const mockContacts: Contact[] = [
       {
         id: 'opp-1',
         type: 'conference',
-        title: 'AI Summit 2024',
+        title: 'AI & Product Management Summit',
         date: new Date('2024-10-15'),
         location: 'Zurich Convention Center',
+        description: 'Speaking on AI ethics in product development',
         registrationStatus: 'confirmed'
       },
       {
         id: 'opp-2',
         type: 'meeting',
-        title: 'Golf Meeting',
+        title: 'Golf & Strategy Session',
         date: new Date('2024-09-20'),
         location: 'Zurich Golf Club',
-        description: 'Discussing potential AI collaboration over golf'
+        description: 'Discussing potential AI collaboration over golf with Sarah and two other tech leads'
+      },
+      {
+        id: 'opp-6',
+        type: 'event',
+        title: 'KOF Alumni Tech Mixer',
+        date: new Date('2024-09-28'),
+        location: 'ETH Zurich Campus',
+        description: 'Quarterly networking event for KOF alumni in tech',
+        registrationStatus: 'registered'
       }
     ],
     interactionHistory: [
@@ -83,11 +93,28 @@ export const mockContacts: Contact[] = [
     upcomingOpportunities: [
       {
         id: 'opp-3',
-        type: 'event',
-        title: 'Blockchain Networking Event',
+        type: 'conference',
+        title: 'Fintech Innovation Week',
         date: new Date('2024-09-25'),
-        location: 'Basel Tech Hub',
-        registrationStatus: 'registered'
+        location: 'Basel Convention Center',
+        description: 'Panel discussion on API standardization in banking',
+        registrationStatus: 'confirmed'
+      },
+      {
+        id: 'opp-7',
+        type: 'meeting',
+        title: 'Startup Founders Dinner',
+        date: new Date('2024-09-22'),
+        location: 'Private Dining Room, Hotel Baur au Lac',
+        description: 'Exclusive dinner with 6 other fintech founders to discuss regulatory challenges'
+      },
+      {
+        id: 'opp-8',
+        type: 'other',
+        title: 'Hackathon Judging',
+        date: new Date('2024-10-05'),
+        location: 'Impact Hub Zurich',
+        description: 'Judging fintech track at Swiss Startup Hackathon'
       }
     ],
     interactionHistory: [
@@ -129,10 +156,27 @@ export const mockContacts: Contact[] = [
       {
         id: 'opp-4',
         type: 'appointment',
-        title: 'Coffee & Design Discussion',
+        title: 'Coffee & Design Trends',
         date: new Date('2024-09-18'),
         location: 'Café Central, Zurich',
-        description: 'Discussing UX collaboration opportunities over coffee'
+        description: 'Catching up on latest design trends and discussing potential UX consulting project'
+      },
+      {
+        id: 'opp-9',
+        type: 'event',
+        title: 'Design Systems Meetup',
+        date: new Date('2024-10-10'),
+        location: 'Google Zurich Office',
+        description: 'Monthly meetup for design professionals, Emily is presenting on mobile banking UX',
+        registrationStatus: 'confirmed'
+      },
+      {
+        id: 'opp-10',
+        type: 'other',
+        title: 'Weekend Workshop Facilitation',
+        date: new Date('2024-10-12'),
+        location: 'Design Thinking Studio, Bern',
+        description: 'Co-facilitating design thinking workshop for non-profit organizations'
       }
     ],
     interactionHistory: [
@@ -170,6 +214,34 @@ export const mockContacts: Contact[] = [
     affiliation: 'CIRET Member',
     offering: 'Investment capital, portfolio company connections, strategic guidance',
     lookingFor: 'High-growth B2B SaaS startups, AI/ML innovations, market expansion opportunities',
+    upcomingOpportunities: [
+      {
+        id: 'opp-5',
+        type: 'conference',
+        title: 'European Venture Summit',
+        date: new Date('2024-10-20'),
+        location: 'Geneva International Conference Centre',
+        description: 'Keynote on AI investment trends in Europe',
+        registrationStatus: 'confirmed'
+      },
+      {
+        id: 'opp-11',
+        type: 'meeting',
+        title: 'Portfolio Company Board Meeting',
+        date: new Date('2024-09-19'),
+        location: 'VC Partners Office, Zurich',
+        description: 'Quarterly board meeting with 3 portfolio companies, networking lunch afterwards'
+      },
+      {
+        id: 'opp-12',
+        type: 'event',
+        title: 'Private Investor Networking',
+        date: new Date('2024-09-30'),
+        location: 'Exclusive Members Club, Geneva',
+        description: 'Monthly gathering of Swiss VCs and angel investors',
+        registrationStatus: 'registered'
+      }
+    ],
     interactionHistory: []
   }
 ];
