@@ -4,6 +4,7 @@ import { mockContacts } from '@/data/mockContacts';
 import Header from '@/components/Header';
 import ContactCard from '@/components/ContactCard';
 import StatsCard from '@/components/StatsCard';
+import OperationsMode from '@/components/OperationsMode';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -15,7 +16,8 @@ import {
   Grid,
   List,
   Network,
-  Clock
+  Clock,
+  Settings
 } from 'lucide-react';
 import {
   Select,
@@ -31,6 +33,7 @@ const Index = () => {
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isOperationsMode, setIsOperationsMode] = useState(false);
 
   // Filter and sort contacts
   const filteredContacts = useMemo(() => {
@@ -158,6 +161,16 @@ const Index = () => {
     console.log('View details:', contact.id);
   };
 
+  if (isOperationsMode) {
+    return (
+      <OperationsMode
+        contacts={contacts}
+        onClose={() => setIsOperationsMode(false)}
+        onContactUpdate={setContacts}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header 
@@ -235,6 +248,15 @@ const Index = () => {
           </div>
 
           <div className="flex items-center space-x-3">
+            <Button
+              onClick={() => setIsOperationsMode(true)}
+              variant="outline"
+              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Operations Mode
+            </Button>
+            
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-48">
                 <SelectValue />
