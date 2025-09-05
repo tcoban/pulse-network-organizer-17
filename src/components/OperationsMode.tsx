@@ -81,9 +81,13 @@ const OperationsMode = ({ contacts, onClose, onContactUpdate }: OperationsModePr
     const companies = [...new Set(contacts.map(c => c.company).filter(Boolean))];
     const tags = [...new Set(contacts.flatMap(c => c.tags))];
     const affiliations = [...new Set(contacts.map(c => c.affiliation).filter(Boolean))];
-    const locations = [...new Set(contacts.flatMap(c => c.interactionHistory.map(i => i.channel)).filter(Boolean))];
+    const locations = [...new Set(contacts.flatMap(c => 
+      c.upcomingOpportunities?.map(o => o.location) || []
+    ).filter(Boolean))];
     const interactionTypes = [...new Set(contacts.flatMap(c => c.interactionHistory.map(i => i.type)))];
-    const registrationStatuses = [...new Set(contacts.flatMap(c => c.upcomingOpportunities?.map(o => o.registrationStatus) || []).filter(Boolean))];
+    const registrationStatuses = [...new Set(contacts.flatMap(c => 
+      c.upcomingOpportunities?.map(o => o.registrationStatus) || []
+    ).filter(Boolean))];
 
     return {
       companies: companies.sort(),
