@@ -14,7 +14,8 @@ import {
   Filter,
   Grid,
   List,
-  Network
+  Network,
+  Clock
 } from 'lucide-react';
 import {
   Select,
@@ -88,6 +89,12 @@ const Index = () => {
       contact.lastContact > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     ).length;
 
+    // Calculate contacts that need re-engagement (90+ days or never contacted)
+    const needsReengagement = contacts.filter(contact => 
+      !contact.lastContact || 
+      contact.lastContact <= new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+    ).length;
+
     const companies = new Set(contacts.map(c => c.company).filter(Boolean)).size;
 
     // Calculate potential matches (basic keyword matching for now)
@@ -127,7 +134,8 @@ const Index = () => {
       recentContacts,
       companies,
       tags: allTags.length,
-      openMatches: matchCount
+      openMatches: matchCount,
+      needsReengagement
     };
   }, [contacts, allTags]);
 
@@ -160,7 +168,7 @@ const Index = () => {
 
       <main className="p-6">
         {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
           <StatsCard
             title="Total Contacts"
             value={stats.total}
@@ -188,6 +196,12 @@ const Index = () => {
             value={stats.openMatches}
             icon={Network}
             description="Potential connections"
+          />
+          <StatsCard
+            title="Re-engagement Needed"
+            value={stats.needsReengagement}
+            icon={Clock}
+            description="90+ days since contact"
           />
         </div>
 
