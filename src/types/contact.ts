@@ -27,6 +27,8 @@ export interface Contact {
   offering?: string; // What they can offer to help others
   lookingFor?: string; // What they are looking for from others
   upcomingOpportunities?: ContactOpportunity[]; // Registered events, appointments, etc.
+  assignedTo: string; // Team member assigned to this contact
+  createdBy?: string; // Who originally created this contact
 }
 
 export interface Interaction {

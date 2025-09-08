@@ -4,6 +4,14 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { OpportunityDetails } from './OpportunityDetails';
+import { teamMembers } from '@/data/mockContacts';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   Mail, 
   Phone, 
@@ -59,6 +67,17 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
       upcomingOpportunities: contact.upcomingOpportunities?.map(opp => 
         opp.id === updatedOpportunity.id ? updatedOpportunity : opp
       ) || []
+    };
+    
+    onUpdateContact(updatedContact);
+  };
+
+  const handleAssignmentChange = (newAssignee: string) => {
+    if (!onUpdateContact) return;
+    
+    const updatedContact = {
+      ...contact,
+      assignedTo: newAssignee
     };
     
     onUpdateContact(updatedContact);
@@ -178,6 +197,24 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
             </Badge>
           </div>
         )}
+        
+        {/* Assigned To */}
+        <div className="flex items-center text-sm">
+          <User className="h-4 w-4 mr-2 text-accent-foreground" />
+          <span className="text-xs font-medium text-foreground mr-2">Assigned to:</span>
+          <Select value={contact.assignedTo} onValueChange={handleAssignmentChange}>
+            <SelectTrigger className="h-7 text-xs border-none bg-transparent p-0 hover:bg-muted/30">
+              <SelectValue className="text-muted-foreground" />
+            </SelectTrigger>
+            <SelectContent>
+              {teamMembers.map((member) => (
+                <SelectItem key={member} value={member} className="text-xs">
+                  {member}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Last Contact Details */}

@@ -1,5 +1,32 @@
 import { Contact, ContactOpportunity } from '@/types/contact';
 
+export const teamMembers = [
+  'Luca Müller',
+  'Sophie Meier',
+  'Noah Schmid',
+  'Laura Keller',
+  'Emma Weber',
+  'Jonas Steiner',
+  'Lena Huber',
+  'David Schneider',
+  'Anna Meyer',
+  'Samuel Baumann',
+  'Mia Brunner',
+  'Matteo Frei',
+  'Nina Zimmermann',
+  'Leon Graf',
+  'Eva Widmer',
+  'Jan Wyss',
+  'Livia Bachmann',
+  'Nico Suter',
+  'Sandro Berger',
+  'Sarah Lehmann'
+];
+
+const getRandomTeamMember = () => {
+  return teamMembers[Math.floor(Math.random() * teamMembers.length)];
+};
+
 // Helper function to generate random dates in the past
 const getRandomPastDate = (daysAgo: number) => {
   const today = new Date();
@@ -23,6 +50,8 @@ export const mockContacts: Contact[] = [
   {
     id: '1',
     name: 'Sarah Chen',
+    assignedTo: 'Sophie Meier',
+    createdBy: 'Sophie Meier',
     email: 'sarah.chen@techcorp.com',
     phone: '+1 (555) 123-4567',
     company: 'TechCorp',
@@ -80,7 +109,7 @@ export const mockContacts: Contact[] = [
         date: new Date('2024-01-15'),
         description: 'Coffee meeting to discuss product strategy',
         outcome: 'Agreed to share user research insights',
-        contactedBy: 'John Smith',
+        contactedBy: 'Sophie Meier',
         channel: 'In-person',
         evaluation: 'Very productive meeting, high potential for collaboration'
       }
@@ -89,6 +118,8 @@ export const mockContacts: Contact[] = [
   {
     id: '2',
     name: 'Marcus Rodriguez',
+    assignedTo: 'Luca Müller',
+    createdBy: 'Sophie Meier',
     email: 'marcus@startupxyz.com',
     phone: '+1 (555) 987-6543',
     company: 'StartupXYZ',
@@ -128,7 +159,7 @@ export const mockContacts: Contact[] = [
         date: new Date('2024-01-20'),
         description: 'Technical discussion about API integration',
         outcome: 'Scheduled follow-up meeting for next week',
-        contactedBy: 'Maria Garcia',
+        contactedBy: 'Luca Müller',
         channel: 'Phone',
         evaluation: 'Excellent technical discussion, very cooperative and enthusiastic'
       }
@@ -137,6 +168,8 @@ export const mockContacts: Contact[] = [
   {
     id: '3',
     name: 'Emily Watson',
+    assignedTo: 'Noah Schmid',
+    createdBy: 'Noah Schmid',
     email: 'emily.watson@designstudio.com',
     company: 'Creative Design Studio',
     position: 'UX Director',
@@ -173,7 +206,7 @@ export const mockContacts: Contact[] = [
         date: new Date('2024-01-18'),
         description: 'Follow-up on design collaboration proposal',
         outcome: 'Interested but currently busy with current project',
-        contactedBy: 'Alex Thompson',
+        contactedBy: 'Noah Schmid',
         channel: 'Email',
         evaluation: 'Positive response but limited availability in short term'
       }
@@ -182,6 +215,8 @@ export const mockContacts: Contact[] = [
   {
     id: '4',
     name: 'David Kim',
+    assignedTo: 'Laura Keller',
+    createdBy: 'Noah Schmid',
     email: 'david@venturecap.com',
     phone: '+1 (555) 456-7890',
     company: 'Venture Capital Partners',
@@ -215,186 +250,16 @@ export const mockContacts: Contact[] = [
     ],
     interactionHistory: []
   },
-  // Adding 146 more diverse contacts to reach 150 total
-  {
-    id: '5',
-    name: 'Dr. Lisa Müller',
-    email: 'lisa.mueller@medtech.ch',
-    phone: '+41 44 123 4567',
-    company: 'Swiss MedTech AG',
-    position: 'Chief Medical Officer',
-    tags: ['healthcare', 'medical', 'research'],
-    notes: 'Leading expert in digital health technologies. Pioneer in AI-assisted diagnostics.',
-    lastContact: getRandomPastDate(120),
-    addedDate: getRandomPastDate(150),
-    socialLinks: { linkedin: 'https://linkedin.com/in/lisamueller' },
-    referredBy: 'Conference Contact',
-    linkedinConnections: ['Andreas Weber', 'Sarah Chen'],
-    currentProjects: 'Developing AI-powered diagnostic platform for early cancer detection',
-    mutualBenefit: 'Access to healthcare AI innovations and regulatory expertise',
-    cooperationRating: 4,
-    potentialScore: 5,
-    affiliation: 'ETH Alumni',
-    offering: 'Medical expertise, regulatory knowledge, healthcare partnerships',
-    lookingFor: 'AI/ML technical partnerships, medical device certification support',
-    upcomingOpportunities: [
-      {
-        id: 'opp-6',
-        type: 'conference',
-        title: 'Digital Health Summit',
-        date: getRandomFutureDate(60),
-        location: 'Basel Life Sciences Campus',
-        description: 'Keynote on AI in medical diagnostics',
-        registrationStatus: 'confirmed'
-      }
-    ],
-    interactionHistory: [
-      {
-        id: '5',
-        type: 'event',
-        date: getRandomPastDate(120),
-        description: 'Met at MedTech Innovation Conference',
-        outcome: 'Exchanged business cards and discussed potential collaboration',
-        contactedBy: 'John Smith',
-        channel: 'In-person',
-        evaluation: 'Highly knowledgeable, interested in AI applications'
-      }
-    ]
-  },
-  {
-    id: '6',
-    name: 'Andreas Weber',
-    email: 'a.weber@globalmanufacturing.de',
-    phone: '+49 89 123 4567',
-    company: 'Global Manufacturing Solutions',
-    position: 'Head of Digital Transformation',
-    tags: ['manufacturing', 'digital-transformation', 'industry-4.0'],
-    notes: 'Spearheading Industry 4.0 initiatives across European manufacturing facilities.',
-    lastContact: getRandomPastDate(30),
-    addedDate: getRandomPastDate(90),
-    socialLinks: { linkedin: 'https://linkedin.com/in/andreasweber' },
-    referredBy: 'Trade Show Contact',
-    linkedinConnections: ['Dr. Lisa Müller', 'Thomas Schmidt'],
-    currentProjects: 'Implementing IoT and AI across 15 manufacturing plants in Europe',
-    mutualBenefit: 'Manufacturing digitalization expertise and enterprise implementation experience',
-    cooperationRating: 3,
-    potentialScore: 4,
-    affiliation: 'Trade Association Member',
-    offering: 'Manufacturing expertise, digital transformation experience, European market access',
-    lookingFor: 'IoT solutions, predictive maintenance technologies, supply chain optimization',
-    upcomingOpportunities: [
-      {
-        id: 'opp-7',
-        type: 'event',
-        title: 'Industry 4.0 Workshop',
-        date: getRandomFutureDate(45),
-        location: 'Munich Technology Center',
-        description: 'Leading workshop on digital transformation best practices',
-        registrationStatus: 'confirmed'
-      }
-    ],
-    interactionHistory: [
-      {
-        id: '6',
-        type: 'meeting',
-        date: getRandomPastDate(30),
-        description: 'Strategy discussion on manufacturing digitalization',
-        outcome: 'Agreed to pilot program for predictive maintenance solution',
-        contactedBy: 'Maria Garcia',
-        channel: 'Video Call',
-        evaluation: 'Excellent meeting, moving forward with pilot project'
-      }
-    ]
-  },
-  {
-    id: '7',
-    name: 'Jennifer Chang',
-    email: 'jennifer@retailtech.com',
-    phone: '+1 (415) 555-0123',
-    company: 'RetailTech Innovations',
-    position: 'VP of Customer Experience',
-    tags: ['retail', 'customer-experience', 'e-commerce'],
-    notes: 'Expert in omnichannel retail experiences and customer analytics.',
-    lastContact: getRandomPastDate(95),
-    addedDate: getRandomPastDate(120),
-    socialLinks: { linkedin: 'https://linkedin.com/in/jenniferchang', twitter: 'https://twitter.com/jchang_retail' },
-    referredBy: 'Industry Contact',
-    linkedinConnections: ['Michael Brown', 'Sarah Chen'],
-    currentProjects: 'Launching AI-powered personalization engine for omnichannel retail',
-    mutualBenefit: 'Retail industry insights and customer behavior analytics expertise',
-    cooperationRating: 3,
-    potentialScore: 3,
-    affiliation: 'Retail Innovation Network',
-    offering: 'Retail expertise, customer analytics, omnichannel strategy',
-    lookingFor: 'AI personalization technologies, data analytics solutions, payment innovations',
-    upcomingOpportunities: [],
-    interactionHistory: [
-      {
-        id: '7',
-        type: 'email',
-        date: getRandomPastDate(95),
-        description: 'Discussion about retail analytics collaboration',
-        outcome: 'Interested in learning more about our data solutions',
-        contactedBy: 'Alex Thompson',
-        channel: 'Email',
-        evaluation: 'Positive response, need to follow up with technical details'
-      }
-    ]
-  },
-  {
-    id: '8',
-    name: 'Roberto Silva',
-    email: 'roberto@financeplus.br',
-    phone: '+55 11 9876 5432',
-    company: 'Finance Plus Brasil',
-    position: 'Director of Innovation',
-    tags: ['fintech', 'latin-america', 'payments'],
-    notes: 'Leading fintech innovation in Latin American markets, especially payment solutions.',
-    lastContact: getRandomPastDate(110),
-    addedDate: getRandomPastDate(140),
-    socialLinks: { linkedin: 'https://linkedin.com/in/robertosilva' },
-    referredBy: 'Marcus Rodriguez',
-    linkedinConnections: ['Carlos Martinez', 'Ana Santos'],
-    currentProjects: 'Expanding digital payment solutions across 5 Latin American countries',
-    mutualBenefit: 'Latin American market access and fintech regulatory expertise',
-    cooperationRating: 4,
-    potentialScore: 4,
-    affiliation: 'LatAm Fintech Association',
-    offering: 'Latin American market expertise, fintech solutions, regulatory compliance',
-    lookingFor: 'Payment infrastructure, fraud detection technologies, international partnerships',
-    upcomingOpportunities: [
-      {
-        id: 'opp-8',
-        type: 'conference',
-        title: 'LatAm Fintech Summit',
-        date: getRandomFutureDate(75),
-        location: 'São Paulo Convention Center',
-        description: 'Panel on cross-border payment innovations',
-        registrationStatus: 'confirmed'
-      }
-    ],
-    interactionHistory: [
-      {
-        id: '8',
-        type: 'call',
-        date: getRandomPastDate(110),
-        description: 'Initial discussion about Latin American expansion',
-        outcome: 'Shared market insights and discussed potential partnerships',
-        contactedBy: 'John Smith',
-        channel: 'Phone',
-        evaluation: 'Very knowledgeable about LatAm markets, high cooperation potential'
-      }
-    ]
-  },
-  // Continue with remaining contacts...
-  ...Array.from({ length: 142 }, (_, index) => {
-    const id = (index + 9).toString();
+  // Continue with remaining 146 contacts
+  ...Array.from({ length: 146 }, (_, index) => {
+    const id = (index + 5).toString();
     const names = [
-      'Yuki Tanaka', 'Sophie Dubois', 'Michael O\'Brien', 'Priya Patel', 'Thomas Schmidt', 'Isabella Rossi',
-      'Ahmed Al-Rashid', 'Emma Thompson', 'Lars Andersen', 'Maria Santos', 'Viktor Petrov', 'Rachel Green',
-      'Hendrik van der Berg', 'Chen Wei', 'Olumide Adebayo', 'Astrid Nielsen', 'François Dubois', 'James Mitchell',
-      'Fatima Al-Zahra', 'Erik Johansson', 'Claudia Romano', 'Dmitri Volkov', 'Ananya Sharma', 'Pedro Gonzalez',
-      'Ingrid Larsen', 'Kenji Nakamura', 'Beatrice Müller', 'Omar Hassan', 'Lucia Fernandez', 'Raj Gupta',
+      'Dr. Lisa Müller', 'Andreas Weber', 'Jennifer Chang', 'Roberto Silva', 'Yuki Tanaka', 'Sophie Dubois',
+      'Michael O\'Brien', 'Priya Patel', 'Thomas Schmidt', 'Isabella Rossi', 'Ahmed Al-Rashid', 'Emma Thompson',
+      'Lars Andersen', 'Maria Santos', 'Viktor Petrov', 'Rachel Green', 'Hendrik van der Berg', 'Chen Wei',
+      'Olumide Adebayo', 'Astrid Nielsen', 'François Dubois', 'James Mitchell', 'Fatima Al-Zahra', 'Erik Johansson',
+      'Claudia Romano', 'Dmitri Volkov', 'Ananya Sharma', 'Pedro Gonzalez', 'Ingrid Larsen', 'Kenji Nakamura',
+      'Beatrice Müller', 'Omar Hassan', 'Lucia Fernandez', 'Raj Gupta',
       'Nadia Petersen', 'Alexandre Costa', 'Zara Ahmed', 'Matteo Bianchi', 'Leila Kristensen', 'Hans Andersson',
       'Carmen Rodriguez', 'Hiroshi Yamamoto', 'Elena Kozlov', 'Finn O\'Sullivan', 'Amelia Clarke', 'Giorgio Rossi',
       'Anya Popov', 'Kai Lindqvist', 'Rosa Martinez', 'Takeshi Sato', 'Nina Johansson', 'Carlos Mendoza',
@@ -417,6 +282,13 @@ export const mockContacts: Contact[] = [
     ];
     
     const companies = [
+      'Swiss MedTech AG', 'Global Manufacturing Solutions', 'RetailTech Innovations', 'Finance Plus Brasil',
+      'Tokyo Innovation Labs', 'Dubois Consulting', 'Dublin Tech Solutions', 'Mumbai Analytics',
+      'Schmidt Engineering', 'Milano Design Studio', 'Al-Rashid Holdings', 'Thompson & Associates',
+      'Nordic Systems', 'Santos & Partners', 'Petrov Industries', 'Green Solutions', 'Berg Ventures',
+      'Wei Technologies', 'Lagos Innovations', 'Copenhagen Analytics', 'Paris Consulting Group',
+      'Mitchell Corp', 'Al-Zahra Enterprises', 'Stockholm Ventures', 'Romano Holdings', 'Moscow Tech',
+      'Sharma Analytics', 'Barcelona Solutions', 'Oslo Systems', 'Nakamura Industries',
       'TechNova Solutions', 'Digital Innovation Lab', 'Global Systems Corp', 'NextGen Technologies',
       'Smart Enterprise Solutions', 'Innovation Hub', 'Future Systems', 'Advanced Technologies',
       'Digital Transformation Partners', 'Enterprise Solutions Group', 'Tech Innovations Inc',
@@ -430,8 +302,11 @@ export const mockContacts: Contact[] = [
       'Technology Solutions', 'Digital Ventures', 'Innovation Dynamics', 'Tech Excellence',
       'Digital Leaders', 'Advanced Innovation', 'Smart Technology', 'Future Solutions'
     ];
-    
+
     const positions = [
+      'CEO', 'CTO', 'VP of Engineering', 'Head of Product', 'Director of Innovation', 'Chief Data Officer',
+      'Senior Manager', 'Principal Consultant', 'Lead Developer', 'Research Director', 'VP of Sales',
+      'Head of Marketing', 'Chief Strategy Officer', 'Senior Analyst', 'Product Manager', 'Tech Lead',
       'CEO', 'CTO', 'VP of Engineering', 'Director of Innovation', 'Head of Product',
       'Chief Data Officer', 'VP of Technology', 'Innovation Manager', 'Tech Lead',
       'Product Manager', 'Engineering Director', 'Chief Technology Officer',
@@ -439,76 +314,94 @@ export const mockContacts: Contact[] = [
       'Technology Manager', 'Digital Strategy Director', 'Head of AI/ML',
       'VP of Product Development', 'Chief Innovation Officer'
     ];
-    
-    const tagOptions = [
-      ['AI', 'machine-learning', 'tech'], ['fintech', 'payments', 'finance'], ['healthcare', 'medtech', 'digital-health'],
-      ['manufacturing', 'industry-4.0', 'IoT'], ['retail', 'e-commerce', 'customer-experience'],
-      ['education', 'edtech', 'digital-learning'], ['energy', 'cleantech', 'sustainability'],
-      ['automotive', 'mobility', 'autonomous-systems'], ['cybersecurity', 'data-protection', 'security'],
-      ['blockchain', 'crypto', 'web3'], ['gaming', 'VR', 'entertainment'], ['logistics', 'supply-chain', 'transportation'],
-      ['real-estate', 'proptech', 'smart-buildings'], ['insurance', 'insurtech', 'risk-management'],
-      ['agriculture', 'agtech', 'farming'], ['aerospace', 'space-tech', 'satellites'],
-      ['biotech', 'pharma', 'life-sciences'], ['legal', 'legaltech', 'compliance'],
-      ['marketing', 'adtech', 'digital-marketing'], ['HR', 'talent', 'workforce-management']
-    ];
-    
+
     const affiliations = [
+      'ETH Alumni', 'University of Zurich', 'EPFL Graduate', 'MIT Alumni', 'Stanford Graduate',
+      'Harvard Business School', 'Oxford University', 'Cambridge Graduate', 'Wharton School',
+      'INSEAD Alumni', 'London Business School', 'Berkeley Graduate', 'NYU Stern', 'Columbia Business School',
+      'Chicago Booth', 'Kellogg School', 'Sloan School', 'IESE Business School', 'IMD Lausanne',
       'ETH Alumni', 'KOF Alumni', 'Dataservice Customer', 'CIRET Member', 'Survey Participant Contact',
       'Conference Contact', 'LinkedIn Connection', 'Industry Association Member', 'Trade Show Contact',
       'Research Collaboration Partner', 'University Connection', 'Professional Network',
       'Industry Expert', 'Advisory Board Member', 'Strategic Partner'
     ];
 
-    const name = names[index % names.length];
-    const company = companies[index % companies.length];
-    const position = positions[index % positions.length];
-    const tags = tagOptions[index % tagOptions.length];
-    const affiliation = affiliations[index % affiliations.length];
+    const tags = [
+      'tech', 'finance', 'healthcare', 'manufacturing', 'retail', 'consulting', 'startup', 'enterprise',
+      'AI/ML', 'blockchain', 'fintech', 'medtech', 'IoT', 'cybersecurity', 'data-science', 'cloud',
+      'mobile', 'web3', 'SaaS', 'B2B', 'B2C', 'international', 'emerging-markets', 'sustainability',
+      'AI', 'machine-learning', 'tech', 'fintech', 'payments', 'finance', 'healthcare', 'medtech', 'digital-health',
+      'manufacturing', 'industry-4.0', 'IoT', 'retail', 'e-commerce', 'customer-experience',
+      'education', 'edtech', 'digital-learning', 'energy', 'cleantech', 'sustainability',
+      'automotive', 'mobility', 'autonomous-systems', 'cybersecurity', 'data-protection', 'security',
+      'blockchain', 'crypto', 'web3', 'gaming', 'VR', 'entertainment', 'logistics', 'supply-chain', 'transportation',
+      'real-estate', 'proptech', 'smart-buildings', 'insurance', 'insurtech', 'risk-management',
+      'agriculture', 'agtech', 'farming', 'aerospace', 'space-tech', 'satellites',
+      'biotech', 'pharma', 'life-sciences', 'legal', 'legaltech', 'compliance',
+      'marketing', 'adtech', 'digital-marketing', 'HR', 'talent', 'workforce-management'
+    ];
+
+    const creator = getRandomTeamMember();
+    const lastContactPerson = Math.random() > 0.7 ? getRandomTeamMember() : creator;
+    const assignedTo = lastContactPerson;
     
-    return {
+    const contact: Contact = {
       id,
-      name,
-      email: `${name.toLowerCase().replace(/[^a-z]/g, '')}@${company.toLowerCase().replace(/[^a-z]/g, '')}.com`,
-      phone: `+${Math.floor(Math.random() * 50) + 1} ${Math.floor(Math.random() * 900) + 100} ${Math.floor(Math.random() * 9000) + 1000}`,
-      company,
-      position,
-      tags,
-      notes: `Professional contact with expertise in ${tags.join(', ')}. Potential collaboration opportunities identified.`,
-      lastContact: Math.random() > 0.3 ? getRandomPastDate(200) : undefined,
-      addedDate: getRandomPastDate(365),
-      socialLinks: { linkedin: `https://linkedin.com/in/${name.toLowerCase().replace(/[^a-z]/g, '')}` },
-      referredBy: Math.random() > 0.5 ? names[Math.floor(Math.random() * names.length)] : 'Direct Contact',
-      linkedinConnections: [names[Math.floor(Math.random() * names.length)], names[Math.floor(Math.random() * names.length)]],
-      currentProjects: `Leading ${tags[0]} initiatives and digital transformation projects`,
-      mutualBenefit: `Access to ${tags[0]} expertise and industry connections`,
+      name: names[index % names.length] || `Contact ${index + 5}`,
+      assignedTo,
+      createdBy: creator,
+      email: `${names[index % names.length]?.toLowerCase().replace(/\s+/g, '.').replace(/'/g, '') || `contact${index + 5}`}@${companies[index % companies.length]?.toLowerCase().replace(/\s+/g, '') || 'company'}.com`,
+      phone: `+${Math.floor(Math.random() * 99) + 1} ${Math.floor(Math.random() * 9000) + 1000} ${Math.floor(Math.random() * 9000) + 1000}`,
+      company: companies[index % companies.length] || `Company ${index + 5}`,
+      position: positions[index % positions.length] || 'Manager',
+      tags: [tags[index % tags.length], tags[(index + 1) % tags.length], tags[(index + 2) % tags.length]].slice(0, Math.floor(Math.random() * 3) + 1),
+      notes: `Professional contact with expertise in ${tags[index % tags.length]}. ${Math.random() > 0.5 ? 'High potential for collaboration.' : 'Maintaining relationship for future opportunities.'}`,
+      lastContact: Math.random() > 0.3 ? getRandomPastDate(365) : undefined,
+      addedDate: getRandomPastDate(500),
+      socialLinks: {
+        linkedin: `https://linkedin.com/in/${names[index % names.length]?.toLowerCase().replace(/\s+/g, '') || `contact${index + 5}`}`,
+        ...(Math.random() > 0.8 && { twitter: `https://twitter.com/${names[index % names.length]?.toLowerCase().replace(/\s+/g, '') || `contact${index + 5}`}` })
+      },
+      referredBy: Math.random() > 0.6 ? names[Math.floor(Math.random() * names.length)] : undefined,
+      linkedinConnections: Math.random() > 0.5 ? [names[Math.floor(Math.random() * names.length)], names[Math.floor(Math.random() * names.length)]].filter(Boolean) : [],
+      currentProjects: Math.random() > 0.4 ? `Working on ${tags[index % tags.length]} initiatives for enterprise clients` : undefined,
+      mutualBenefit: Math.random() > 0.5 ? `Potential collaboration in ${tags[index % tags.length]} and strategic partnerships` : undefined,
       cooperationRating: Math.floor(Math.random() * 5) + 1,
       potentialScore: Math.floor(Math.random() * 5) + 1,
-      affiliation,
-      offering: `${tags[0]} expertise, industry knowledge, strategic partnerships`,
-      lookingFor: `Technology solutions, partnerships, market expansion opportunities`,
-      upcomingOpportunities: Math.random() > 0.6 ? [
+      affiliation: Math.random() > 0.4 ? affiliations[index % affiliations.length] : undefined,
+      offering: Math.random() > 0.5 ? `${tags[index % tags.length]} expertise, industry connections, strategic consulting` : undefined,
+      lookingFor: Math.random() > 0.5 ? `Partnership opportunities, ${tags[(index + 1) % tags.length]} solutions, market expansion` : undefined,
+      upcomingOpportunities: Math.random() > 0.7 ? [
         {
           id: `opp-${id}`,
-          type: Math.random() > 0.5 ? 'conference' : 'meeting',
-          title: Math.random() > 0.5 ? `${tags[0]} Summit` : 'Strategic Planning Meeting',
+          type: ['conference', 'meeting', 'event'][Math.floor(Math.random() * 3)] as any,
+          title: `${tags[index % tags.length].toUpperCase()} ${['Summit', 'Conference', 'Meeting', 'Workshop'][Math.floor(Math.random() * 4)]}`,
           date: getRandomFutureDate(90),
-          location: 'TBD',
-          description: `Industry event focused on ${tags[0]} innovations`,
-          registrationStatus: Math.random() > 0.3 ? 'confirmed' : 'registered'
+          location: ['Zurich', 'Geneva', 'Basel', 'Bern', 'Lausanne'][Math.floor(Math.random() * 5)],
+          description: `Professional networking and ${tags[index % tags.length]} discussion`,
+          registrationStatus: ['registered', 'considering', 'confirmed'][Math.floor(Math.random() * 3)] as any,
+          ...(Math.random() > 0.5 && {
+            meetingGoals: [
+              { id: `goal-${id}-1`, description: `Discuss ${tags[index % tags.length]} collaboration opportunities`, achieved: Math.random() > 0.5 },
+              { id: `goal-${id}-2`, description: 'Exchange industry insights and best practices', achieved: Math.random() > 0.5 }
+            ]
+          })
         }
       ] : [],
       interactionHistory: Math.random() > 0.4 ? [
         {
-          id: `int-${id}`,
-          type: Math.random() > 0.5 ? 'email' : 'call',
+          id: `interaction-${id}`,
+          type: ['meeting', 'call', 'email', 'event'][Math.floor(Math.random() * 4)] as any,
           date: getRandomPastDate(200),
-          description: `Discussion about ${tags[0]} collaboration opportunities`,
-          outcome: Math.random() > 0.5 ? 'Positive response, follow-up scheduled' : 'Exploring partnership opportunities',
-          contactedBy: Math.random() > 0.5 ? 'John Smith' : 'Maria Garcia',
-          channel: Math.random() > 0.5 ? 'Email' : 'Phone',
-          evaluation: 'Good potential for collaboration'
+          description: `Discussion about ${tags[index % tags.length]} opportunities and potential collaboration`,
+          outcome: Math.random() > 0.5 ? 'Positive discussion, agreed to follow up' : 'Initial contact established, exploring opportunities',
+          contactedBy: lastContactPerson,
+          channel: ['LinkedIn', 'Phone', 'Email', 'In-person'][Math.floor(Math.random() * 4)],
+          evaluation: Math.random() > 0.5 ? 'Productive conversation, high potential' : 'Good initial contact, need to develop relationship further'
         }
       ] : []
-    } as Contact;
+    };
+
+    return contact;
   })
 ];
