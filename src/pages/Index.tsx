@@ -161,6 +161,10 @@ const Index = () => {
     console.log('View details:', contact.id);
   };
 
+  const handleUpdateContact = (updatedContact: Contact) => {
+    setContacts(prev => prev.map(c => c.id === updatedContact.id ? updatedContact : c));
+  };
+
   if (isOperationsMode) {
     return (
       <OperationsMode
@@ -310,6 +314,7 @@ const Index = () => {
               onEdit={handleEditContact}
               onDelete={handleDeleteContact}
               onViewDetails={handleViewDetails}
+              onUpdateContact={handleUpdateContact}
             />
           ))}
         </div>

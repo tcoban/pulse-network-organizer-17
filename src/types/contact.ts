@@ -48,6 +48,13 @@ export interface ContactOpportunity {
   location?: string;
   description?: string;
   registrationStatus?: 'registered' | 'considering' | 'confirmed';
+  meetingGoals?: MeetingGoal[];
+}
+
+export interface MeetingGoal {
+  id: string;
+  description: string;
+  achieved: boolean;
 }
 
 export interface ContactStats {

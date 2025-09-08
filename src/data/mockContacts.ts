@@ -52,15 +52,25 @@ export const mockContacts: Contact[] = [
         date: new Date('2024-10-15'),
         location: 'Zurich Convention Center',
         description: 'Speaking on AI ethics in product development',
-        registrationStatus: 'confirmed'
+        registrationStatus: 'confirmed',
+        meetingGoals: [
+          { id: 'goal-1', description: 'Network with 5 new AI product managers', achieved: false },
+          { id: 'goal-2', description: 'Present our AI ethics framework', achieved: false },
+          { id: 'goal-3', description: 'Schedule follow-up meetings with 3 potential partners', achieved: false }
+        ]
       },
       {
         id: 'opp-2',
         type: 'meeting',
         title: 'Golf & Strategy Session',
-        date: new Date('2024-09-20'),
+        date: new Date('2024-09-22'),
         location: 'Zurich Golf Club',
-        description: 'Discussing potential AI collaboration over golf with Sarah and two other tech leads'
+        description: 'Casual networking and strategic discussions',
+        registrationStatus: 'confirmed',
+        meetingGoals: [
+          { id: 'goal-4', description: 'Discuss potential collaboration on AI ethics project', achieved: true },
+          { id: 'goal-5', description: 'Explore investment opportunities', achieved: false }
+        ]
       }
     ],
     interactionHistory: [

@@ -1,8 +1,9 @@
-import { Contact } from '@/types/contact';
+import { Contact, ContactOpportunity } from '@/types/contact';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { OpportunityDetails } from './OpportunityDetails';
 import { 
   Mail, 
   Phone, 
@@ -38,10 +39,30 @@ interface ContactCardProps {
   onEdit: (contact: Contact) => void;
   onDelete: (contactId: string) => void;
   onViewDetails: (contact: Contact) => void;
+  onUpdateContact?: (contact: Contact) => void;
 }
 
-const ContactCard = ({ contact, onEdit, onDelete, onViewDetails }: ContactCardProps) => {
+const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact }: ContactCardProps) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<ContactOpportunity | null>(null);
+  const [isOpportunityDialogOpen, setIsOpportunityDialogOpen] = useState(false);
+  const handleOpportunityClick = (opportunity: ContactOpportunity) => {
+    setSelectedOpportunity(opportunity);
+    setIsOpportunityDialogOpen(true);
+  };
+
+  const handleOpportunitySave = (updatedOpportunity: ContactOpportunity) => {
+    if (!onUpdateContact) return;
+    
+    const updatedContact = {
+      ...contact,
+      upcomingOpportunities: contact.upcomingOpportunities?.map(opp => 
+        opp.id === updatedOpportunity.id ? updatedOpportunity : opp
+      ) || []
+    };
+    
+    onUpdateContact(updatedContact);
+  };
 
   const getInitials = (name: string) => {
     return name
@@ -205,15 +226,25 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails }: ContactCardPr
           </div>
           <div className="space-y-2">
             {contact.upcomingOpportunities.slice(0, 2).map((opportunity) => (
-              <div key={opportunity.id} className="text-xs">
+              <div 
+                key={opportunity.id} 
+                className="text-xs cursor-pointer hover:bg-accent/10 p-2 rounded transition-colors"
+                onClick={() => handleOpportunityClick(opportunity)}
+              >
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-foreground">{opportunity.title}</span>
+                  <span className="font-medium text-foreground hover:text-primary">{opportunity.title}</span>
                   <span className="text-muted-foreground">{formatOpportunityDate(opportunity.date)}</span>
                 </div>
                 {opportunity.location && (
                   <div className="flex items-center mt-1 text-muted-foreground">
                     <MapPin className="h-3 w-3 mr-1" />
                     <span>{opportunity.location}</span>
+                  </div>
+                )}
+                {opportunity.meetingGoals && opportunity.meetingGoals.length > 0 && (
+                  <div className="flex items-center mt-1 text-muted-foreground">
+                    <Target className="h-3 w-3 mr-1" />
+                    <span>{opportunity.meetingGoals.filter(g => g.achieved).length}/{opportunity.meetingGoals.length} goals</span>
                   </div>
                 )}
               </div>
@@ -387,6 +418,13 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails }: ContactCardPr
   return (
     <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer group">
       {isFlipped ? renderBackView() : renderFrontView()}
+      
+      <OpportunityDetails
+        opportunity={selectedOpportunity}
+        isOpen={isOpportunityDialogOpen}
+        onClose={() => setIsOpportunityDialogOpen(false)}
+        onSave={handleOpportunitySave}
+      />
     </Card>
   );
 };
