@@ -7,8 +7,10 @@ import StatsCard from '@/components/StatsCard';
 import OperationsMode from '@/components/OperationsMode';
 import ContactForm from '@/components/ContactForm';
 import OpportunityForm from '@/components/OpportunityForm';
+import TeamOpportunities from '@/components/TeamOpportunities';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Users, 
   Building2, 
@@ -19,7 +21,8 @@ import {
   List,
   Network,
   Clock,
-  Settings
+  Settings,
+  CalendarDays
 } from 'lucide-react';
 import {
   Select,
@@ -36,6 +39,7 @@ const Index = () => {
   const [sortBy, setSortBy] = useState<string>('name');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isOperationsMode, setIsOperationsMode] = useState(false);
+  const [isTeamOpportunitiesMode, setIsTeamOpportunitiesMode] = useState(false);
   const [contactFormOpen, setContactFormOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [opportunityFormOpen, setOpportunityFormOpen] = useState(false);
@@ -232,6 +236,32 @@ const Index = () => {
     );
   }
 
+  if (isTeamOpportunitiesMode) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header 
+          onAddContact={handleAddContact}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
+        <main className="p-6">
+          <div className="mb-6">
+            <Button
+              onClick={() => setIsTeamOpportunitiesMode(false)}
+              variant="outline"
+            >
+              ← Back to Contacts
+            </Button>
+          </div>
+          <TeamOpportunities 
+            contacts={contacts}
+            onUpdateContact={handleUpdateContact}
+          />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header 
@@ -309,6 +339,15 @@ const Index = () => {
           </div>
 
           <div className="flex items-center space-x-3">
+            <Button
+              onClick={() => setIsTeamOpportunitiesMode(true)}
+              variant="outline"
+              className="border-blue-200 text-blue-700 hover:bg-blue-50"
+            >
+              <CalendarDays className="h-4 w-4 mr-2" />
+              Team Opportunities
+            </Button>
+            
             <Button
               onClick={() => setIsOperationsMode(true)}
               variant="outline"
