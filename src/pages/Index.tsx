@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react';
-import { Contact } from '@/types/contact';
+import { Contact, ContactOpportunity } from '@/types/contact';
 import { mockContacts } from '@/data/mockContacts';
 import Header from '@/components/Header';
 import ContactCard from '@/components/ContactCard';
 import StatsCard from '@/components/StatsCard';
 import OperationsMode from '@/components/OperationsMode';
+import ContactForm from '@/components/ContactForm';
+import OpportunityForm from '@/components/OpportunityForm';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -34,6 +36,11 @@ const Index = () => {
   const [sortBy, setSortBy] = useState<string>('name');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isOperationsMode, setIsOperationsMode] = useState(false);
+  const [contactFormOpen, setContactFormOpen] = useState(false);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [opportunityFormOpen, setOpportunityFormOpen] = useState(false);
+  const [editingOpportunity, setEditingOpportunity] = useState<ContactOpportunity | null>(null);
+  const [selectedContactForOpportunity, setSelectedContactForOpportunity] = useState<Contact | null>(null);
 
   // Filter and sort contacts
   const filteredContacts = useMemo(() => {
@@ -143,13 +150,12 @@ const Index = () => {
   }, [contacts, allTags]);
 
   const handleAddContact = () => {
-    // TODO: Open add contact modal
-    console.log('Add contact clicked');
+    setContactFormOpen(true);
   };
 
   const handleEditContact = (contact: Contact) => {
-    // TODO: Open edit contact modal
-    console.log('Edit contact:', contact.id);
+    setEditingContact(contact);
+    setContactFormOpen(true);
   };
 
   const handleDeleteContact = (contactId: string) => {
@@ -163,6 +169,57 @@ const Index = () => {
 
   const handleUpdateContact = (updatedContact: Contact) => {
     setContacts(prev => prev.map(c => c.id === updatedContact.id ? updatedContact : c));
+  };
+
+  const handleSaveContact = (contactData: Contact) => {
+    if (editingContact) {
+      // Update existing contact
+      setContacts(prev => prev.map(c => c.id === contactData.id ? contactData : c));
+    } else {
+      // Add new contact
+      setContacts(prev => [...prev, contactData]);
+    }
+    setEditingContact(null);
+  };
+
+  const handleCloseContactForm = () => {
+    setContactFormOpen(false);
+    setEditingContact(null);
+  };
+
+  const handleAddOpportunity = (contact: Contact) => {
+    setSelectedContactForOpportunity(contact);
+    setOpportunityFormOpen(true);
+  };
+
+  const handleEditOpportunity = (opportunity: ContactOpportunity, contact: Contact) => {
+    setEditingOpportunity(opportunity);
+    setSelectedContactForOpportunity(contact);
+    setOpportunityFormOpen(true);
+  };
+
+  const handleSaveOpportunity = (opportunityData: ContactOpportunity) => {
+    if (!selectedContactForOpportunity) return;
+
+    const updatedContact = {
+      ...selectedContactForOpportunity,
+      upcomingOpportunities: editingOpportunity
+        ? selectedContactForOpportunity.upcomingOpportunities?.map(opp =>
+            opp.id === opportunityData.id ? opportunityData : opp
+          ) || []
+        : [...(selectedContactForOpportunity.upcomingOpportunities || []), opportunityData]
+    };
+
+    setContacts(prev => prev.map(c => c.id === updatedContact.id ? updatedContact : c));
+    
+    setEditingOpportunity(null);
+    setSelectedContactForOpportunity(null);
+  };
+
+  const handleCloseOpportunityForm = () => {
+    setOpportunityFormOpen(false);
+    setEditingOpportunity(null);
+    setSelectedContactForOpportunity(null);
   };
 
   if (isOperationsMode) {
@@ -315,6 +372,8 @@ const Index = () => {
               onDelete={handleDeleteContact}
               onViewDetails={handleViewDetails}
               onUpdateContact={handleUpdateContact}
+              onAddOpportunity={() => handleAddOpportunity(contact)}
+              onEditOpportunity={(opportunity) => handleEditOpportunity(opportunity, contact)}
             />
           ))}
         </div>
@@ -335,6 +394,24 @@ const Index = () => {
           </div>
         )}
       </main>
+
+      {/* Contact Form */}
+      <ContactForm
+        contact={editingContact || undefined}
+        isOpen={contactFormOpen}
+        onClose={handleCloseContactForm}
+        onSave={handleSaveContact}
+        isEditing={!!editingContact}
+      />
+
+      {/* Opportunity Form */}
+      <OpportunityForm
+        opportunity={editingOpportunity || undefined}
+        isOpen={opportunityFormOpen}
+        onClose={handleCloseOpportunityForm}
+        onSave={handleSaveOpportunity}
+        isEditing={!!editingOpportunity}
+      />
     </div>
   );
 };

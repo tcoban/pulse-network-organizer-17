@@ -29,6 +29,14 @@ export interface Contact {
   upcomingOpportunities?: ContactOpportunity[]; // Registered events, appointments, etc.
   assignedTo: string; // Team member assigned to this contact
   createdBy?: string; // Who originally created this contact
+  preferences?: ContactPreferences; // Communication preferences
+}
+
+export interface ContactPreferences {
+  language: string; // Preferred communication language
+  preferredChannel: 'email' | 'phone' | 'linkedin' | 'in-person' | 'video-call' | 'other';
+  availableTimes?: string; // When they're available for meetings
+  meetingLocation?: string; // Preferred meeting location/venue
 }
 
 export interface Interaction {

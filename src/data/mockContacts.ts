@@ -102,6 +102,12 @@ export const mockContacts: Contact[] = [
         ]
       }
     ],
+    preferences: {
+      language: 'English',
+      preferredChannel: 'email',
+      availableTimes: 'Weekday mornings, preferably 9-11 AM',
+      meetingLocation: 'Zurich office or virtual meetings'
+    },
     interactionHistory: [
       {
         id: '1',
@@ -152,6 +158,12 @@ export const mockContacts: Contact[] = [
         registrationStatus: 'confirmed'
       }
     ],
+    preferences: {
+      language: 'English',
+      preferredChannel: 'phone',
+      availableTimes: 'Afternoon calls after 2 PM, flexible weekends',
+      meetingLocation: 'Prefer virtual meetings or coffee shops in Basel'
+    },
     interactionHistory: [
       {
         id: '2',

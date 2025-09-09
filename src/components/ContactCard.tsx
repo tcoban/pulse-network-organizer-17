@@ -32,7 +32,8 @@ import {
   Search,
   FlipHorizontal,
   MapPin,
-  CalendarDays
+  CalendarDays,
+  Plus
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -48,15 +49,21 @@ interface ContactCardProps {
   onDelete: (contactId: string) => void;
   onViewDetails: (contact: Contact) => void;
   onUpdateContact?: (contact: Contact) => void;
+  onAddOpportunity?: () => void;
+  onEditOpportunity?: (opportunity: ContactOpportunity) => void;
 }
 
-const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact }: ContactCardProps) => {
+const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact, onAddOpportunity, onEditOpportunity }: ContactCardProps) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<ContactOpportunity | null>(null);
   const [isOpportunityDialogOpen, setIsOpportunityDialogOpen] = useState(false);
   const handleOpportunityClick = (opportunity: ContactOpportunity) => {
-    setSelectedOpportunity(opportunity);
-    setIsOpportunityDialogOpen(true);
+    if (onEditOpportunity) {
+      onEditOpportunity(opportunity);
+    } else {
+      setSelectedOpportunity(opportunity);
+      setIsOpportunityDialogOpen(true);
+    }
   };
 
   const handleOpportunitySave = (updatedOpportunity: ContactOpportunity) => {
@@ -255,45 +262,60 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
       })()}
 
       {/* Next Contact Opportunities */}
-      {contact.upcomingOpportunities && contact.upcomingOpportunities.length > 0 && (
-        <div className="bg-accent/20 rounded-lg p-3 mb-4">
-          <div className="flex items-center text-sm font-medium text-foreground mb-2">
+      <div className="bg-accent/20 rounded-lg p-3 mb-4">
+        <div className="flex items-center justify-between text-sm font-medium text-foreground mb-2">
+          <div className="flex items-center">
             <CalendarDays className="h-4 w-4 mr-2 text-accent-foreground" />
             Next Contact Opportunities
           </div>
-          <div className="space-y-2">
-            {contact.upcomingOpportunities.slice(0, 2).map((opportunity) => (
-              <div 
-                key={opportunity.id} 
-                className="text-xs cursor-pointer hover:bg-accent/10 p-2 rounded transition-colors"
-                onClick={() => handleOpportunityClick(opportunity)}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-foreground hover:text-primary">{opportunity.title}</span>
-                  <span className="text-muted-foreground">{formatOpportunityDate(opportunity.date)}</span>
-                </div>
-                {opportunity.location && (
-                  <div className="flex items-center mt-1 text-muted-foreground">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    <span>{opportunity.location}</span>
-                  </div>
-                )}
-                {opportunity.meetingGoals && opportunity.meetingGoals.length > 0 && (
-                  <div className="flex items-center mt-1 text-muted-foreground">
-                    <Target className="h-3 w-3 mr-1" />
-                    <span>{opportunity.meetingGoals.filter(g => g.achieved).length}/{opportunity.meetingGoals.length} goals</span>
-                  </div>
-                )}
-              </div>
-            ))}
-            {contact.upcomingOpportunities.length > 2 && (
-              <div className="text-xs text-muted-foreground">
-                +{contact.upcomingOpportunities.length - 2} more opportunities
-              </div>
-            )}
-          </div>
+          {onAddOpportunity && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onAddOpportunity}
+              className="h-6 text-xs"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Add
+            </Button>
+          )}
         </div>
-      )}
+        {contact.upcomingOpportunities && contact.upcomingOpportunities.length > 0 ? (
+            <div className="space-y-2">
+              {contact.upcomingOpportunities.slice(0, 2).map((opportunity) => (
+                <div 
+                  key={opportunity.id} 
+                  className="text-xs cursor-pointer hover:bg-accent/10 p-2 rounded transition-colors"
+                  onClick={() => handleOpportunityClick(opportunity)}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-foreground hover:text-primary">{opportunity.title}</span>
+                    <span className="text-muted-foreground">{formatOpportunityDate(opportunity.date)}</span>
+                  </div>
+                  {opportunity.location && (
+                    <div className="flex items-center mt-1 text-muted-foreground">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      <span>{opportunity.location}</span>
+                    </div>
+                  )}
+                  {opportunity.meetingGoals && opportunity.meetingGoals.length > 0 && (
+                    <div className="flex items-center mt-1 text-muted-foreground">
+                      <Target className="h-3 w-3 mr-1" />
+                      <span>{opportunity.meetingGoals.filter(g => g.achieved).length}/{opportunity.meetingGoals.length} goals</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {contact.upcomingOpportunities.length > 2 && (
+                <div className="text-xs text-muted-foreground">
+                  +{contact.upcomingOpportunities.length - 2} more opportunities
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">No opportunities scheduled yet.</p>
+          )}
+        </div>
 
       {/* Cooperation Level and Potential Score */}
       <div className="grid grid-cols-2 gap-4 mb-4">
