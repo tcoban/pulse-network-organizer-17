@@ -11,6 +11,7 @@ import OpportunityForm from '@/components/OpportunityForm';
 import TeamOpportunities from '@/components/TeamOpportunities';
 import SmartDashboard from '@/components/SmartDashboard';
 import AdvancedSearch from '@/components/AdvancedSearch';
+import AdminPanel from '@/components/AdminPanel';
 import SyntheticDataGenerator from '@/components/SyntheticDataGenerator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -52,6 +53,7 @@ const Index = () => {
   const [editingOpportunity, setEditingOpportunity] = useState<ContactOpportunity | null>(null);
   const [selectedContactForOpportunity, setSelectedContactForOpportunity] = useState<Contact | null>(null);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
 
   // Filter and sort contacts
   const filteredContacts = useMemo(() => {
@@ -290,6 +292,31 @@ const Index = () => {
     );
   }
 
+  if (showAdminPanel) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header 
+          searchTerm={searchQuery}
+          setSearchTerm={setSearchQuery}
+          setShowForm={setContactFormOpen}
+          setShowAdvancedSearch={setShowAdvancedSearch}
+          onShowAdminPanel={() => setShowAdminPanel(true)}
+        />
+        <main className="p-6">
+          <div className="mb-6">
+            <Button
+              onClick={() => setShowAdminPanel(false)}
+              variant="outline"
+            >
+              ← Back to Contacts
+            </Button>
+          </div>
+          <AdminPanel />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header 
@@ -297,6 +324,7 @@ const Index = () => {
         setSearchTerm={setSearchQuery}
         setShowForm={setContactFormOpen}
         setShowAdvancedSearch={setShowAdvancedSearch}
+        onShowAdminPanel={() => setShowAdminPanel(true)}
       />
 
       <main className="p-6">

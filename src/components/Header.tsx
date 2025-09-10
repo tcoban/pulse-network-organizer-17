@@ -1,18 +1,21 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
-import { Search, Plus, User, Users, LogOut } from 'lucide-react';
+import { useUserRole } from '@/hooks/useUserRole';
+import { Search, Plus, User, Users, LogOut, Crown } from 'lucide-react';
 
 interface HeaderProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   setShowForm: (show: boolean) => void;
   setShowAdvancedSearch: (show: boolean) => void;
+  onShowAdminPanel?: () => void;
 }
 
-const Header = ({ searchTerm, setSearchTerm, setShowForm, setShowAdvancedSearch }: HeaderProps) => {
+const Header = ({ searchTerm, setSearchTerm, setShowForm, setShowAdvancedSearch, onShowAdminPanel }: HeaderProps) => {
   const { signOut, user } = useAuth();
+  const { isAdmin } = useUserRole();
 
   return (
     <header className="bg-card border-b border-border px-6 py-4">
@@ -61,6 +64,16 @@ const Header = ({ searchTerm, setSearchTerm, setShowForm, setShowAdvancedSearch 
               <DropdownMenuItem disabled className="text-xs text-muted-foreground">
                 {user?.email}
               </DropdownMenuItem>
+              {isAdmin && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onShowAdminPanel}>
+                    <Crown className="h-4 w-4 mr-2" />
+                    Admin Panel
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => signOut()}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign out
