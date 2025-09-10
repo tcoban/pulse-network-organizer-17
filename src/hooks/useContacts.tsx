@@ -110,8 +110,26 @@ export const useContacts = () => {
 
   // Create new contact
   const createContact = async (contactData: Omit<Contact, 'id' | 'addedDate' | 'interactionHistory' | 'upcomingOpportunities'>) => {
-
     try {
+      // Check for duplicate email
+      const { data: existingContact, error: checkError } = await supabase
+        .from('contacts')
+        .select('id, name')
+        .eq('email', contactData.email)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned" - which is what we want
+        throw checkError;
+      }
+
+      if (existingContact) {
+        toast({
+          title: "Duplicate Contact",
+          description: `A contact with email ${contactData.email} already exists (${existingContact.name})`,
+          variant: "destructive",
+        });
+        throw new Error(`Contact with email ${contactData.email} already exists`);
+      }
       // Insert contact
       const { data: contact, error: contactError } = await supabase
         .from('contacts')
@@ -132,7 +150,7 @@ export const useContacts = () => {
           affiliation: contactData.affiliation,
           offering: contactData.offering,
           looking_for: contactData.lookingFor,
-          assigned_to: user?.id || null,
+          assigned_to: contactData.assignedTo || user?.id || null,
           created_by: user?.id || null,
         })
         .select()
@@ -213,6 +231,7 @@ export const useContacts = () => {
           affiliation: contactData.affiliation,
           offering: contactData.offering,
           looking_for: contactData.lookingFor,
+          assigned_to: contactData.assignedTo,
         })
         .eq('id', contactId);
 

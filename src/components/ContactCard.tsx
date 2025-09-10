@@ -235,10 +235,10 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
               Last Contact Details
             </div>
             <div className="space-y-2 text-xs">
-              <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                 <div>
                   <span className="font-medium text-foreground">Contacted by:</span>
-                  <span className="ml-1 text-muted-foreground">{lastInteraction.contactedBy || 'Unknown'}</span>
+                  <span className="ml-1 text-muted-foreground">{getTeamMemberName(lastInteraction.contactedBy || '') || 'Unknown'}</span>
                 </div>
                 <div>
                   <span className="font-medium text-foreground">Channel:</span>
