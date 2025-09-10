@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Clock, TrendingUp, Users, Brain, Target, MapPin, Bell } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { Contact } from '@/types/contact';
 import { format, isThisWeek, addDays } from 'date-fns';
 
@@ -40,13 +39,10 @@ const SmartDashboard = ({ contacts }: { contacts: Contact[] }) => {
   const [networkTrends, setNetworkTrends] = useState<NetworkTrend[]>([]);
   const [policyEvents, setPolicyEvents] = useState<PolicyEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      fetchDashboardData();
-    }
-  }, [user, contacts]);
+    fetchDashboardData();
+  }, [contacts]);
 
   const fetchDashboardData = async () => {
     try {
