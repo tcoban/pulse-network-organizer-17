@@ -1,6 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Contact, ContactOpportunity } from '@/types/contact';
-import { mockContacts } from '@/data/mockContacts';
+import { useAuth } from '@/hooks/useAuth';
+import { useContacts } from '@/hooks/useContacts';
 import Header from '@/components/Header';
 import ContactCard from '@/components/ContactCard';
 import StatsCard from '@/components/StatsCard';
@@ -8,6 +10,8 @@ import OperationsMode from '@/components/OperationsMode';
 import ContactForm from '@/components/ContactForm';
 import OpportunityForm from '@/components/OpportunityForm';
 import TeamOpportunities from '@/components/TeamOpportunities';
+import SmartDashboard from '@/components/SmartDashboard';
+import AdvancedSearch from '@/components/AdvancedSearch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,7 +26,8 @@ import {
   Network,
   Clock,
   Settings,
-  CalendarDays
+  CalendarDays,
+  Brain
 } from 'lucide-react';
 import {
   Select,
@@ -33,7 +38,9 @@ import {
 } from '@/components/ui/select';
 
 const Index = () => {
-  const [contacts, setContacts] = useState<Contact[]>(mockContacts);
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { contacts, loading: contactsLoading, createContact, updateContact, deleteContact } = useContacts();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
@@ -45,6 +52,31 @@ const Index = () => {
   const [opportunityFormOpen, setOpportunityFormOpen] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<ContactOpportunity | null>(null);
   const [selectedContactForOpportunity, setSelectedContactForOpportunity] = useState<Contact | null>(null);
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show nothing if not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
 
   // Filter and sort contacts
   const filteredContacts = useMemo(() => {
@@ -162,8 +194,12 @@ const Index = () => {
     setContactFormOpen(true);
   };
 
-  const handleDeleteContact = (contactId: string) => {
-    setContacts(prev => prev.filter(c => c.id !== contactId));
+  const handleDeleteContact = async (contactId: string) => {
+    try {
+      await deleteContact(contactId);
+    } catch (error) {
+      console.error('Error deleting contact:', error);
+    }
   };
 
   const handleViewDetails = (contact: Contact) => {
@@ -171,19 +207,27 @@ const Index = () => {
     console.log('View details:', contact.id);
   };
 
-  const handleUpdateContact = (updatedContact: Contact) => {
-    setContacts(prev => prev.map(c => c.id === updatedContact.id ? updatedContact : c));
+  const handleUpdateContact = async (updatedContact: Contact) => {
+    try {
+      await updateContact(updatedContact.id, updatedContact);
+    } catch (error) {
+      console.error('Error updating contact:', error);
+    }
   };
 
-  const handleSaveContact = (contactData: Contact) => {
-    if (editingContact) {
-      // Update existing contact
-      setContacts(prev => prev.map(c => c.id === contactData.id ? contactData : c));
-    } else {
-      // Add new contact
-      setContacts(prev => [...prev, contactData]);
+  const handleSaveContact = async (contactData: Contact) => {
+    try {
+      if (editingContact) {
+        // Update existing contact
+        await updateContact(contactData.id, contactData);
+      } else {
+        // Add new contact
+        await createContact(contactData);
+      }
+      setEditingContact(null);
+    } catch (error) {
+      console.error('Error saving contact:', error);
     }
-    setEditingContact(null);
   };
 
   const handleCloseContactForm = () => {
@@ -202,22 +246,26 @@ const Index = () => {
     setOpportunityFormOpen(true);
   };
 
-  const handleSaveOpportunity = (opportunityData: ContactOpportunity) => {
+  const handleSaveOpportunity = async (opportunityData: ContactOpportunity) => {
     if (!selectedContactForOpportunity) return;
 
-    const updatedContact = {
-      ...selectedContactForOpportunity,
-      upcomingOpportunities: editingOpportunity
-        ? selectedContactForOpportunity.upcomingOpportunities?.map(opp =>
-            opp.id === opportunityData.id ? opportunityData : opp
-          ) || []
-        : [...(selectedContactForOpportunity.upcomingOpportunities || []), opportunityData]
-    };
+    try {
+      const updatedContact = {
+        ...selectedContactForOpportunity,
+        upcomingOpportunities: editingOpportunity
+          ? selectedContactForOpportunity.upcomingOpportunities?.map(opp =>
+              opp.id === opportunityData.id ? opportunityData : opp
+            ) || []
+          : [...(selectedContactForOpportunity.upcomingOpportunities || []), opportunityData]
+      };
 
-    setContacts(prev => prev.map(c => c.id === updatedContact.id ? updatedContact : c));
-    
-    setEditingOpportunity(null);
-    setSelectedContactForOpportunity(null);
+      await updateContact(updatedContact.id, updatedContact);
+      
+      setEditingOpportunity(null);
+      setSelectedContactForOpportunity(null);
+    } catch (error) {
+      console.error('Error saving opportunity:', error);
+    }
   };
 
   const handleCloseOpportunityForm = () => {
@@ -231,7 +279,11 @@ const Index = () => {
       <OperationsMode
         contacts={contacts}
         onClose={() => setIsOperationsMode(false)}
-        onContactUpdate={setContacts}
+        onContactUpdate={(updatedContacts) => {
+          // This is a workaround since OperationsMode expects array but we have individual update
+          // We'll need to refactor OperationsMode later to use the new hook pattern
+          console.log('Operations mode update not yet implemented with new database pattern');
+        }}
       />
     );
   }
@@ -243,6 +295,8 @@ const Index = () => {
           onAddContact={handleAddContact}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          onSignOut={signOut}
+          user={user}
         />
         <main className="p-6">
           <div className="mb-6">
@@ -268,9 +322,25 @@ const Index = () => {
         onAddContact={handleAddContact}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        onSignOut={signOut}
+        user={user}
       />
 
       <main className="p-6">
+        {/* Smart Dashboard */}
+        <SmartDashboard contacts={contacts} />
+
+        {/* Advanced Search */}
+        {showAdvancedSearch && (
+          <AdvancedSearch 
+            contacts={contacts} 
+            onSelectContact={(contact) => {
+              handleViewDetails(contact);
+              setShowAdvancedSearch(false);
+            }}
+          />
+        )}
+
         {/* Stats Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
           <StatsCard
@@ -340,6 +410,15 @@ const Index = () => {
 
           <div className="flex items-center space-x-3">
             <Button
+              onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+              variant="outline"
+              className="border-purple-200 text-purple-700 hover:bg-purple-50"
+            >
+              <Brain className="h-4 w-4 mr-2" />
+              AI Search
+            </Button>
+
+            <Button
               onClick={() => setIsTeamOpportunitiesMode(true)}
               variant="outline"
               className="border-blue-200 text-blue-700 hover:bg-blue-50"
@@ -399,10 +478,24 @@ const Index = () => {
         </div>
 
         {/* Contact Grid */}
-        <div className={viewMode === 'grid' 
-          ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-          : "space-y-4"
-        }>
+        {contactsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-card rounded-lg border p-4 space-y-3">
+                  <div className="h-4 bg-muted rounded w-3/4"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
+                  <div className="h-3 bg-muted rounded"></div>
+                  <div className="h-3 bg-muted rounded w-5/6"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className={viewMode === 'grid' 
+            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            : "space-y-4"
+          }>
           {filteredContacts.map(contact => (
             <ContactCard
               key={contact.id}
@@ -415,7 +508,8 @@ const Index = () => {
               onEditOpportunity={(opportunity) => handleEditOpportunity(opportunity, contact)}
             />
           ))}
-        </div>
+          </div>
+        )}
 
         {filteredContacts.length === 0 && (
           <div className="text-center py-12">

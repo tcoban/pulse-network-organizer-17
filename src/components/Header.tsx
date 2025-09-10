@@ -1,14 +1,17 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Plus, Users, Settings } from 'lucide-react';
+import { Search, Plus, LogOut, User, Users, Settings } from 'lucide-react';
+import { User as AuthUser } from '@supabase/supabase-js';
 
 interface HeaderProps {
   onAddContact: () => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  onSignOut: () => void;
+  user: AuthUser;
 }
 
-const Header = ({ onAddContact, searchQuery, onSearchChange }: HeaderProps) => {
+const Header = ({ onAddContact, searchQuery, onSearchChange, onSignOut, user }: HeaderProps) => {
   return (
     <header className="bg-card border-b border-border px-6 py-4">
       <div className="flex items-center justify-between">
@@ -29,13 +32,24 @@ const Header = ({ onAddContact, searchQuery, onSearchChange }: HeaderProps) => {
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <User className="h-4 w-4" />
+            {user.email}
+          </div>
+          
           <Button onClick={onAddContact} className="bg-primary hover:bg-primary-hover">
             <Plus className="h-4 w-4 mr-2" />
             Add Contact
           </Button>
-          <Button variant="outline" size="icon">
-            <Settings className="h-4 w-4" />
+          
+          <Button 
+            onClick={onSignOut} 
+            variant="outline"
+            size="sm"
+            className="text-muted-foreground"
+          >
+            <LogOut className="h-4 w-4" />
           </Button>
         </div>
       </div>
