@@ -12,7 +12,7 @@ import TeamOpportunities from '@/components/TeamOpportunities';
 import SmartDashboard from '@/components/SmartDashboard';
 import AdvancedSearch from '@/components/AdvancedSearch';
 import AdminPanel from '@/components/AdminPanel';
-import SyntheticDataGenerator from '@/components/SyntheticDataGenerator';
+
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -340,12 +340,6 @@ const Index = () => {
           </div>
         )}
 
-        {/* Show synthetic data generator if no contacts exist and user is authenticated */}
-        {contacts.length === 0 && !contactsLoading && !contactsError && user && (
-          <div className="mb-8 flex justify-center">
-            <SyntheticDataGenerator onComplete={() => window.location.reload()} />
-          </div>
-        )}
 
         {/* Smart Dashboard */}
         <SmartDashboard contacts={contacts} />
