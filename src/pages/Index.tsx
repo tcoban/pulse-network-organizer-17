@@ -10,6 +10,7 @@ import OpportunityForm from '@/components/OpportunityForm';
 import TeamOpportunities from '@/components/TeamOpportunities';
 import SmartDashboard from '@/components/SmartDashboard';
 import AdvancedSearch from '@/components/AdvancedSearch';
+import SyntheticDataGenerator from '@/components/SyntheticDataGenerator';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -297,6 +298,13 @@ const Index = () => {
       />
 
       <main className="p-6">
+        {/* Show synthetic data generator if no contacts exist */}
+        {contacts.length === 0 && !contactsLoading && (
+          <div className="mb-8 flex justify-center">
+            <SyntheticDataGenerator onComplete={() => window.location.reload()} />
+          </div>
+        )}
+
         {/* Smart Dashboard */}
         <SmartDashboard contacts={contacts} />
 
