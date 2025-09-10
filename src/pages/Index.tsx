@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Contact, ContactOpportunity } from '@/types/contact';
 import { useContacts } from '@/hooks/useContacts';
+import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import ContactCard from '@/components/ContactCard';
 import StatsCard from '@/components/StatsCard';
@@ -37,7 +38,8 @@ import {
 } from '@/components/ui/select';
 
 const Index = () => {
-  const { contacts, loading: contactsLoading, createContact, updateContact, deleteContact } = useContacts();
+  const { contacts, loading: contactsLoading, error: contactsError, createContact, updateContact, deleteContact } = useContacts();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
@@ -298,8 +300,20 @@ const Index = () => {
       />
 
       <main className="p-6">
-        {/* Show synthetic data generator if no contacts exist */}
-        {contacts.length === 0 && !contactsLoading && (
+        {/* Show error banner if RLS fails */}
+        {contactsError && (
+          <div className="mb-8 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <p className="text-destructive font-medium">Failed to load contacts</p>
+            <p className="text-sm text-destructive/80 mt-1">
+              {contactsError.includes('row-level security') 
+                ? 'Authentication required to access contacts data.' 
+                : contactsError}
+            </p>
+          </div>
+        )}
+
+        {/* Show synthetic data generator if no contacts exist and user is authenticated */}
+        {contacts.length === 0 && !contactsLoading && !contactsError && user && (
           <div className="mb-8 flex justify-center">
             <SyntheticDataGenerator onComplete={() => window.location.reload()} />
           </div>

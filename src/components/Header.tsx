@@ -1,6 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Plus, User, Users } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/contexts/AuthContext';
+import { Search, Plus, User, Users, LogOut } from 'lucide-react';
 
 interface HeaderProps {
   searchTerm: string;
@@ -10,6 +12,8 @@ interface HeaderProps {
 }
 
 const Header = ({ searchTerm, setSearchTerm, setShowForm, setShowAdvancedSearch }: HeaderProps) => {
+  const { signOut, user } = useAuth();
+
   return (
     <header className="bg-card border-b border-border px-6 py-4">
       <div className="flex items-center justify-between">
@@ -47,9 +51,22 @@ const Header = ({ searchTerm, setSearchTerm, setShowForm, setShowAdvancedSearch 
             Advanced Search
           </Button>
           
-          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-            <User className="h-4 w-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <User className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                {user?.email}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => signOut()}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
