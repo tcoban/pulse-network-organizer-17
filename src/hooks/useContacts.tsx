@@ -1,21 +1,16 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Contact } from '@/types/contact';
-import { useAuth } from './useAuth';
+import { useToast } from './use-toast';
 
 export const useContacts = () => {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { toast } = useToast();
 
   // Fetch contacts from database
   const fetchContacts = async () => {
-    if (!user) {
-      setContacts([]);
-      setLoading(false);
-      return;
-    }
 
     try {
       setLoading(true);
@@ -113,7 +108,6 @@ export const useContacts = () => {
 
   // Create new contact
   const createContact = async (contactData: Omit<Contact, 'id' | 'addedDate' | 'interactionHistory' | 'upcomingOpportunities'>) => {
-    if (!user) throw new Error('User not authenticated');
 
     try {
       // Insert contact
@@ -136,8 +130,8 @@ export const useContacts = () => {
           affiliation: contactData.affiliation,
           offering: contactData.offering,
           looking_for: contactData.lookingFor,
-          assigned_to: user.id,
-          created_by: user.id,
+          assigned_to: 'team',
+          created_by: 'team',
         })
         .select()
         .single();
@@ -248,7 +242,7 @@ export const useContacts = () => {
 
   useEffect(() => {
     fetchContacts();
-  }, [user]);
+  }, []);
 
   return {
     contacts,

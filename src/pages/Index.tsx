@@ -1,7 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo } from 'react';
 import { Contact, ContactOpportunity } from '@/types/contact';
-import { useAuth } from '@/hooks/useAuth';
 import { useContacts } from '@/hooks/useContacts';
 import Header from '@/components/Header';
 import ContactCard from '@/components/ContactCard';
@@ -38,9 +36,7 @@ import {
 } from '@/components/ui/select';
 
 const Index = () => {
-  const { user, loading: authLoading, signOut } = useAuth();
   const { contacts, loading: contactsLoading, createContact, updateContact, deleteContact } = useContacts();
-  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
@@ -53,30 +49,6 @@ const Index = () => {
   const [editingOpportunity, setEditingOpportunity] = useState<ContactOpportunity | null>(null);
   const [selectedContactForOpportunity, setSelectedContactForOpportunity] = useState<Contact | null>(null);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
-
-  // Redirect to auth if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
-  }, [user, authLoading, navigate]);
-
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show nothing if not authenticated (will redirect)
-  if (!user) {
-    return null;
-  }
 
   // Filter and sort contacts
   const filteredContacts = useMemo(() => {
@@ -292,11 +264,10 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header 
-          onAddContact={handleAddContact}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onSignOut={signOut}
-          user={user}
+          searchTerm={searchQuery}
+          setSearchTerm={setSearchQuery}
+          setShowForm={setContactFormOpen}
+          setShowAdvancedSearch={setShowAdvancedSearch}
         />
         <main className="p-6">
           <div className="mb-6">
@@ -319,11 +290,10 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header 
-        onAddContact={handleAddContact}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onSignOut={signOut}
-        user={user}
+        searchTerm={searchQuery}
+        setSearchTerm={setSearchQuery}
+        setShowForm={setContactFormOpen}
+        setShowAdvancedSearch={setShowAdvancedSearch}
       />
 
       <main className="p-6">

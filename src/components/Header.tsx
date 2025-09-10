@@ -1,17 +1,15 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Plus, LogOut, User, Users, Settings } from 'lucide-react';
-import { User as AuthUser } from '@supabase/supabase-js';
+import { Search, Plus, User, Users } from 'lucide-react';
 
 interface HeaderProps {
-  onAddContact: () => void;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  onSignOut: () => void;
-  user: AuthUser;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  setShowForm: (show: boolean) => void;
+  setShowAdvancedSearch: (show: boolean) => void;
 }
 
-const Header = ({ onAddContact, searchQuery, onSearchChange, onSignOut, user }: HeaderProps) => {
+const Header = ({ searchTerm, setSearchTerm, setShowForm, setShowAdvancedSearch }: HeaderProps) => {
   return (
     <header className="bg-card border-b border-border px-6 py-4">
       <div className="flex items-center justify-between">
@@ -25,31 +23,32 @@ const Header = ({ onAddContact, searchQuery, onSearchChange, onSignOut, user }: 
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search contacts..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 w-80"
             />
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <User className="h-4 w-4" />
-            {user.email}
-          </div>
-          
-          <Button onClick={onAddContact} className="bg-primary hover:bg-primary-hover">
+          <Button 
+            onClick={() => setShowForm(true)} 
+            className="bg-primary hover:bg-primary-hover"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Contact
           </Button>
           
-          <Button 
-            onClick={onSignOut} 
+          <Button
+            onClick={() => setShowAdvancedSearch(true)}
             variant="outline"
             size="sm"
-            className="text-muted-foreground"
           >
-            <LogOut className="h-4 w-4" />
+            Advanced Search
+          </Button>
+          
+          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+            <User className="h-4 w-4" />
           </Button>
         </div>
       </div>
