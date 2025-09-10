@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { OpportunityDetails } from './OpportunityDetails';
-import { teamMembers } from '@/data/mockContacts';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 import {
   Select,
   SelectContent,
@@ -57,6 +57,7 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
   const [isFlipped, setIsFlipped] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<ContactOpportunity | null>(null);
   const [isOpportunityDialogOpen, setIsOpportunityDialogOpen] = useState(false);
+  const { teamMembers, getTeamMemberName } = useTeamMembers();
   const handleOpportunityClick = (opportunity: ContactOpportunity) => {
     if (onEditOpportunity) {
       onEditOpportunity(opportunity);
@@ -211,12 +212,12 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
           <span className="text-xs font-medium text-foreground mr-2">Assigned to:</span>
           <Select value={contact.assignedTo} onValueChange={handleAssignmentChange}>
             <SelectTrigger className="h-7 text-xs border-none bg-transparent p-0 hover:bg-muted/30">
-              <SelectValue className="text-muted-foreground" />
+              <SelectValue placeholder={getTeamMemberName(contact.assignedTo)} className="text-muted-foreground" />
             </SelectTrigger>
             <SelectContent>
               {teamMembers.map((member) => (
-                <SelectItem key={member} value={member} className="text-xs">
-                  {member}
+                <SelectItem key={member.id} value={member.id} className="text-xs">
+                  {member.name}
                 </SelectItem>
               ))}
             </SelectContent>

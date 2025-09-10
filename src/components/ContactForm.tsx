@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Contact, ContactPreferences } from '@/types/contact';
-import { teamMembers } from '@/data/mockContacts';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,6 +33,7 @@ interface ContactFormProps {
 
 const ContactForm = ({ contact, isOpen, onClose, onSave, isEditing = false }: ContactFormProps) => {
   const { toast } = useToast();
+  const { teamMembers } = useTeamMembers();
   const [formData, setFormData] = useState<Partial<Contact>>(() => {
     if (contact) return { ...contact };
     
@@ -52,7 +53,7 @@ const ContactForm = ({ contact, isOpen, onClose, onSave, isEditing = false }: Co
       affiliation: '',
       cooperationRating: 3,
       potentialScore: 3,
-      assignedTo: teamMembers[0],
+      assignedTo: teamMembers[0]?.id || '',
       socialLinks: { linkedin: '', twitter: '', github: '' },
       preferences: {
         language: 'English',
@@ -132,8 +133,8 @@ const ContactForm = ({ contact, isOpen, onClose, onSave, isEditing = false }: Co
       affiliation: formData.affiliation || undefined,
       cooperationRating: formData.cooperationRating || 3,
       potentialScore: formData.potentialScore || 3,
-      assignedTo: formData.assignedTo || teamMembers[0],
-      createdBy: contact?.createdBy || teamMembers[0],
+      assignedTo: formData.assignedTo || teamMembers[0]?.id || '',
+      createdBy: contact?.createdBy || teamMembers[0]?.id || '',
       socialLinks: formData.socialLinks,
       preferences: formData.preferences,
       interactionHistory: contact?.interactionHistory || [],
@@ -238,8 +239,8 @@ const ContactForm = ({ contact, isOpen, onClose, onSave, isEditing = false }: Co
                 </SelectTrigger>
                 <SelectContent>
                   {teamMembers.map((member) => (
-                    <SelectItem key={member} value={member}>
-                      {member}
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

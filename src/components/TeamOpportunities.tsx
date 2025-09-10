@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Contact, ContactOpportunity, MeetingGoal } from '@/types/contact';
-import { teamMembers } from '@/data/mockContacts';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +44,7 @@ interface PastOpportunityReminder extends OpportunityWithContact {
 
 const TeamOpportunities = ({ contacts, onUpdateContact }: TeamOpportunitiesProps) => {
   const { toast } = useToast();
+  const { teamMembers, getTeamMemberName } = useTeamMembers();
   const [selectedTeamMember, setSelectedTeamMember] = useState<string>('all');
 
   const formatDate = (date: Date) => {
@@ -200,8 +201,8 @@ const TeamOpportunities = ({ contacts, onUpdateContact }: TeamOpportunitiesProps
               <SelectContent>
                 <SelectItem value="all">All Team Members</SelectItem>
                 {teamMembers.map(member => (
-                  <SelectItem key={member} value={member}>
-                    {member}
+                  <SelectItem key={member.id} value={member.id}>
+                    {member.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -304,7 +305,7 @@ const TeamOpportunities = ({ contacts, onUpdateContact }: TeamOpportunitiesProps
                       <div>
                         <h3 className="font-semibold text-lg text-foreground">{opportunity.title}</h3>
                         <p className="text-muted-foreground">
-                          Contact: {opportunity.contactName} • Assigned to: {opportunity.assignedTo}
+                          Contact: {opportunity.contactName} • Assigned to: {getTeamMemberName(opportunity.assignedTo)}
                         </p>
                       </div>
                       <div className="flex space-x-2">
@@ -381,7 +382,7 @@ const TeamOpportunities = ({ contacts, onUpdateContact }: TeamOpportunitiesProps
                       <div>
                         <h3 className="font-semibold text-lg text-foreground">{reminder.title}</h3>
                         <p className="text-muted-foreground">
-                          Contact: {reminder.contactName} • Assigned to: {reminder.assignedTo}
+                          Contact: {reminder.contactName} • Assigned to: {getTeamMemberName(reminder.assignedTo)}
                         </p>
                       </div>
                       <div className="flex space-x-2">
