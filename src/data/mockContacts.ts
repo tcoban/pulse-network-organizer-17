@@ -1,26 +1,11 @@
 import { Contact, ContactOpportunity } from '@/types/contact';
 
+// Swiss team members for realistic demo data
 export const teamMembers = [
-  'Luca Müller',
-  'Sophie Meier',
-  'Noah Schmid',
-  'Laura Keller',
-  'Emma Weber',
-  'Jonas Steiner',
-  'Lena Huber',
-  'David Schneider',
-  'Anna Meyer',
-  'Samuel Baumann',
-  'Mia Brunner',
-  'Matteo Frei',
-  'Nina Zimmermann',
-  'Leon Graf',
-  'Eva Widmer',
-  'Jan Wyss',
-  'Livia Bachmann',
-  'Nico Suter',
-  'Sandro Berger',
-  'Sarah Lehmann'
+  "Markus Müller", "Anna Schneider", "Stefan Weber", "Sarah Meier", "Thomas Fischer",
+  "Nina Zimmermann", "David Schmid", "Julia Keller", "Michael Brunner", "Lisa Baumann",
+  "Patrick Huber", "Carmen Steiner", "Daniel Wolf", "Claudia Gerber", "Marco Roth",
+  "Sandra Bauer", "Andreas Graf", "Simone Hofer", "Beat Wyss", "Petra Frei"
 ];
 
 const getRandomTeamMember = () => {
