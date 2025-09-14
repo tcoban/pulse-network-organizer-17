@@ -138,6 +138,8 @@ const ContactForm = ({ contact, isOpen, onClose, onSave, isEditing = false }: Co
       socialLinks: formData.socialLinks,
       preferences: formData.preferences,
       interactionHistory: contact?.interactionHistory || [],
+      eventParticipationHistory: contact?.eventParticipationHistory || [],
+      pastCollaborations: contact?.pastCollaborations || [],
       upcomingOpportunities: contact?.upcomingOpportunities || [],
       linkedinConnections: contact?.linkedinConnections
     };

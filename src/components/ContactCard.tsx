@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { OpportunityDetails } from './OpportunityDetails';
+import HistoryTabs from './HistoryTabs';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import {
   Select,
@@ -390,47 +391,41 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
         )}
       </div>
 
-      {/* Networking Intelligence Section */}
-      <div className="space-y-3 mb-4 border-t pt-4">
+      {/* Historical Data Section */}
+      <div className="border-t pt-4">
+        <div className="flex items-center mb-3">
+          <Clock className="h-4 w-4 mr-2 text-accent-foreground" />
+          <span className="font-medium text-sm text-foreground">Contact History</span>
+        </div>
+        <HistoryTabs contact={contact} />
+      </div>
+
+      {/* Quick Stats */}
+      <div className="border-t pt-4 mt-4">
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="bg-muted/30 rounded p-2">
+            <div className="text-xs font-medium text-foreground">{contact.interactionHistory.length}</div>
+            <div className="text-xs text-muted-foreground">Interactions</div>
+          </div>
+          <div className="bg-muted/30 rounded p-2">
+            <div className="text-xs font-medium text-foreground">{contact.eventParticipationHistory.length}</div>
+            <div className="text-xs text-muted-foreground">Events</div>
+          </div>
+          <div className="bg-muted/30 rounded p-2">
+            <div className="text-xs font-medium text-foreground">{contact.pastCollaborations.length}</div>
+            <div className="text-xs text-muted-foreground">Collaborations</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Additional Details */}
+      <div className="space-y-3 mt-4 border-t pt-4">
         {contact.referredBy && (
           <div className="flex items-start text-sm">
             <UserCheck className="h-4 w-4 mr-2 mt-0.5 text-accent-foreground" />
             <div>
               <span className="font-medium text-foreground">Referred by: </span>
               <span className="text-muted-foreground">{contact.referredBy}</span>
-            </div>
-          </div>
-        )}
-
-        {contact.linkedinConnections && contact.linkedinConnections.length > 0 && (
-          <div className="flex items-start text-sm">
-            <Users className="h-4 w-4 mr-2 mt-0.5 text-accent-foreground" />
-            <div>
-              <span className="font-medium text-foreground">LinkedIn connections: </span>
-              <span className="text-muted-foreground">
-                {contact.linkedinConnections.slice(0, 2).join(', ')}
-                {contact.linkedinConnections.length > 2 && ` +${contact.linkedinConnections.length - 2} more`}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {contact.currentProjects && (
-          <div className="flex items-start text-sm">
-            <Briefcase className="h-4 w-4 mr-2 mt-0.5 text-accent-foreground" />
-            <div>
-              <span className="font-medium text-foreground">Current focus: </span>
-              <span className="text-muted-foreground">{contact.currentProjects}</span>
-            </div>
-          </div>
-        )}
-
-        {contact.mutualBenefit && (
-          <div className="flex items-start text-sm">
-            <Target className="h-4 w-4 mr-2 mt-0.5 text-accent-foreground" />
-            <div>
-              <span className="font-medium text-foreground">Mutual benefit: </span>
-              <span className="text-muted-foreground">{contact.mutualBenefit}</span>
             </div>
           </div>
         )}

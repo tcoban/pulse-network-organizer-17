@@ -300,10 +300,10 @@ export const generateSyntheticContacts = (): Omit<Contact, 'id' | 'addedDate' | 
   // Generate additional contacts to reach 150
   const additionalContacts = generateAdditionalContacts(contacts.length);
   
-  return [...contacts, ...additionalContacts];
+  return [...contacts, ...additionalContacts] as Omit<Contact, 'id' | 'addedDate' | 'interactionHistory' | 'upcomingOpportunities'>[];
 };
 
-const generateAdditionalContacts = (startingNumber: number): Omit<Contact, 'id' | 'addedDate' | 'interactionHistory' | 'upcomingOpportunities'>[] => {
+const generateAdditionalContacts = (startingNumber: number): Omit<Contact, 'id' | 'addedDate' | 'interactionHistory' | 'upcomingOpportunities' | 'eventParticipationHistory' | 'pastCollaborations'>[] => {
   const companies = [
     "ETH Zurich", "University of Basel", "University of St. Gallen", "EPFL",
     "Swiss Re", "Zurich Insurance", "Roche", "Novartis", "Nestlé",

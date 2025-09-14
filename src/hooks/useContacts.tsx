@@ -36,35 +36,54 @@ export const useContacts = () => {
 
       if (contactsError) throw contactsError;
 
-      // Transform database data to Contact type
-      const transformedContacts: Contact[] = contactsData?.map(contact => ({
-        id: contact.id,
-        name: contact.name,
-        email: contact.email,
-        phone: contact.phone,
-        company: contact.company,
-        position: contact.position,
-        avatar: contact.avatar,
-        tags: contact.contact_tags?.map((tag: any) => tag.tag) || [],
-        notes: contact.notes || '',
-        lastContact: contact.last_contact ? new Date(contact.last_contact) : undefined,
-        addedDate: new Date(contact.added_date),
-        socialLinks: {
-          linkedin: contact.contact_social_links?.find((link: any) => link.platform === 'linkedin')?.url,
-          twitter: contact.contact_social_links?.find((link: any) => link.platform === 'twitter')?.url,
-          github: contact.contact_social_links?.find((link: any) => link.platform === 'github')?.url,
-        },
-        customFields: {},
-        interactionHistory: contact.interactions?.map((interaction: any) => ({
-          id: interaction.id,
-          type: interaction.type,
-          date: new Date(interaction.date),
-          description: interaction.description,
-          outcome: interaction.outcome,
-          contactedBy: interaction.contacted_by,
-          channel: interaction.channel,
-          evaluation: interaction.evaluation,
-        })) || [],
+        // Transform database data to Contact type
+        const transformedContacts: Contact[] = contactsData?.map(contact => ({
+          id: contact.id,
+          name: contact.name,
+          email: contact.email,
+          phone: contact.phone,
+          company: contact.company,
+          position: contact.position,
+          avatar: contact.avatar,
+          tags: contact.contact_tags?.map((tag: any) => tag.tag) || [],
+          notes: contact.notes || '',
+          lastContact: contact.last_contact ? new Date(contact.last_contact) : undefined,
+          addedDate: new Date(contact.added_date),
+          socialLinks: {
+            linkedin: contact.contact_social_links?.find((link: any) => link.platform === 'linkedin')?.url,
+            twitter: contact.contact_social_links?.find((link: any) => link.platform === 'twitter')?.url,
+            github: contact.contact_social_links?.find((link: any) => link.platform === 'github')?.url,
+          },
+          customFields: {},
+          interactionHistory: contact.interactions?.map((interaction: any) => ({
+            id: interaction.id,
+            type: interaction.type,
+            date: new Date(interaction.date),
+            description: interaction.description,
+            outcome: interaction.outcome,
+            contactedBy: interaction.contacted_by,
+            channel: interaction.channel,
+            evaluation: interaction.evaluation,
+          })) || [],
+          eventParticipationHistory: contact.event_participations?.map((event: any) => ({
+            id: event.id,
+            eventName: event.event_name,
+            eventType: event.event_type,
+            eventDate: new Date(event.event_date),
+            location: event.location,
+            participationType: event.participation_type,
+            notes: event.notes,
+          })) || [],
+          pastCollaborations: contact.collaborations?.map((collab: any) => ({
+            id: collab.id,
+            projectName: collab.project_name,
+            description: collab.description,
+            startDate: collab.start_date ? new Date(collab.start_date) : undefined,
+            endDate: collab.end_date ? new Date(collab.end_date) : undefined,
+            outcome: collab.outcome,
+            successRating: collab.success_rating,
+            createdBy: collab.created_by,
+          })) || [],
         referredBy: contact.referred_by,
         linkedinConnections: contact.linkedin_connections || [],
         currentProjects: contact.current_projects,
@@ -109,7 +128,7 @@ export const useContacts = () => {
   };
 
   // Create new contact
-  const createContact = async (contactData: Omit<Contact, 'id' | 'addedDate' | 'interactionHistory' | 'upcomingOpportunities'>) => {
+  const createContact = async (contactData: Omit<Contact, 'id' | 'addedDate' | 'interactionHistory' | 'upcomingOpportunities' | 'eventParticipationHistory' | 'pastCollaborations'>) => {
     try {
       // Check for duplicate email
       const { data: existingContact, error: checkError } = await supabase

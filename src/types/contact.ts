@@ -17,6 +17,8 @@ export interface Contact {
   };
   customFields?: Record<string, string>;
   interactionHistory: Interaction[];
+  eventParticipationHistory: EventParticipation[]; // Past KOF events attended
+  pastCollaborations: PastCollaboration[]; // Past successful collaborations
   referredBy?: string; // Who brought in this contact
   linkedinConnections?: string[]; // Mutual LinkedIn connections
   currentProjects?: string; // What they're working on
@@ -65,6 +67,27 @@ export interface MeetingGoal {
   id: string;
   description: string;
   achieved: boolean;
+}
+
+export interface EventParticipation {
+  id: string;
+  eventName: string;
+  eventType: string;
+  eventDate: Date;
+  location?: string;
+  participationType?: string; // speaker, attendee, organizer, etc.
+  notes?: string;
+}
+
+export interface PastCollaboration {
+  id: string;
+  projectName: string;
+  description?: string;
+  startDate?: Date;
+  endDate?: Date;
+  outcome?: string;
+  successRating?: number; // 1-5 rating
+  createdBy?: string;
 }
 
 export interface ContactStats {

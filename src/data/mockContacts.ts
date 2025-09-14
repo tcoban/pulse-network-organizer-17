@@ -104,6 +104,29 @@ export const mockContacts: Contact[] = [
         channel: 'In-person',
         evaluation: 'Very productive meeting, high potential for collaboration'
       }
+    ],
+    eventParticipationHistory: [
+      {
+        id: '1',
+        eventName: 'KOF Digital Transformation Summit 2023',
+        eventType: 'conference',
+        eventDate: new Date('2023-11-15'),
+        location: 'ETH Zurich',
+        participationType: 'speaker',
+        notes: 'Keynote on AI governance'
+      }
+    ],
+    pastCollaborations: [
+      {
+        id: '1',
+        projectName: 'Swiss AI Policy Framework',
+        description: 'Joint research on AI regulation policies',
+        startDate: new Date('2023-01-15'),
+        endDate: new Date('2023-06-30'),
+        outcome: 'Published white paper on AI governance',
+        successRating: 5,
+        createdBy: 'Sophie Meier'
+      }
     ]
   },
   {
@@ -160,7 +183,19 @@ export const mockContacts: Contact[] = [
         channel: 'Phone',
         evaluation: 'Excellent technical discussion, very cooperative and enthusiastic'
       }
-    ]
+    ],
+    eventParticipationHistory: [
+      {
+        id: '2',
+        eventName: 'KOF Business Sentiment Survey Launch',
+        eventType: 'event',
+        eventDate: new Date('2023-09-20'),
+        location: 'Zurich',
+        participationType: 'attendee',
+        notes: 'Networking event'
+      }
+    ],
+    pastCollaborations: []
   },
   {
     id: '3',
@@ -207,6 +242,29 @@ export const mockContacts: Contact[] = [
         channel: 'Email',
         evaluation: 'Positive response but limited availability in short term'
       }
+    ],
+    eventParticipationHistory: [
+      {
+        id: '3',
+        eventName: 'Tech4Good Switzerland Meetup',
+        eventType: 'meetup',
+        eventDate: new Date('2023-12-05'),
+        location: 'Impact Hub Zurich',
+        participationType: 'participant',
+        notes: 'Pitched sustainability platform'
+      }
+    ],
+    pastCollaborations: [
+      {
+        id: '2',
+        projectName: 'EcoTech Accelerator',
+        description: 'Mentorship program for green startups',
+        startDate: new Date('2023-03-01'),
+        endDate: new Date('2023-08-31'),
+        outcome: 'Successfully launched 3 startups',
+        successRating: 4,
+        createdBy: 'Noah Schmid'
+      }
     ]
   },
   {
@@ -245,7 +303,9 @@ export const mockContacts: Contact[] = [
         registrationStatus: 'confirmed'
       }
     ],
-    interactionHistory: []
+    interactionHistory: [],
+    eventParticipationHistory: [],
+    pastCollaborations: []
   },
   // Continue with remaining 146 contacts
   ...Array.from({ length: 146 }, (_, index) => {
@@ -395,6 +455,29 @@ export const mockContacts: Contact[] = [
           contactedBy: lastContactPerson,
           channel: ['LinkedIn', 'Phone', 'Email', 'In-person'][Math.floor(Math.random() * 4)],
           evaluation: Math.random() > 0.5 ? 'Productive conversation, high potential' : 'Good initial contact, need to develop relationship further'
+        }
+      ] : [],
+      eventParticipationHistory: Math.random() > 0.6 ? [
+        {
+          id: `event-${id}`,
+          eventName: `KOF ${tags[index % tags.length].toUpperCase()} Conference ${2023 + Math.floor(Math.random() * 2)}`,
+          eventType: ['conference', 'workshop', 'seminar', 'meetup'][Math.floor(Math.random() * 4)],
+          eventDate: getRandomPastDate(365),
+          location: ['Zurich', 'Geneva', 'Basel', 'Bern'][Math.floor(Math.random() * 4)],
+          participationType: ['speaker', 'attendee', 'organizer', 'panelist'][Math.floor(Math.random() * 4)],
+          notes: Math.random() > 0.5 ? `Active participation in ${tags[index % tags.length]} discussions` : undefined
+        }
+      ] : [],
+      pastCollaborations: Math.random() > 0.7 ? [
+        {
+          id: `collab-${id}`,
+          projectName: `${tags[index % tags.length].toUpperCase()} Innovation Project`,
+          description: `Joint initiative focusing on ${tags[index % tags.length]} solutions`,
+          startDate: getRandomPastDate(730),
+          endDate: getRandomPastDate(365),
+          outcome: Math.random() > 0.5 ? 'Successful project completion with positive outcomes' : 'Project completed with valuable learnings',
+          successRating: Math.floor(Math.random() * 3) + 3, // 3-5 rating
+          createdBy: creator
         }
       ] : []
     };
