@@ -611,6 +611,48 @@ export type Database = {
         }
         Relationships: []
       }
+      team_members: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          department: string
+          email: string
+          first_name: string
+          id: string
+          is_active: boolean | null
+          last_name: string
+          role: string
+          specializations: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          department: string
+          email: string
+          first_name: string
+          id?: string
+          is_active?: boolean | null
+          last_name: string
+          role: string
+          specializations?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          department?: string
+          email?: string
+          first_name?: string
+          id?: string
+          is_active?: boolean | null
+          last_name?: string
+          role?: string
+          specializations?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
