@@ -1,0 +1,26 @@
+-- Create Swiss team member profiles directly
+INSERT INTO profiles (id, first_name, last_name, email, created_at, updated_at)
+VALUES
+  (gen_random_uuid(), 'Dr. Hans', 'Zimmermann', 'hans.zimmermann@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Prof. Elisabeth', 'Weber', 'elisabeth.weber@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Dr. Andreas', 'Müller', 'andreas.mueller@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Dr. Claudia', 'Fischer', 'claudia.fischer@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Dr. Thomas', 'Huber', 'thomas.huber@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Dr. Margrit', 'Baumgartner', 'margrit.baumgartner@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Stefan', 'Meier', 'stefan.meier@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Nicole', 'Graf', 'nicole.graf@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Daniel', 'Schneider', 'daniel.schneider@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Sandra', 'Keller', 'sandra.keller@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Markus', 'Steiner', 'markus.steiner@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Beat', 'Wyss', 'beat.wyss@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Petra', 'Hofmann', 'petra.hofmann@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Lukas', 'Brunner', 'lukas.brunner@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Carmen', 'Roth', 'carmen.roth@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Michael', 'Baumann', 'michael.baumann@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Dr. Simone', 'Gerber', 'simone.gerber@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Patrick', 'Lehmann', 'patrick.lehmann@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Ursula', 'Frei', 'ursula.frei@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Werner', 'Schmid', 'werner.schmid@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Julia', 'Widmer', 'julia.widmer@kof.ethz.ch', now(), now()),
+  (gen_random_uuid(), 'Marco', 'Vogel', 'marco.vogel@kof.ethz.ch', now(), now())
+ON CONFLICT (email) DO NOTHING;
