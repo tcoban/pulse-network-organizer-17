@@ -302,6 +302,153 @@ const DrillDownView = ({
     );
   };
 
+  const renderIntroductionView = () => {
+    if (type !== 'auto-introductions') return null;
+
+    const introductionPairs = findIntroductionPairs(contacts);
+
+    return (
+      <div className="space-y-6">
+        <Card className="bg-primary/5 border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-primary" />
+              AI Introduction Engine
+            </CardTitle>
+            <CardDescription>
+              Based on matching interests and offerings, here are potential introduction opportunities.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full" onClick={() => handleStartIntroductions(introductionPairs)}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Start AI-Suggested Introductions ({introductionPairs.length} pairs)
+            </Button>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
+          {introductionPairs.map((pair, index) => (
+            <Card key={index} className="border-l-4 border-l-primary">
+              <CardHeader>
+                <CardTitle className="text-lg">Introduction Opportunity #{index + 1}</CardTitle>
+                <CardDescription>
+                  {pair.matchReason}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-semibold mb-2 text-primary">Contact 1</h4>
+                    <ContactCard
+                      contact={pair.contact1}
+                      onEdit={onEditContact}
+                      onDelete={onDeleteContact}
+                      onViewDetails={onViewDetails}
+                      onUpdateContact={onUpdateContact}
+                      onAddOpportunity={() => onAddOpportunity(pair.contact1)}
+                      onEditOpportunity={(opportunity) => onEditOpportunity(opportunity, pair.contact1)}
+                    />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2 text-primary">Contact 2</h4>
+                    <ContactCard
+                      contact={pair.contact2}
+                      onEdit={onEditContact}
+                      onDelete={onDeleteContact}
+                      onViewDetails={onViewDetails}
+                      onUpdateContact={onUpdateContact}
+                      onAddOpportunity={() => onAddOpportunity(pair.contact2)}
+                      onEditOpportunity={(opportunity) => onEditOpportunity(opportunity, pair.contact2)}
+                    />
+                  </div>
+                </div>
+                <div className="mt-4 flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleSingleIntroduction(pair)}
+                    className="flex-1"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Make This Introduction
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => handleSkipIntroduction(pair)}
+                  >
+                    Skip
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Helper function to find introduction pairs with match reasoning
+  const findIntroductionPairs = (contacts: Contact[]) => {
+    const pairs = [];
+    
+    for (let i = 0; i < contacts.length; i++) {
+      for (let j = i + 1; j < contacts.length; j++) {
+        const contact1 = contacts[i];
+        const contact2 = contacts[j];
+        
+        if (!contact1.lookingFor || !contact2.offering || 
+            !contact1.offering || !contact2.lookingFor) continue;
+        
+        const matches = [];
+        
+        // Check if contact1 is looking for what contact2 offers
+        const match1 = contact1.lookingFor.toLowerCase().split(/[\s,]+/).find(word => 
+          word.length > 3 && contact2.offering.toLowerCase().includes(word)
+        );
+        
+        // Check if contact2 is looking for what contact1 offers
+        const match2 = contact2.lookingFor.toLowerCase().split(/[\s,]+/).find(word => 
+          word.length > 3 && contact1.offering.toLowerCase().includes(word)
+        );
+        
+        if (match1) {
+          matches.push(`${contact1.name} is looking for "${match1}" which ${contact2.name} offers`);
+        }
+        
+        if (match2) {
+          matches.push(`${contact2.name} is looking for "${match2}" which ${contact1.name} offers`);
+        }
+        
+        if (matches.length > 0) {
+          pairs.push({
+            contact1,
+            contact2,
+            matchReason: matches.join('. '),
+            matchScore: matches.length
+          });
+        }
+      }
+    }
+    
+    return pairs.sort((a, b) => b.matchScore - a.matchScore);
+  };
+
+  const handleStartIntroductions = (pairs: any[]) => {
+    // This would typically integrate with an email service or notification system
+    console.log('Starting AI introductions for', pairs.length, 'pairs');
+    // For now, we'll show a success message
+    alert(`Preparing ${pairs.length} AI-suggested introductions. You'll receive drafts shortly.`);
+  };
+
+  const handleSingleIntroduction = (pair: any) => {
+    console.log('Making introduction between', pair.contact1.name, 'and', pair.contact2.name);
+    alert(`Preparing introduction between ${pair.contact1.name} and ${pair.contact2.name}. You'll receive a draft shortly.`);
+  };
+
+  const handleSkipIntroduction = (pair: any) => {
+    console.log('Skipping introduction between', pair.contact1.name, 'and', pair.contact2.name);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -329,6 +476,8 @@ const DrillDownView = ({
         renderCompanyView()
       ) : type === 'tags' ? (
         renderTagsView()
+      ) : type === 'auto-introductions' ? (
+        renderIntroductionView()
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredContacts.map(contact => (
