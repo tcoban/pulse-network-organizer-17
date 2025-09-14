@@ -257,10 +257,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "contacts_assigned_to_fkey"
+            foreignKeyName: "contacts_assigned_to_team_members_fkey"
             columns: ["assigned_to"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
           {

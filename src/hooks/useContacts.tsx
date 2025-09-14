@@ -17,7 +17,7 @@ export const useContacts = () => {
     try {
       setLoading(true);
       
-      // Fetch contacts with all related data
+      // Fetch contacts with all related data including team_members
       const { data: contactsData, error: contactsError } = await supabase
         .from('contacts')
         .select(`
@@ -31,7 +31,15 @@ export const useContacts = () => {
             meeting_goals (*)
           ),
           event_participations (*),
-          collaborations (*)
+          collaborations (*),
+          team_members!contacts_assigned_to_team_members_fkey (
+            id,
+            first_name,
+            last_name,
+            email,
+            department,
+            role
+          )
         `);
 
       if (contactsError) throw contactsError;

@@ -18,9 +18,11 @@ export const testTeamAssignment = async () => {
         position,
         assigned_to,
         contact_tags (tag),
-        profiles!contacts_assigned_to_fkey (
+        team_members!contacts_assigned_to_team_members_fkey (
           first_name,
-          last_name
+          last_name,
+          department,
+          role
         )
       `)
       .limit(20);
@@ -39,9 +41,11 @@ export const testTeamAssignment = async () => {
     console.log('=' .repeat(60));
 
     contacts.forEach((contact, index) => {
-      const assignedMember = contact.profiles;
-      const assignedName = assignedMember 
-        ? `${assignedMember.first_name} ${assignedMember.last_name}`.trim()
+      const assignedMember = contact.team_members;
+      const assignedName = assignedMember && Array.isArray(assignedMember) && assignedMember.length > 0
+        ? `${assignedMember[0].first_name} ${assignedMember[0].last_name}`.trim()
+        : assignedMember && !Array.isArray(assignedMember)
+        ? `${(assignedMember as any).first_name} ${(assignedMember as any).last_name}`.trim()
         : 'Unassigned';
       
       const tags = contact.contact_tags?.map((tag: any) => tag.tag).join(', ') || 'No tags';
@@ -66,9 +70,13 @@ export const testTeamAssignment = async () => {
     // Show team member distribution
     const teamDistribution: { [key: string]: number } = {};
     contacts.forEach(contact => {
-      if (contact.profiles) {
-        const name = `${contact.profiles.first_name} ${contact.profiles.last_name}`.trim();
-        teamDistribution[name] = (teamDistribution[name] || 0) + 1;
+      const member = contact.team_members;
+      if (member) {
+        const memberData = Array.isArray(member) ? member[0] : member as any;
+        if (memberData && memberData.first_name && memberData.last_name) {
+          const name = `${memberData.first_name} ${memberData.last_name}`.trim();
+          teamDistribution[name] = (teamDistribution[name] || 0) + 1;
+        }
       }
     });
 
