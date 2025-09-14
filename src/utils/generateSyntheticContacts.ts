@@ -297,10 +297,20 @@ export const generateSyntheticContacts = (): Omit<Contact, 'id' | 'addedDate' | 
     }
   ];
 
-  // Generate additional contacts to reach 150
+  // Generate additional contacts to reach 150, ensuring no duplicate emails
   const additionalContacts = generateAdditionalContacts(contacts.length);
   
-  return [...contacts, ...additionalContacts] as Omit<Contact, 'id' | 'addedDate' | 'interactionHistory' | 'upcomingOpportunities'>[];
+  // Create a set to track emails and prevent duplicates
+  const existingEmails = new Set(contacts.map(c => c.email));
+  const uniqueAdditionalContacts = additionalContacts.filter(contact => {
+    if (existingEmails.has(contact.email)) {
+      return false;
+    }
+    existingEmails.add(contact.email);
+    return true;
+  });
+  
+  return [...contacts, ...uniqueAdditionalContacts] as Omit<Contact, 'id' | 'addedDate' | 'interactionHistory' | 'upcomingOpportunities'>[];
 };
 
 const generateAdditionalContacts = (startingNumber: number): Omit<Contact, 'id' | 'addedDate' | 'interactionHistory' | 'upcomingOpportunities' | 'eventParticipationHistory' | 'pastCollaborations'>[] => {
