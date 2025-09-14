@@ -190,6 +190,10 @@ const Index = () => {
     setDrillDownType(type);
   };
 
+  const handleAutomationDrillDown = (type: 'auto-introductions' | 'follow-up-alerts' | 'opportunity-matches') => {
+    setDrillDownType(type);
+  };
+
   const handleUpdateContact = async (updatedContact: Contact) => {
     try {
       await updateContact(updatedContact.id, updatedContact);
@@ -376,7 +380,7 @@ const Index = () => {
 
 
         {/* Smart Dashboard */}
-        <SmartDashboard contacts={contacts} />
+        <SmartDashboard contacts={contacts} onDrillDown={handleAutomationDrillDown} />
 
         {/* Advanced Search */}
         {showAdvancedSearch && (

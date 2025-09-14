@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import ContactCard from '@/components/ContactCard';
-import { ArrowLeft, Users, Building2, Tag, Network, Clock, Calendar } from 'lucide-react';
+import { ArrowLeft, Users, Building2, Tag, Network, Clock, Calendar, Bell, UserPlus, AlertCircle } from 'lucide-react';
 
 export type DrillDownType = 
   | 'recent-interactions'
@@ -12,6 +12,9 @@ export type DrillDownType =
   | 'tags'
   | 'open-matches'
   | 're-engagement'
+  | 'auto-introductions'
+  | 'follow-up-alerts'
+  | 'opportunity-matches'
   | null;
 
 interface DrillDownViewProps {
@@ -38,6 +41,38 @@ const DrillDownView = ({
   onEditOpportunity 
 }: DrillDownViewProps) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Helper function to find contacts that can be introduced to each other
+  const findIntroductionCandidates = (contacts: Contact[]) => {
+    const candidates = new Set<Contact>();
+    
+    // Find contacts with matching offerings and needs
+    for (let i = 0; i < contacts.length; i++) {
+      for (let j = i + 1; j < contacts.length; j++) {
+        const contact1 = contacts[i];
+        const contact2 = contacts[j];
+        
+        if (!contact1.lookingFor || !contact2.offering || 
+            !contact1.offering || !contact2.lookingFor) continue;
+        
+        // Simple keyword matching
+        const hasMatch1 = contact1.lookingFor.toLowerCase().split(/[\s,]+/).some(word => 
+          word.length > 3 && contact2.offering.toLowerCase().includes(word)
+        );
+        
+        const hasMatch2 = contact2.lookingFor.toLowerCase().split(/[\s,]+/).some(word => 
+          word.length > 3 && contact1.offering.toLowerCase().includes(word)
+        );
+        
+        if (hasMatch1 || hasMatch2) {
+          candidates.add(contact1);
+          candidates.add(contact2);
+        }
+      }
+    }
+    
+    return Array.from(candidates);
+  };
 
   if (!type) return null;
 
@@ -73,6 +108,24 @@ const DrillDownView = ({
         // Return contacts that have both offering and looking for data
         return contacts.filter(contact => contact.offering && contact.lookingFor);
       
+      case 'auto-introductions':
+        // Find contacts that can potentially be introduced to each other
+        return findIntroductionCandidates(contacts);
+      
+      case 'follow-up-alerts':
+        // Same as re-engagement but different context
+        return contacts.filter(contact => 
+          !contact.lastContact || 
+          contact.lastContact <= new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+        );
+      
+      case 'opportunity-matches':
+        // Return contacts with high cooperation ratings and current projects
+        return contacts.filter(contact => 
+          (contact.cooperationRating >= 4 || contact.potentialScore >= 4) &&
+          contact.currentProjects
+        );
+      
       default:
         return [];
     }
@@ -90,6 +143,12 @@ const DrillDownView = ({
         return 'Tagged Contacts';
       case 'open-matches':
         return 'Potential Matches';
+      case 'auto-introductions':
+        return 'Auto-Introduction Ready';
+      case 'follow-up-alerts':
+        return 'Follow-up Alerts';
+      case 'opportunity-matches':
+        return 'Opportunity Matches';
       default:
         return '';
     }
@@ -107,6 +166,12 @@ const DrillDownView = ({
         return 'Contacts organized by tags';
       case 'open-matches':
         return 'Contacts with matching interests and offerings';
+      case 'auto-introductions':
+        return 'Contacts ready for AI-suggested introductions';
+      case 'follow-up-alerts':
+        return 'Contacts requiring relationship maintenance';
+      case 'opportunity-matches':
+        return 'High-potential contacts with active projects';
       default:
         return '';
     }
@@ -124,6 +189,12 @@ const DrillDownView = ({
         return Tag;
       case 'open-matches':
         return Network;
+      case 'auto-introductions':
+        return UserPlus;
+      case 'follow-up-alerts':
+        return AlertCircle;
+      case 'opportunity-matches':
+        return Bell;
       default:
         return Users;
     }
