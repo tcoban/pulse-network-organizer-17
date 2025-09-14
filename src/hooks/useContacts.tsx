@@ -131,17 +131,18 @@ export const useContacts = () => {
   const createContact = async (contactData: Omit<Contact, 'id' | 'addedDate' | 'interactionHistory' | 'upcomingOpportunities' | 'eventParticipationHistory' | 'pastCollaborations'>) => {
     try {
       // Check for duplicate email
-      const { data: existingContact, error: checkError } = await supabase
+      const { data: existingContacts, error: checkError } = await supabase
         .from('contacts')
         .select('id, name')
         .eq('email', contactData.email)
-        .single();
+        .limit(1);
 
-      if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned" - which is what we want
+      if (checkError) {
         throw checkError;
       }
 
-      if (existingContact) {
+      if (existingContacts && existingContacts.length > 0) {
+        const existingContact = existingContacts[0];
         toast({
           title: "Duplicate Contact",
           description: `A contact with email ${contactData.email} already exists (${existingContact.name})`,
@@ -150,7 +151,7 @@ export const useContacts = () => {
         throw new Error(`Contact with email ${contactData.email} already exists`);
       }
       // Insert contact
-      const { data: contact, error: contactError } = await supabase
+      const { data: insertedContact, error: contactError } = await supabase
         .from('contacts')
         .insert({
           name: contactData.name,
@@ -172,17 +173,19 @@ export const useContacts = () => {
           assigned_to: contactData.assignedTo || user?.id || null,
           created_by: user?.id || null,
         })
-        .select()
-        .single();
+        .select();
 
       if (contactError) throw contactError;
+      
+      const newContact = insertedContact?.[0];
+      if (!newContact) throw new Error('Failed to create contact');
 
       // Insert preferences if provided
       if (contactData.preferences) {
         await supabase
           .from('contact_preferences')
           .insert({
-            contact_id: contact.id,
+            contact_id: newContact.id,
             language: contactData.preferences.language,
             preferred_channel: contactData.preferences.preferredChannel,
             available_times: contactData.preferences.availableTimes,
@@ -196,7 +199,7 @@ export const useContacts = () => {
           .from('contact_tags')
           .insert(
             contactData.tags.map(tag => ({
-              contact_id: contact.id,
+              contact_id: newContact.id,
               tag,
             }))
           );
@@ -207,7 +210,7 @@ export const useContacts = () => {
         const socialLinksToInsert = Object.entries(contactData.socialLinks)
           .filter(([_, url]) => url && url.trim() !== '')
           .map(([platform, url]) => ({
-            contact_id: contact.id,
+            contact_id: newContact.id,
             platform,
             url,
           }));
@@ -220,7 +223,7 @@ export const useContacts = () => {
       }
 
       await fetchContacts();
-      return contact;
+      return newContact;
     } catch (err) {
       console.error('Error creating contact:', err);
       throw err;
