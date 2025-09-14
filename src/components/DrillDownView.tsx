@@ -1,0 +1,293 @@
+import { useState } from 'react';
+import { Contact } from '@/types/contact';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import ContactCard from '@/components/ContactCard';
+import { ArrowLeft, Users, Building2, Tag, Network, Clock, Calendar } from 'lucide-react';
+
+export type DrillDownType = 
+  | 'recent-interactions'
+  | 'companies' 
+  | 'tags'
+  | 'open-matches'
+  | 're-engagement'
+  | null;
+
+interface DrillDownViewProps {
+  type: DrillDownType;
+  contacts: Contact[];
+  onClose: () => void;
+  onEditContact: (contact: Contact) => void;
+  onDeleteContact: (contactId: string) => void;
+  onViewDetails: (contact: Contact) => void;
+  onUpdateContact: (contact: Contact) => void;
+  onAddOpportunity: (contact: Contact) => void;
+  onEditOpportunity: (opportunity: any, contact: Contact) => void;
+}
+
+const DrillDownView = ({ 
+  type, 
+  contacts, 
+  onClose, 
+  onEditContact, 
+  onDeleteContact, 
+  onViewDetails,
+  onUpdateContact,
+  onAddOpportunity, 
+  onEditOpportunity 
+}: DrillDownViewProps) => {
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  if (!type) return null;
+
+  const getFilteredContacts = () => {
+    switch (type) {
+      case 'recent-interactions':
+        return contacts.filter(contact => 
+          contact.lastContact && 
+          contact.lastContact > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        );
+      
+      case 're-engagement':
+        return contacts.filter(contact => 
+          !contact.lastContact || 
+          contact.lastContact <= new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+        );
+      
+      case 'companies':
+        // Group by company and return one contact per company
+        const companiesMap = new Map<string, Contact>();
+        contacts.forEach(contact => {
+          if (contact.company && !companiesMap.has(contact.company)) {
+            companiesMap.set(contact.company, contact);
+          }
+        });
+        return Array.from(companiesMap.values());
+      
+      case 'tags':
+        // Return contacts that have tags
+        return contacts.filter(contact => contact.tags.length > 0);
+      
+      case 'open-matches':
+        // Return contacts that have both offering and looking for data
+        return contacts.filter(contact => contact.offering && contact.lookingFor);
+      
+      default:
+        return [];
+    }
+  };
+
+  const getTitle = () => {
+    switch (type) {
+      case 'recent-interactions':
+        return 'Recent Interactions';
+      case 're-engagement':
+        return 'Re-engagement Needed';
+      case 'companies':
+        return 'Companies';
+      case 'tags':
+        return 'Tagged Contacts';
+      case 'open-matches':
+        return 'Potential Matches';
+      default:
+        return '';
+    }
+  };
+
+  const getDescription = () => {
+    switch (type) {
+      case 'recent-interactions':
+        return 'Contacts with interactions in the last 30 days';
+      case 're-engagement':
+        return 'Contacts not contacted for 90+ days or never contacted';
+      case 'companies':
+        return 'Unique companies in your contact network';
+      case 'tags':
+        return 'Contacts organized by tags';
+      case 'open-matches':
+        return 'Contacts with matching interests and offerings';
+      default:
+        return '';
+    }
+  };
+
+  const getIcon = () => {
+    switch (type) {
+      case 'recent-interactions':
+        return Calendar;
+      case 're-engagement':
+        return Clock;
+      case 'companies':
+        return Building2;
+      case 'tags':
+        return Tag;
+      case 'open-matches':
+        return Network;
+      default:
+        return Users;
+    }
+  };
+
+  const filteredContacts = getFilteredContacts();
+  const Icon = getIcon();
+
+  const renderCompanyView = () => {
+    if (type !== 'companies') return null;
+
+    const companiesMap = new Map<string, Contact[]>();
+    contacts.forEach(contact => {
+      if (contact.company) {
+        if (!companiesMap.has(contact.company)) {
+          companiesMap.set(contact.company, []);
+        }
+        companiesMap.get(contact.company)!.push(contact);
+      }
+    });
+
+    return (
+      <div className="space-y-4">
+        {Array.from(companiesMap.entries()).map(([company, companyContacts]) => (
+          <Card key={company}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                {company}
+                <Badge variant="secondary">{companyContacts.length} contacts</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {companyContacts.map(contact => (
+                  <ContactCard
+                    key={contact.id}
+                    contact={contact}
+                    onEdit={onEditContact}
+                    onDelete={onDeleteContact}
+                    onViewDetails={onViewDetails}
+                    onUpdateContact={onUpdateContact}
+                    onAddOpportunity={() => onAddOpportunity(contact)}
+                    onEditOpportunity={(opportunity) => onEditOpportunity(opportunity, contact)}
+                  />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
+  const renderTagsView = () => {
+    if (type !== 'tags') return null;
+
+    const tagsMap = new Map<string, Contact[]>();
+    contacts.forEach(contact => {
+      contact.tags.forEach(tag => {
+        if (!tagsMap.has(tag)) {
+          tagsMap.set(tag, []);
+        }
+        tagsMap.get(tag)!.push(contact);
+      });
+    });
+
+    return (
+      <div className="space-y-4">
+        {Array.from(tagsMap.entries())
+          .sort(([, a], [, b]) => b.length - a.length)
+          .map(([tag, tagContacts]) => (
+          <Card key={tag}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Tag className="h-5 w-5" />
+                {tag}
+                <Badge variant="secondary">{tagContacts.length} contacts</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {tagContacts.slice(0, 6).map(contact => (
+                <ContactCard
+                  key={contact.id}
+                  contact={contact}
+                  onEdit={onEditContact}
+                  onDelete={onDeleteContact}
+                  onViewDetails={onViewDetails}
+                  onUpdateContact={onUpdateContact}
+                  onAddOpportunity={() => onAddOpportunity(contact)}
+                  onEditOpportunity={(opportunity) => onEditOpportunity(opportunity, contact)}
+                />
+                ))}
+              </div>
+              {tagContacts.length > 6 && (
+                <div className="mt-4 text-sm text-muted-foreground">
+                  And {tagContacts.length - 6} more contacts...
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={onClose}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+          <div className="flex items-center gap-3">
+            <Icon className="h-6 w-6 text-primary" />
+            <div>
+              <h1 className="text-2xl font-bold">{getTitle()}</h1>
+              <p className="text-muted-foreground">{getDescription()}</p>
+            </div>
+          </div>
+        </div>
+        <Badge variant="outline" className="text-lg px-3 py-1">
+          {filteredContacts.length} {filteredContacts.length === 1 ? 'contact' : 'contacts'}
+        </Badge>
+      </div>
+
+      {/* Content */}
+      {type === 'companies' ? (
+        renderCompanyView()
+      ) : type === 'tags' ? (
+        renderTagsView()
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredContacts.map(contact => (
+          <ContactCard
+            key={contact.id}
+            contact={contact}
+            onEdit={onEditContact}
+            onDelete={onDeleteContact}
+            onViewDetails={onViewDetails}
+            onUpdateContact={onUpdateContact}
+            onAddOpportunity={() => onAddOpportunity(contact)}
+            onEditOpportunity={(opportunity) => onEditOpportunity(opportunity, contact)}
+          />
+          ))}
+        </div>
+      )}
+
+      {filteredContacts.length === 0 && (
+        <Card>
+          <CardContent className="text-center py-12">
+            <Icon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No contacts found</h3>
+            <p className="text-muted-foreground">
+              There are no contacts matching this criteria.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default DrillDownView;

@@ -4,7 +4,8 @@ import { useContacts } from '@/hooks/useContacts';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import ContactCard from '@/components/ContactCard';
-import StatsCard from '@/components/StatsCard';
+import ClickableStatsCard from '@/components/ClickableStatsCard';
+import DrillDownView, { DrillDownType } from '@/components/DrillDownView';
 import OperationsMode from '@/components/OperationsMode';
 import ContactForm from '@/components/ContactForm';
 import OpportunityForm from '@/components/OpportunityForm';
@@ -54,6 +55,7 @@ const Index = () => {
   const [selectedContactForOpportunity, setSelectedContactForOpportunity] = useState<Contact | null>(null);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [drillDownType, setDrillDownType] = useState<DrillDownType>(null);
 
   // Filter and sort contacts
   const filteredContacts = useMemo(() => {
@@ -182,6 +184,10 @@ const Index = () => {
   const handleViewDetails = (contact: Contact) => {
     // TODO: Open contact details modal
     console.log('View details:', contact.id);
+  };
+
+  const handleDrillDown = (type: DrillDownType) => {
+    setDrillDownType(type);
   };
 
   const handleUpdateContact = async (updatedContact: Contact) => {
@@ -317,6 +323,34 @@ const Index = () => {
     );
   }
 
+  // Show drill-down view if active
+  if (drillDownType) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header 
+          searchTerm={searchQuery}
+          setSearchTerm={setSearchQuery}
+          setShowForm={setContactFormOpen}
+          setShowAdvancedSearch={setShowAdvancedSearch}
+          onShowAdminPanel={() => setShowAdminPanel(true)}
+        />
+        <main className="p-6">
+          <DrillDownView
+            type={drillDownType}
+            contacts={contacts}
+            onClose={() => setDrillDownType(null)}
+            onEditContact={handleEditContact}
+            onDeleteContact={handleDeleteContact}
+            onViewDetails={handleViewDetails}
+            onUpdateContact={handleUpdateContact}
+            onAddOpportunity={handleAddOpportunity}
+            onEditOpportunity={handleEditOpportunity}
+          />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header 
@@ -357,39 +391,44 @@ const Index = () => {
 
         {/* Stats Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
-          <StatsCard
+          <ClickableStatsCard
             title="Total Contacts"
             value={stats.total}
             icon={Users}
             trend={{ value: 12, isPositive: true }}
           />
-          <StatsCard
+          <ClickableStatsCard
             title="Recent Interactions"
             value={stats.recentContacts}
             icon={Calendar}
             description="Last 30 days"
+            onClick={() => handleDrillDown('recent-interactions')}
           />
-          <StatsCard
+          <ClickableStatsCard
             title="Companies"
             value={stats.companies}
             icon={Building2}
+            onClick={() => handleDrillDown('companies')}
           />
-          <StatsCard
+          <ClickableStatsCard
             title="Tags"
             value={stats.tags}
             icon={Tag}
+            onClick={() => handleDrillDown('tags')}
           />
-          <StatsCard
+          <ClickableStatsCard
             title="Open Matches"
             value={stats.openMatches}
             icon={Network}
             description="Potential connections"
+            onClick={() => handleDrillDown('open-matches')}
           />
-          <StatsCard
+          <ClickableStatsCard
             title="Re-engagement Needed"
             value={stats.needsReengagement}
             icon={Clock}
             description="90+ days since contact"
+            onClick={() => handleDrillDown('re-engagement')}
           />
         </div>
 
