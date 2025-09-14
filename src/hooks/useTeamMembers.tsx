@@ -3,8 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface TeamMember {
   id: string;
+  firstName: string;
+  lastName: string;
   name: string;
   email: string;
+  department: string;
+  role: string;
+  specializations: string[];
+  bio?: string;
 }
 
 export const useTeamMembers = () => {
@@ -14,21 +20,30 @@ export const useTeamMembers = () => {
   const fetchTeamMembers = async () => {
     try {
       setLoading(true);
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name, email');
+      
+      // Fetch from team_members table instead of profiles
+      const { data: members, error } = await supabase
+        .from('team_members')
+        .select('*')
+        .eq('is_active', true)
+        .order('department', { ascending: true })
+        .order('role', { ascending: true });
 
       if (error) throw error;
 
-      const members = profiles?.map(profile => ({
-        id: profile.id,
-        name: profile.first_name && profile.last_name 
-          ? `${profile.first_name} ${profile.last_name}`
-          : profile.email || 'Unknown Team Member',
-        email: profile.email || ''
+      const transformedMembers = members?.map(member => ({
+        id: member.id,
+        firstName: member.first_name,
+        lastName: member.last_name,
+        name: `${member.first_name} ${member.last_name}`,
+        email: member.email,
+        department: member.department,
+        role: member.role,
+        specializations: member.specializations || [],
+        bio: member.bio
       })) || [];
 
-      setTeamMembers(members);
+      setTeamMembers(transformedMembers);
     } catch (error) {
       console.error('Error fetching team members:', error);
     } finally {
@@ -42,8 +57,30 @@ export const useTeamMembers = () => {
 
   const getTeamMemberName = (id: string): string => {
     const member = teamMembers.find(m => m.id === id);
-    return member?.name || 'Team Member';
+    return member?.name || 'Unassigned';
   };
 
-  return { teamMembers, loading, getTeamMemberName, fetchTeamMembers };
+  const getTeamMemberById = (id: string): TeamMember | undefined => {
+    return teamMembers.find(m => m.id === id);
+  };
+
+  const getTeamMembersByDepartment = (department: string): TeamMember[] => {
+    return teamMembers.filter(m => m.department === department);
+  };
+
+  const getTeamMembersBySpecialization = (specialization: string): TeamMember[] => {
+    return teamMembers.filter(m => 
+      m.specializations.includes(specialization)
+    );
+  };
+
+  return { 
+    teamMembers, 
+    loading, 
+    getTeamMemberName, 
+    getTeamMemberById,
+    getTeamMembersByDepartment,
+    getTeamMembersBySpecialization,
+    fetchTeamMembers 
+  };
 };
