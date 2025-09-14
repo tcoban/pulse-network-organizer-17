@@ -16,6 +16,7 @@ import { TeamMember, useTeamMembers } from '@/hooks/useTeamMembers';
 import { assignAllContactsToTeamMembers, getContactAssignmentStats } from '@/utils/assignContactsToTeam';
 import { removeDuplicateContacts, checkForDuplicates } from '@/utils/removeDuplicateContacts';
 import { insertSyntheticContacts } from '@/utils/insertSyntheticContacts';
+import { GenerateHistoricalDataButton } from '@/components/GenerateHistoricalDataButton';
 
 interface User {
   id: string;
@@ -386,6 +387,7 @@ const AdminPanel = () => {
             <Button onClick={insertContacts} disabled={loading} variant="outline">
               Insert Test Contacts
             </Button>
+            <GenerateHistoricalDataButton />
           </div>
         </CardContent>
       </Card>
