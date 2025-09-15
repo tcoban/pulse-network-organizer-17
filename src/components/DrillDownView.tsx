@@ -329,7 +329,7 @@ const DrillDownView = ({
 
         <div className="space-y-4">
           {introductionPairs.map((pair, index) => (
-            <Card key={index} className="border-l-4 border-l-primary">
+            <Card key={`${pair.contact1.id}-${pair.contact2.id}`} className="border-l-4 border-l-primary">
               <CardHeader>
                 <CardTitle className="text-lg">Introduction Opportunity #{index + 1}</CardTitle>
                 <CardDescription>
