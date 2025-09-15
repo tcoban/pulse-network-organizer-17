@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import ContactCard from '@/components/ContactCard';
 import ClickableStatsCard from '@/components/ClickableStatsCard';
-import DrillDownView, { DrillDownType } from '@/components/DrillDownView';
+import { DrillDownView, DrillDownType } from '@/components/DrillDownView';
 import OperationsMode from '@/components/OperationsMode';
 import ContactForm from '@/components/ContactForm';
 import OpportunityForm from '@/components/OpportunityForm';
@@ -342,9 +342,8 @@ const Index = () => {
           <DrillDownView
             type={drillDownType}
             contacts={contacts}
-            onClose={() => setDrillDownType(null)}
             onEditContact={handleEditContact}
-            onDeleteContact={handleDeleteContact}
+            onDeleteContact={(contactId: string) => handleDeleteContact(contactId)}
             onViewDetails={handleViewDetails}
             onUpdateContact={handleUpdateContact}
             onAddOpportunity={handleAddOpportunity}
