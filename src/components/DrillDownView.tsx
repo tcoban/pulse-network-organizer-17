@@ -29,6 +29,7 @@ interface DrillDownViewProps {
   onUpdateContact: (contact: Contact) => void;
   onAddOpportunity: (contact: Contact) => void;
   onEditOpportunity: (opportunity: any, contact: Contact) => void;
+  onBack?: () => void;
 }
 
 interface LLMIntroductionAnalysisProps {
@@ -293,6 +294,7 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
   onUpdateContact,
   onAddOpportunity,
   onEditOpportunity,
+  onBack,
 }) => {
   const getTitle = () => {
     switch (type) {
@@ -500,7 +502,7 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={() => window.history.back()}
+          onClick={onBack || (() => window.history.back())}
           className="mr-4"
         >
           ← Back

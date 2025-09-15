@@ -348,6 +348,7 @@ const Index = () => {
             onUpdateContact={handleUpdateContact}
             onAddOpportunity={handleAddOpportunity}
             onEditOpportunity={handleEditOpportunity}
+            onBack={() => setDrillDownType(null)}
           />
         </main>
       </div>
