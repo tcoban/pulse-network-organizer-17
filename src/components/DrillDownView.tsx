@@ -3,6 +3,7 @@ import { Contact } from '@/types/contact';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import { Avatar, AvatarFallback } from './ui/avatar';
 import { 
   Users, 
   Building2, 
@@ -12,7 +13,8 @@ import {
   UserPlus,
   Bot,
   Loader2,
-  Sparkles
+  Sparkles,
+  Clock
 } from 'lucide-react';
 import ContactCard from './ContactCard';
 import { supabase } from '@/integrations/supabase/client';
@@ -303,6 +305,8 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
   onBack,
   onAnalysisComplete,
 }) => {
+  const { toast } = useToast();
+
   const getTitle = () => {
     switch (type) {
       case 'recent-interactions': return 'Recent Interactions';
@@ -325,7 +329,7 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
       case 'open-matches': return <Users className="h-5 w-5" />;
       case 're-engagement': return <Heart className="h-5 w-5" />;
       case 'auto-introductions': return <UserPlus className="h-5 w-5" />;
-      case 'follow-up-alerts': return <Calendar className="h-5 w-5" />;
+      case 'follow-up-alerts': return <Clock className="h-5 w-5" />;
       case 'opportunity-matches': return <Users className="h-5 w-5" />;
       default: return <Users className="h-5 w-5" />;
     }
@@ -466,6 +470,216 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
     );
   };
 
+  const renderFollowUpAlertsView = () => {
+    if (type !== 'follow-up-alerts') return null;
+
+    // Categorize contacts by urgency
+    const now = Date.now();
+    const categorizedContacts = contacts.map(contact => {
+      const daysSinceContact = contact.lastContact 
+        ? Math.floor((now - contact.lastContact.getTime()) / (1000 * 60 * 60 * 24))
+        : null;
+      
+      let urgency: 'critical' | 'high' | 'medium' | 'never-contacted' = 'medium';
+      let urgencyColor = 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      
+      if (!contact.lastContact) {
+        urgency = 'never-contacted';
+        urgencyColor = 'bg-red-100 text-red-800 border-red-200';
+      } else if (daysSinceContact && daysSinceContact > 365) {
+        urgency = 'critical';
+        urgencyColor = 'bg-red-100 text-red-800 border-red-200';
+      } else if (daysSinceContact && daysSinceContact > 180) {
+        urgency = 'high';
+        urgencyColor = 'bg-orange-100 text-orange-800 border-orange-200';
+      }
+
+      return {
+        ...contact,
+        daysSinceContact,
+        urgency,
+        urgencyColor
+      };
+    }).sort((a, b) => {
+      // Sort by urgency, then by days since contact
+      const urgencyOrder = { 'never-contacted': 0, 'critical': 1, 'high': 2, 'medium': 3 };
+      if (urgencyOrder[a.urgency] !== urgencyOrder[b.urgency]) {
+        return urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
+      }
+      
+      if (!a.daysSinceContact && !b.daysSinceContact) return 0;
+      if (!a.daysSinceContact) return -1;
+      if (!b.daysSinceContact) return 1;
+      return b.daysSinceContact - a.daysSinceContact;
+    });
+
+    const handleMarkAsContacted = async (contact: Contact) => {
+      const updatedContact = {
+        ...contact,
+        lastContact: new Date(),
+        interactionHistory: [
+          ...contact.interactionHistory,
+          {
+            id: `interaction-${Date.now()}`,
+            type: 'other' as const,
+            date: new Date(),
+            description: 'Follow-up contact made',
+            outcome: 'Completed follow-up outreach',
+            contactedBy: 'Current user',
+            channel: 'Manual entry'
+          }
+        ]
+      };
+      
+      await onUpdateContact(updatedContact);
+      toast({
+        title: "Contact Updated",
+        description: `Marked ${contact.name} as contacted today.`,
+      });
+    };
+
+    return (
+      <div className="space-y-6">
+        <Card className="bg-orange-50 border-orange-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-orange-600" />
+              Follow-up Alert Summary
+            </CardTitle>
+            <CardDescription>
+              Contacts are categorized by how long since last interaction. Prioritize never-contacted and critical alerts.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">
+                  {categorizedContacts.filter(c => c.urgency === 'never-contacted').length}
+                </div>
+                <div className="text-sm text-muted-foreground">Never Contacted</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">
+                  {categorizedContacts.filter(c => c.urgency === 'critical').length}
+                </div>
+                <div className="text-sm text-muted-foreground">Critical (1+ years)</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">
+                  {categorizedContacts.filter(c => c.urgency === 'high').length}
+                </div>
+                <div className="text-sm text-muted-foreground">High (6+ months)</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-yellow-600">
+                  {categorizedContacts.filter(c => c.urgency === 'medium').length}
+                </div>
+                <div className="text-sm text-muted-foreground">Medium (3+ months)</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
+          {categorizedContacts.map(contact => (
+            <Card key={contact.id} className="border-l-4 border-l-orange-400">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4">
+                    <Avatar>
+                      <AvatarFallback>
+                        {contact.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-semibold text-lg">{contact.name}</h3>
+                      <p className="text-sm text-muted-foreground">{contact.company}</p>
+                      <p className="text-sm text-muted-foreground">{contact.email}</p>
+                      
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge className={contact.urgencyColor}>
+                          {contact.urgency.replace('-', ' ')}
+                        </Badge>
+                        {contact.daysSinceContact ? (
+                          <span className="text-sm text-muted-foreground">
+                            Last contacted {contact.daysSinceContact} days ago
+                          </span>
+                        ) : (
+                          <span className="text-sm text-red-600 font-medium">
+                            Never contacted
+                          </span>
+                        )}
+                      </div>
+
+                      {contact.notes && (
+                        <div className="mt-2 text-sm text-muted-foreground bg-muted/30 rounded p-2">
+                          <strong>Notes:</strong> {contact.notes}
+                        </div>
+                      )}
+
+                      <div className="mt-3 text-sm">
+                        <strong>Follow-up suggestions:</strong>
+                        <ul className="ml-4 mt-1 space-y-1">
+                          {contact.urgency === 'never-contacted' && (
+                            <>
+                              <li>• Send initial introduction email</li>
+                              <li>• Connect on LinkedIn</li>
+                              <li>• Schedule a brief introductory call</li>
+                            </>
+                          )}
+                          {contact.urgency === 'critical' && (
+                            <>
+                              <li>• Send re-engagement email with value proposition</li>
+                              <li>• Share relevant industry updates</li>
+                              <li>• Propose coffee meeting or call</li>
+                            </>
+                          )}
+                          {(contact.urgency === 'high' || contact.urgency === 'medium') && (
+                            <>
+                              <li>• Send friendly check-in message</li>
+                              <li>• Share relevant opportunities or insights</li>
+                              <li>• Invite to upcoming events</li>
+                            </>
+                          )}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleMarkAsContacted(contact)}
+                      className="whitespace-nowrap"
+                    >
+                      Mark as Contacted
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onAddOpportunity(contact)}
+                      className="whitespace-nowrap"
+                    >
+                      Schedule Follow-up
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEditContact(contact)}
+                      className="whitespace-nowrap"
+                    >
+                      Edit Contact
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const renderIntroductionView = () => {
     if (type !== 'auto-introductions') return null;
 
@@ -482,7 +696,7 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
   };
 
   const renderDefaultView = () => {
-    if (['recent-interactions', 'companies', 'tags', 'auto-introductions'].includes(type)) {
+    if (['recent-interactions', 'companies', 'tags', 'auto-introductions', 'follow-up-alerts'].includes(type)) {
       return null;
     }
 
@@ -523,6 +737,7 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
       {renderRecentInteractionsView()}
       {renderCompaniesView()}
       {renderTagsView()}
+      {renderFollowUpAlertsView()}
       {renderIntroductionView()}
       {renderDefaultView()}
     </div>
