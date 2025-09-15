@@ -56,6 +56,7 @@ const Index = () => {
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [drillDownType, setDrillDownType] = useState<DrillDownType>(null);
+  const [aiIntroductionCount, setAiIntroductionCount] = useState(0);
 
   // Filter and sort contacts
   const filteredContacts = useMemo(() => {
@@ -372,6 +373,7 @@ const Index = () => {
             onAddOpportunity={handleAddOpportunity}
             onEditOpportunity={handleEditOpportunity}
             onBack={() => setDrillDownType(null)}
+            onAnalysisComplete={(count) => setAiIntroductionCount(count)}
           />
         </main>
       </div>
@@ -403,7 +405,7 @@ const Index = () => {
 
 
         {/* Smart Dashboard */}
-        <SmartDashboard contacts={contacts} onDrillDown={handleAutomationDrillDown} />
+        <SmartDashboard contacts={contacts} onDrillDown={handleAutomationDrillDown} aiIntroductionCount={aiIntroductionCount} />
 
         {/* Advanced Search */}
         {showAdvancedSearch && (

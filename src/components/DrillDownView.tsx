@@ -30,6 +30,7 @@ interface DrillDownViewProps {
   onAddOpportunity: (contact: Contact) => void;
   onEditOpportunity: (opportunity: any, contact: Contact) => void;
   onBack?: () => void;
+  onAnalysisComplete?: (count: number) => void;
 }
 
 interface LLMIntroductionAnalysisProps {
@@ -40,6 +41,7 @@ interface LLMIntroductionAnalysisProps {
   onUpdateContact: (contact: Contact) => void;
   onAddOpportunity: (contact: Contact) => void;
   onEditOpportunity: (opportunity: any, contact: Contact) => void;
+  onAnalysisComplete?: (count: number) => void;
 }
 
 const LLMIntroductionAnalysis: React.FC<LLMIntroductionAnalysisProps> = ({
@@ -49,7 +51,8 @@ const LLMIntroductionAnalysis: React.FC<LLMIntroductionAnalysisProps> = ({
   onViewDetails,
   onUpdateContact,
   onAddOpportunity,
-  onEditOpportunity
+  onEditOpportunity,
+  onAnalysisComplete
 }) => {
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzedPairs, setAnalyzedPairs] = useState<any[]>([]);
@@ -67,6 +70,9 @@ const LLMIntroductionAnalysis: React.FC<LLMIntroductionAnalysisProps> = ({
 
       setAnalyzedPairs(data.pairs || []);
       setHasAnalyzed(true);
+      
+      // Notify parent component of the analysis result
+      onAnalysisComplete?.(data.pairs?.length || 0);
       
       toast({
         title: "Analysis Complete",
@@ -295,6 +301,7 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
   onAddOpportunity,
   onEditOpportunity,
   onBack,
+  onAnalysisComplete,
 }) => {
   const getTitle = () => {
     switch (type) {
@@ -469,7 +476,8 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
       onDeleteContact={onDeleteContact} 
       onViewDetails={onViewDetails} 
       onAddOpportunity={onAddOpportunity} 
-      onEditOpportunity={onEditOpportunity} 
+      onEditOpportunity={onEditOpportunity}
+      onAnalysisComplete={onAnalysisComplete}
     />;
   };
 

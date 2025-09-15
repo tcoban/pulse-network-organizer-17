@@ -34,9 +34,10 @@ interface PolicyEvent {
   importanceLevel: number;
 }
 
-const SmartDashboard = ({ contacts, onDrillDown }: { 
+const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0 }: { 
   contacts: Contact[]; 
   onDrillDown?: (type: 'auto-introductions' | 'follow-up-alerts' | 'opportunity-matches') => void;
+  aiIntroductionCount?: number;
 }) => {
   const [priorities, setPriorities] = useState<DashboardPriority[]>([]);
   const [networkTrends, setNetworkTrends] = useState<NetworkTrend[]>([]);
@@ -445,13 +446,13 @@ const SmartDashboard = ({ contacts, onDrillDown }: {
               <div>
                 <h4 className="text-sm font-medium">Auto-Introduction Ready</h4>
                 <p className="text-xs text-muted-foreground">
-                  {findIntroductionCandidates(contacts).length} contacts ready for AI-suggested introductions
+                  {aiIntroductionCount > 0 ? `${aiIntroductionCount} AI-verified introduction opportunities` : 'Run AI analysis to find introduction opportunities'}
                 </p>
                 {onDrillDown && (
                   <p className="text-xs text-primary mt-1">Click to drill down</p>
                 )}
               </div>
-              <Badge variant="outline">{findIntroductionCandidates(contacts).length}</Badge>
+              <Badge variant="outline">{aiIntroductionCount}</Badge>
             </div>
             <div 
               className={`flex items-center justify-between p-4 rounded-lg border ${
