@@ -40,14 +40,15 @@ serve(async (req) => {
     // Analyze each pair with LLM
     const analyzedPairs = []
     
-    for (const pair of pairs.slice(0, 10)) { // Limit to prevent too many API calls
+    for (const pair of pairs.slice(0, 15)) { // Analyze more pairs
       const analysis = await analyzeContactPair(pair)
       if (analysis.isMatch) {
         analyzedPairs.push({
           ...pair,
           matchReason: analysis.reason,
           matchScore: analysis.confidence,
-          matchType: analysis.matchType
+          matchType: analysis.matchType,
+          interpretation: analysis.interpretation || getConfidenceInterpretation(analysis.confidence)
         })
       }
     }
@@ -72,6 +73,14 @@ serve(async (req) => {
     )
   }
 })
+
+function getConfidenceInterpretation(confidence: number): string {
+  if (confidence >= 80) return "Excellent match - strong potential for meaningful collaboration";
+  if (confidence >= 65) return "Good match - clear synergies identified";
+  if (confidence >= 50) return "Moderate match - some alignment found, worth exploring";
+  if (confidence >= 35) return "Weak match - limited connections but networking value possible";
+  return "Minimal match - very speculative introduction";
+}
 
 async function analyzeContactPair(pair: ContactPair) {
   const { contact1, contact2 } = pair
@@ -109,10 +118,11 @@ Respond in JSON format:
   "isMatch": boolean,
   "confidence": number (0-100),
   "reason": "Detailed explanation of why they should be introduced",
-  "matchType": "need-offering" | "business-synergy" | "professional-alignment" | "project-collaboration" | "network-expansion"
+  "matchType": "need-offering" | "business-synergy" | "professional-alignment" | "project-collaboration" | "network-expansion",
+  "interpretation": "Brief explanation of the confidence level and what it means"
 }
 
-Only return matches with confidence > 60.
+Include matches with confidence > 30. Lower confidence matches can still provide networking value.
 `
 
   try {
@@ -151,11 +161,11 @@ Only return matches with confidence > 60.
       return analysis
     } catch (parseError) {
       console.error('Failed to parse LLM response:', content)
-      return { isMatch: false, confidence: 0, reason: 'Analysis failed', matchType: 'none' }
+      return { isMatch: false, confidence: 0, reason: 'Analysis failed', matchType: 'none', interpretation: 'Technical error occurred' }
     }
 
   } catch (error) {
     console.error('Error calling OpenAI API:', error)
-    return { isMatch: false, confidence: 0, reason: 'Analysis failed', matchType: 'none' }
+    return { isMatch: false, confidence: 0, reason: 'Analysis failed', matchType: 'none', interpretation: 'API error occurred' }
   }
 }

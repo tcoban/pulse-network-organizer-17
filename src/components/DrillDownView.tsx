@@ -202,11 +202,14 @@ const LLMIntroductionAnalysis: React.FC<LLMIntroductionAnalysisProps> = ({
         <Card>
           <CardContent className="py-8 text-center">
             <Bot className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-semibold mb-2">No Strong Matches Found</h3>
-            <p className="text-sm text-muted-foreground">
-              The AI couldn't find high-confidence introduction opportunities. 
-              Try adding more detailed "offering" and "looking for" information to your contacts.
+            <h3 className="font-semibold mb-2">No Matches Found</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              The AI couldn't find introduction opportunities with the current contact data. 
             </p>
+            <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3 max-w-md mx-auto">
+              <strong>Tip:</strong> Add more detailed "offering" and "looking for" information to your contacts.
+              The AI now finds matches with 30%+ confidence, including weaker connections that might still have networking value.
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -228,6 +231,11 @@ const LLMIntroductionAnalysis: React.FC<LLMIntroductionAnalysisProps> = ({
                     <Badge variant="secondary">
                       {pair.matchScore}% confidence
                     </Badge>
+                    {pair.interpretation && (
+                      <div className="text-xs text-muted-foreground mt-1 max-w-xs">
+                        {pair.interpretation}
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardHeader>
