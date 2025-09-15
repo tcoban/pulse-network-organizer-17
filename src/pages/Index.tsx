@@ -327,6 +327,29 @@ const Index = () => {
     );
   }
 
+  // Filter contacts based on drill-down type
+  const getDrillDownContacts = (type: DrillDownType) => {
+    switch (type) {
+      case 'auto-introductions':
+        return contacts.filter(contact => 
+          (contact.offering && contact.offering.trim().length > 0) || 
+          (contact.lookingFor && contact.lookingFor.trim().length > 0)
+        );
+      case 'follow-up-alerts':
+        return contacts.filter(contact => {
+          if (!contact.lastContact) return true;
+          const daysSinceContact = (Date.now() - contact.lastContact.getTime()) / (1000 * 60 * 60 * 24);
+          return daysSinceContact >= 90;
+        });
+      case 'opportunity-matches':
+        return contacts.filter(contact => 
+          contact.upcomingOpportunities && contact.upcomingOpportunities.length > 0
+        );
+      default:
+        return contacts;
+    }
+  };
+
   // Show drill-down view if active
   if (drillDownType) {
     return (
@@ -341,7 +364,7 @@ const Index = () => {
         <main className="p-6">
           <DrillDownView
             type={drillDownType}
-            contacts={contacts}
+            contacts={getDrillDownContacts(drillDownType)}
             onEditContact={handleEditContact}
             onDeleteContact={(contactId: string) => handleDeleteContact(contactId)}
             onViewDetails={handleViewDetails}

@@ -225,6 +225,15 @@ const SmartDashboard = ({ contacts, onDrillDown }: {
     return bestMatch;
   };
 
+  // Function to count contacts that are candidates for AI introduction analysis
+  const findIntroductionCandidates = (contacts: Contact[]) => {
+    return contacts.filter(contact => 
+      // Contact must have either offering or looking for information
+      (contact.offering && contact.offering.trim().length > 0) || 
+      (contact.lookingFor && contact.lookingFor.trim().length > 0)
+    );
+  };
+
   const getPriorityIcon = (type: DashboardPriority['type']) => {
     switch (type) {
       case 'scheduled_meeting':
@@ -436,13 +445,13 @@ const SmartDashboard = ({ contacts, onDrillDown }: {
               <div>
                 <h4 className="text-sm font-medium">Auto-Introduction Ready</h4>
                 <p className="text-xs text-muted-foreground">
-                  {priorities.filter(p => p.type === 'introduction_opportunity').length} contacts ready for AI-suggested introductions
+                  {findIntroductionCandidates(contacts).length} contacts ready for AI-suggested introductions
                 </p>
                 {onDrillDown && (
                   <p className="text-xs text-primary mt-1">Click to drill down</p>
                 )}
               </div>
-              <Badge variant="outline">{priorities.filter(p => p.type === 'introduction_opportunity').length}</Badge>
+              <Badge variant="outline">{findIntroductionCandidates(contacts).length}</Badge>
             </div>
             <div 
               className={`flex items-center justify-between p-4 rounded-lg border ${
