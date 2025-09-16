@@ -34,11 +34,18 @@ interface PolicyEvent {
   importanceLevel: number;
 }
 
-const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0 }: { 
-  contacts: Contact[]; 
+interface SmartDashboardProps {
+  contacts: Contact[];
   onDrillDown?: (type: 'auto-introductions' | 'follow-up-alerts' | 'opportunity-matches') => void;
   aiIntroductionCount?: number;
-}) => {
+  stats?: {
+    openMatches: number;
+    needsReengagement: number;
+  };
+  onActionDrillDown?: (type: string) => void;
+}
+
+const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0, stats, onActionDrillDown }: SmartDashboardProps) => {
   const [priorities, setPriorities] = useState<DashboardPriority[]>([]);
   const [networkTrends, setNetworkTrends] = useState<NetworkTrend[]>([]);
   const [policyEvents, setPolicyEvents] = useState<PolicyEvent[]>([]);
@@ -427,16 +434,16 @@ const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0 }: {
         </Card>
       </div>
 
-      {/* Automation Indicators */}
+      {/* Action Items */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5 text-primary" />
-            Automation Indicators
+            Action Items
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div 
               className={`flex items-center justify-between p-4 rounded-lg border ${
                 onDrillDown ? 'cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-200' : ''
@@ -456,6 +463,40 @@ const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0 }: {
             </div>
             <div 
               className={`flex items-center justify-between p-4 rounded-lg border ${
+                onActionDrillDown ? 'cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-200' : ''
+              }`}
+              onClick={() => onActionDrillDown?.('opportunity-matches')}
+            >
+              <div>
+                <h4 className="text-sm font-medium">Open Matches</h4>
+                <p className="text-xs text-muted-foreground">
+                  Potential connections
+                </p>
+                {onActionDrillDown && (
+                  <p className="text-xs text-primary mt-1">Click to drill down</p>
+                )}
+              </div>
+              <Badge variant="outline">{stats?.openMatches || 0}</Badge>
+            </div>
+            <div 
+              className={`flex items-center justify-between p-4 rounded-lg border ${
+                onActionDrillDown ? 'cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-200' : ''
+              }`}
+              onClick={() => onActionDrillDown?.('follow-up-alerts')}
+            >
+              <div>
+                <h4 className="text-sm font-medium">Re-engagement Needed</h4>
+                <p className="text-xs text-muted-foreground">
+                  90+ days since contact
+                </p>
+                {onActionDrillDown && (
+                  <p className="text-xs text-primary mt-1">Click to drill down</p>
+                )}
+              </div>
+              <Badge variant="outline">{stats?.needsReengagement || 0}</Badge>
+            </div>
+            <div 
+              className={`flex items-center justify-between p-4 rounded-lg border ${
                 onDrillDown ? 'cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-200' : ''
               }`}
               onClick={() => onDrillDown?.('follow-up-alerts')}
@@ -470,23 +511,6 @@ const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0 }: {
                 )}
               </div>
               <Badge variant="outline">{priorities.filter(p => p.type === 'follow_up_action').length}</Badge>
-            </div>
-            <div 
-              className={`flex items-center justify-between p-4 rounded-lg border ${
-                onDrillDown ? 'cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-200' : ''
-              }`}
-              onClick={() => onDrillDown?.('opportunity-matches')}
-            >
-              <div>
-                <h4 className="text-sm font-medium">Opportunity Matches</h4>
-                <p className="text-xs text-muted-foreground">
-                  New collaboration possibilities detected
-                </p>
-                {onDrillDown && (
-                  <p className="text-xs text-primary mt-1">Click to drill down</p>
-                )}
-              </div>
-              <Badge variant="outline">{Math.floor(Math.random() * 8) + 3}</Badge>
             </div>
           </div>
         </CardContent>

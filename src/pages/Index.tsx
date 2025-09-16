@@ -404,20 +404,6 @@ const Index = () => {
         )}
 
 
-        {/* Smart Dashboard */}
-        <SmartDashboard contacts={contacts} onDrillDown={handleAutomationDrillDown} aiIntroductionCount={aiIntroductionCount} />
-
-        {/* Advanced Search */}
-        {showAdvancedSearch && (
-          <AdvancedSearch 
-            contacts={contacts} 
-            onSelectContact={(contact) => {
-              handleViewDetails(contact);
-              setShowAdvancedSearch(false);
-            }}
-          />
-        )}
-
         {/* Overview Stats - Informational Only */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-foreground mb-4">Overview</h2>
@@ -450,26 +436,26 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Action Required - Actionable Items */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Action Required</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ClickableStatsCard
-              title="Open Matches"
-              value={stats.openMatches}
-              icon={Network}
-              description="Potential connections"
-              onClick={() => handleDrillDown('opportunity-matches')}
-            />
-            <ClickableStatsCard
-              title="Re-engagement Needed"
-              value={stats.needsReengagement}
-              icon={Clock}
-              description="90+ days since contact"
-              onClick={() => handleDrillDown('follow-up-alerts')}
-            />
-          </div>
-        </div>
+        {/* Smart Dashboard */}
+        <SmartDashboard 
+          contacts={contacts} 
+          onDrillDown={handleAutomationDrillDown} 
+          aiIntroductionCount={aiIntroductionCount}
+          stats={{ openMatches: stats.openMatches, needsReengagement: stats.needsReengagement }}
+          onActionDrillDown={handleDrillDown}
+        />
+
+        {/* Advanced Search */}
+        {showAdvancedSearch && (
+          <AdvancedSearch 
+            contacts={contacts} 
+            onSelectContact={(contact) => {
+              handleViewDetails(contact);
+              setShowAdvancedSearch(false);
+            }}
+          />
+        )}
+
 
         {/* Filters and Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
