@@ -150,7 +150,7 @@ const Index = () => {
         );
         
         if (hasMatch) {
-          matchCount += 2; // Count both contacts as having a match
+          matchCount++; // Count each match once, not twice
         }
       }
     }
