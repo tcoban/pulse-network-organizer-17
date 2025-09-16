@@ -718,6 +718,232 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
     );
   };
 
+  const renderOpportunityMatchesView = () => {
+    if (type !== 'opportunity-matches') return null;
+
+    // Find contacts with offerings and those looking for things
+    const contactsWithOfferings = contacts.filter(contact => contact.offering && contact.offering.trim());
+    const contactsWithNeeds = contacts.filter(contact => contact.lookingFor && contact.lookingFor.trim());
+
+    // Create potential matches where one contact's offering might match another's need
+    const potentialMatches: Array<{
+      contact1: Contact;
+      contact2: Contact;
+      matchType: 'offering-to-need' | 'mutual-benefit';
+      confidence: number;
+      reason: string;
+    }> = [];
+
+    // Simple keyword-based matching
+    contactsWithOfferings.forEach(offeringContact => {
+      contactsWithNeeds.forEach(needContact => {
+        if (offeringContact.id === needContact.id) return; // Skip same contact
+        
+        const offering = offeringContact.offering?.toLowerCase() || '';
+        const need = needContact.lookingFor?.toLowerCase() || '';
+        
+        // Simple keyword overlap detection
+        const offeringWords = offering.split(/\s+/).filter(word => word.length > 2);
+        const needWords = need.split(/\s+/).filter(word => word.length > 2);
+        
+        const commonWords = offeringWords.filter(word => 
+          needWords.some(needWord => 
+            needWord.includes(word) || word.includes(needWord) ||
+            (word.length > 3 && needWord.length > 3 && 
+             (word.startsWith(needWord.substring(0, 3)) || needWord.startsWith(word.substring(0, 3))))
+          )
+        );
+
+        if (commonWords.length > 0) {
+          let confidence = Math.min(90, (commonWords.length / Math.max(offeringWords.length, needWords.length)) * 100);
+          
+          // Check for mutual benefit (both have offerings and needs that might match)
+          let matchType: 'offering-to-need' | 'mutual-benefit' = 'offering-to-need';
+          if (needContact.offering && offeringContact.lookingFor) {
+            const reverseOffering = needContact.offering.toLowerCase();
+            const reverseLookingFor = offeringContact.lookingFor.toLowerCase();
+            const reverseOfferingWords = reverseOffering.split(/\s+/).filter(word => word.length > 2);
+            const reverseLookingWords = reverseLookingFor.split(/\s+/).filter(word => word.length > 2);
+            
+            const reverseCommonWords = reverseOfferingWords.filter(word => 
+              reverseLookingWords.some(lookingWord => 
+                lookingWord.includes(word) || word.includes(lookingWord)
+              )
+            );
+            
+            if (reverseCommonWords.length > 0) {
+              matchType = 'mutual-benefit';
+              confidence = Math.min(95, confidence + 20);
+            }
+          }
+
+          potentialMatches.push({
+            contact1: offeringContact,
+            contact2: needContact,
+            matchType,
+            confidence: Math.round(confidence),
+            reason: `${offeringContact.name} offers "${offeringContact.offering}" which may help ${needContact.name} who is looking for "${needContact.lookingFor}"`
+          });
+        }
+      });
+    });
+
+    // Remove duplicates and sort by confidence
+    const uniqueMatches = potentialMatches
+      .filter((match, index, self) => 
+        index === self.findIndex(m => 
+          (m.contact1.id === match.contact1.id && m.contact2.id === match.contact2.id) ||
+          (m.contact1.id === match.contact2.id && m.contact2.id === match.contact1.id)
+        )
+      )
+      .sort((a, b) => b.confidence - a.confidence)
+      .slice(0, 20); // Limit to top 20 matches
+
+    const summaryStats = {
+      total: uniqueMatches.length,
+      highConfidence: uniqueMatches.filter(m => m.confidence >= 70).length,
+      mediumConfidence: uniqueMatches.filter(m => m.confidence >= 50 && m.confidence < 70).length,
+      mutualBenefit: uniqueMatches.filter(m => m.matchType === 'mutual-benefit').length
+    };
+
+    return (
+      <div className="space-y-6">
+        {/* Summary Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-primary">{summaryStats.total}</div>
+              <div className="text-sm text-muted-foreground">Total Matches</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-green-600">{summaryStats.highConfidence}</div>
+              <div className="text-sm text-muted-foreground">High Confidence</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-orange-600">{summaryStats.mediumConfidence}</div>
+              <div className="text-sm text-muted-foreground">Medium Confidence</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-purple-600">{summaryStats.mutualBenefit}</div>
+              <div className="text-sm text-muted-foreground">Mutual Benefit</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {uniqueMatches.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="font-semibold mb-2">No Opportunity Matches Found</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                No matches found between contact offerings and needs.
+              </p>
+              <div className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3 max-w-md mx-auto">
+                <strong>Tip:</strong> Add "offering" and "looking for" information to your contacts to discover networking opportunities.
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {uniqueMatches.map((match, index) => (
+              <Card key={`${match.contact1.id}-${match.contact2.id}`} className="border-l-4 border-l-primary">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-lg">Match #{index + 1}</CardTitle>
+                      <CardDescription className="mt-2">
+                        {match.reason}
+                      </CardDescription>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Badge className={
+                        match.matchType === 'mutual-benefit' 
+                          ? 'bg-purple-100 text-purple-800 border-purple-200'
+                          : 'bg-blue-100 text-blue-800 border-blue-200'
+                      }>
+                        {match.matchType === 'mutual-benefit' ? 'Mutual Benefit' : 'One-Way Match'}
+                      </Badge>
+                      <Badge variant={match.confidence >= 70 ? 'default' : match.confidence >= 50 ? 'secondary' : 'outline'}>
+                        {match.confidence}% match
+                      </Badge>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-semibold mb-2 text-primary">
+                        {match.contact1.offering ? 'Can Offer' : 'Contact'}
+                      </h4>
+                      <ContactCard
+                        contact={match.contact1}
+                        onEdit={onEditContact}
+                        onDelete={onDeleteContact}
+                        onViewDetails={onViewDetails}
+                        onUpdateContact={onUpdateContact}
+                        onAddOpportunity={() => onAddOpportunity(match.contact1)}
+                        onEditOpportunity={(opportunity) => onEditOpportunity(opportunity, match.contact1)}
+                      />
+                      {match.contact1.offering && (
+                        <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm">
+                          <strong>Offers:</strong> {match.contact1.offering}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2 text-primary">
+                        {match.contact2.lookingFor ? 'Looking For' : 'Contact'}
+                      </h4>
+                      <ContactCard
+                        contact={match.contact2}
+                        onEdit={onEditContact}
+                        onDelete={onDeleteContact}
+                        onViewDetails={onViewDetails}
+                        onUpdateContact={onUpdateContact}
+                        onAddOpportunity={() => onAddOpportunity(match.contact2)}
+                        onEditOpportunity={(opportunity) => onEditOpportunity(opportunity, match.contact2)}
+                      />
+                      {match.contact2.lookingFor && (
+                        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                          <strong>Needs:</strong> {match.contact2.lookingFor}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <Button onClick={() => {
+                      toast({
+                        title: "Introduction Noted",
+                        description: `Potential introduction between ${match.contact1.name} and ${match.contact2.name} has been noted.`,
+                      });
+                    }} className="flex-1">
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Consider Introduction
+                    </Button>
+                    <Button variant="outline" onClick={() => {
+                      toast({
+                        title: "Added to Watch List",
+                        description: "This match has been added to your watch list for future consideration.",
+                      });
+                    }}>
+                      Watch
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
@@ -739,6 +965,7 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
       {renderTagsView()}
       {renderFollowUpAlertsView()}
       {renderIntroductionView()}
+      {renderOpportunityMatchesView()}
       {renderDefaultView()}
     </div>
   );
