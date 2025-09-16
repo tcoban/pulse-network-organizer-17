@@ -418,47 +418,57 @@ const Index = () => {
           />
         )}
 
-        {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
-          <ClickableStatsCard
-            title="Total Contacts"
-            value={stats.total}
-            icon={Users}
-            trend={{ value: 12, isPositive: true }}
-          />
-          <ClickableStatsCard
-            title="Recent Interactions"
-            value={stats.recentContacts}
-            icon={Calendar}
-            description="Last 30 days"
-            onClick={() => handleDrillDown('recent-interactions')}
-          />
-          <ClickableStatsCard
-            title="Companies"
-            value={stats.companies}
-            icon={Building2}
-            onClick={() => handleDrillDown('companies')}
-          />
-          <ClickableStatsCard
-            title="Tags"
-            value={stats.tags}
-            icon={Tag}
-            onClick={() => handleDrillDown('tags')}
-          />
-          <ClickableStatsCard
-            title="Open Matches"
-            value={stats.openMatches}
-            icon={Network}
-            description="Potential connections"
-            onClick={() => handleDrillDown('open-matches')}
-          />
-          <ClickableStatsCard
-            title="Re-engagement Needed"
-            value={stats.needsReengagement}
-            icon={Clock}
-            description="90+ days since contact"
-            onClick={() => handleDrillDown('re-engagement')}
-          />
+        {/* Overview Stats - Informational Only */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Overview</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <ClickableStatsCard
+              title="Total Contacts"
+              value={stats.total}
+              icon={Users}
+              trend={{ value: 12, isPositive: true }}
+            />
+            <ClickableStatsCard
+              title="Recent Interactions"
+              value={stats.recentContacts}
+              icon={Calendar}
+              description="Last 30 days"
+              onClick={() => handleDrillDown('recent-interactions')}
+            />
+            <ClickableStatsCard
+              title="Companies"
+              value={stats.companies}
+              icon={Building2}
+              onClick={() => handleDrillDown('companies')}
+            />
+            <ClickableStatsCard
+              title="Tags"
+              value={stats.tags}
+              icon={Tag}
+              onClick={() => handleDrillDown('tags')}
+            />
+          </div>
+        </div>
+
+        {/* Action Required - Actionable Items */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Action Required</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ClickableStatsCard
+              title="Open Matches"
+              value={stats.openMatches}
+              icon={Network}
+              description="Potential connections"
+              onClick={() => handleDrillDown('opportunity-matches')}
+            />
+            <ClickableStatsCard
+              title="Re-engagement Needed"
+              value={stats.needsReengagement}
+              icon={Clock}
+              description="90+ days since contact"
+              onClick={() => handleDrillDown('follow-up-alerts')}
+            />
+          </div>
         </div>
 
         {/* Filters and Controls */}
