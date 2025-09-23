@@ -11,8 +11,10 @@ import ContactForm from '@/components/ContactForm';
 import OpportunityForm from '@/components/OpportunityForm';
 import TeamOpportunities from '@/components/TeamOpportunities';
 import SmartDashboard from '@/components/SmartDashboard';
+import StrategicDashboard from '@/components/StrategicDashboard';
 import AdvancedSearch from '@/components/AdvancedSearch';
 import AdminPanel from '@/components/AdminPanel';
+import EnhancedAdminPanel from '@/components/EnhancedAdminPanel';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +31,8 @@ import {
   Clock,
   Settings,
   CalendarDays,
-  Brain
+  Brain,
+  Crown
 } from 'lucide-react';
 import {
   Select,
@@ -55,6 +58,7 @@ const Index = () => {
   const [selectedContactForOpportunity, setSelectedContactForOpportunity] = useState<Contact | null>(null);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showEnhancedAdmin, setShowEnhancedAdmin] = useState(false);
   const [drillDownType, setDrillDownType] = useState<DrillDownType>(null);
   const [aiIntroductionCount, setAiIntroductionCount] = useState(0);
 
@@ -195,6 +199,29 @@ const Index = () => {
     setDrillDownType(type);
   };
 
+  const handleNavigateToSection = (destination: string, context?: any) => {
+    switch (destination) {
+      case 'strategic-planning':
+        // Navigate to strategic planning view
+        console.log('Navigate to strategic planning');
+        break;
+      case 'relationship-mapping':
+        // Navigate to relationship mapping
+        console.log('Navigate to relationship mapping');
+        break;
+      case 'campaign-management':
+        // Navigate to campaign management
+        console.log('Navigate to campaign management');
+        break;
+      case 'analytics-insights':
+        // Navigate to analytics insights
+        console.log('Navigate to analytics insights');
+        break;
+      default:
+        console.log('Navigate to:', destination);
+    }
+  };
+
   const handleUpdateContact = async (updatedContact: Contact) => {
     try {
       await updateContact(updatedContact.id, updatedContact);
@@ -322,7 +349,38 @@ const Index = () => {
               ← Back to Contacts
             </Button>
           </div>
-          <AdminPanel />
+          {showEnhancedAdmin ? <EnhancedAdminPanel /> : <AdminPanel />}
+        </main>
+      </div>
+    );
+  }
+
+  if (showEnhancedAdmin) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header 
+          searchTerm={searchQuery}
+          setSearchTerm={setSearchQuery}
+          setShowForm={setContactFormOpen}
+          setShowAdvancedSearch={setShowAdvancedSearch}
+          onShowAdminPanel={() => setShowAdminPanel(true)}
+        />
+        <main className="p-6">
+          <div className="mb-6 flex justify-between items-center">
+            <Button
+              onClick={() => setShowEnhancedAdmin(false)}
+              variant="outline"
+            >
+              ← Back to Contacts
+            </Button>
+            <Button
+              onClick={() => setShowAdminPanel(true)}
+              variant="outline"
+            >
+              Basic Admin Panel
+            </Button>
+          </div>
+          <EnhancedAdminPanel />
         </main>
       </div>
     );
@@ -436,7 +494,14 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Smart Dashboard */}
+        {/* Strategic Dashboard */}
+        <StrategicDashboard 
+          contacts={contacts} 
+          onNavigate={handleNavigateToSection}
+          onDrillDown={handleDrillDown}
+        />
+
+        {/* Smart Dashboard - Legacy Support */}
         <SmartDashboard 
           contacts={contacts} 
           onDrillDown={handleAutomationDrillDown} 
