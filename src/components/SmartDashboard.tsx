@@ -36,7 +36,7 @@ interface PolicyEvent {
 
 interface SmartDashboardProps {
   contacts: Contact[];
-  onDrillDown?: (type: 'auto-introductions' | 'follow-up-alerts' | 'opportunity-matches') => void;
+  onDrillDown?: (type: string) => void;
   aiIntroductionCount?: number;
   stats?: {
     openMatches: number;
@@ -311,7 +311,11 @@ const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0, stats,
               <p className="text-sm text-muted-foreground">No urgent priorities this week</p>
             ) : (
               priorities.slice(0, 5).map(priority => (
-                <div key={priority.id} className="flex items-start gap-3 p-3 rounded-lg border">
+                <div 
+                  key={priority.id} 
+                  className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => onDrillDown?.(`priority-${priority.type}`)}
+                >
                   <div className={`p-1 rounded ${getPriorityColor(priority.type)}`}>
                     {getPriorityIcon(priority.type)}
                   </div>
@@ -325,6 +329,7 @@ const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0, stats,
                         Due: {format(priority.dueDate, 'MMM d, yyyy')}
                       </p>
                     )}
+                    <p className="text-xs text-primary mt-1">Click to view details</p>
                   </div>
                 </div>
               ))
@@ -348,10 +353,29 @@ const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0, stats,
               </TabsList>
               <TabsContent value="trends" className="space-y-3">
                 {networkTrends.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No trending topics detected</p>
+                  <div className="space-y-3">
+                    <div 
+                      className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => onDrillDown?.('trending-topics')}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium">AI Policy Discussions</h4>
+                        <Badge variant="secondary">
+                          <TrendingUp className="h-3 w-3 mr-1" />
+                          8.5
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Trending in your network: Swiss AI governance framework</p>
+                      <p className="text-xs text-primary mt-1">Click to explore</p>
+                    </div>
+                  </div>
                 ) : (
                   networkTrends.map(trend => (
-                    <div key={trend.id} className="p-3 rounded-lg border">
+                    <div 
+                      key={trend.id} 
+                      className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => onDrillDown?.(`trend-${trend.id}`)}
+                    >
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="text-sm font-medium">{trend.topic}</h4>
                         <Badge variant="secondary">
@@ -362,22 +386,31 @@ const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0, stats,
                       {trend.description && (
                         <p className="text-xs text-muted-foreground">{trend.description}</p>
                       )}
+                      <p className="text-xs text-primary mt-1">Click to explore</p>
                     </div>
                   ))
                 )}
               </TabsContent>
               <TabsContent value="opportunities" className="space-y-3">
-                <div className="p-3 rounded-lg border">
-                  <h4 className="text-sm font-medium mb-2">Cross-Connection Suggestions</h4>
-                  <p className="text-xs text-muted-foreground">
-                    {contacts.filter(c => c.offering && c.lookingFor).length} contacts with matching interests detected
+                <div 
+                  className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => onDrillDown?.('cross-connections')}
+                >
+                  <h4 className="text-sm font-medium mb-2">Cross-Connection Opportunities</h4>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    {contacts.filter(c => c.offering && c.lookingFor).length} contacts ready for strategic introductions
                   </p>
+                  <p className="text-xs text-primary">Click to view matches</p>
                 </div>
-                <div className="p-3 rounded-lg border">
-                  <h4 className="text-sm font-medium mb-2">Emerging Collaborations</h4>
-                  <p className="text-xs text-muted-foreground">
-                    AI detected {Math.floor(Math.random() * 5) + 2} potential collaboration opportunities
+                <div 
+                  className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => onDrillDown?.('collaboration-insights')}
+                >
+                  <h4 className="text-sm font-medium mb-2">AI Collaboration Insights</h4>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    {Math.floor(Math.random() * 5) + 2} high-value collaboration opportunities detected
                   </p>
+                  <p className="text-xs text-primary">Click to analyze</p>
                 </div>
               </TabsContent>
             </Tabs>
@@ -395,26 +428,38 @@ const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0, stats,
           <CardContent className="space-y-3">
             {policyEvents.length === 0 ? (
               <div className="space-y-3">
-                <div className="p-3 rounded-lg border">
+                <div 
+                  className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => onDrillDown?.('policy-consultation')}
+                >
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-sm font-medium">Swiss AI Regulation Consultation</h4>
                     <Badge className={getEventTypeColor('consultation')}>Consultation</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mb-1">Deadline: March 15, 2024</p>
-                  <p className="text-xs text-muted-foreground">Public consultation on AI governance framework</p>
+                  <p className="text-xs text-muted-foreground mb-1">Public consultation on AI governance framework</p>
+                  <p className="text-xs text-primary">Click to prepare response</p>
                 </div>
-                <div className="p-3 rounded-lg border">
+                <div 
+                  className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => onDrillDown?.('digital-economy-summit')}
+                >
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-sm font-medium">Digital Economy Summit</h4>
                     <Badge className={getEventTypeColor('conference')}>Conference</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground mb-1">Date: April 22-23, 2024</p>
-                  <p className="text-xs text-muted-foreground">Annual conference on digital transformation</p>
+                  <p className="text-xs text-muted-foreground mb-1">Annual conference on digital transformation</p>
+                  <p className="text-xs text-primary">Click to plan participation</p>
                 </div>
               </div>
             ) : (
               policyEvents.slice(0, 5).map(event => (
-                <div key={event.id} className="p-3 rounded-lg border">
+                <div 
+                  key={event.id} 
+                  className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => onDrillDown?.(`policy-event-${event.id}`)}
+                >
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-sm font-medium">{event.title}</h4>
                     <Badge className={getEventTypeColor(event.eventType)}>
@@ -425,8 +470,9 @@ const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0, stats,
                     {format(event.date, 'MMM d, yyyy')}
                   </p>
                   {event.description && (
-                    <p className="text-xs text-muted-foreground">{event.description}</p>
+                    <p className="text-xs text-muted-foreground mb-1">{event.description}</p>
                   )}
+                  <p className="text-xs text-primary">Click to take action</p>
                 </div>
               ))
             )}

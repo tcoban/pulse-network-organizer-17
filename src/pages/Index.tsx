@@ -15,6 +15,7 @@ import StrategicDashboard from '@/components/StrategicDashboard';
 import AdvancedSearch from '@/components/AdvancedSearch';
 import AdminPanel from '@/components/AdminPanel';
 import EnhancedAdminPanel from '@/components/EnhancedAdminPanel';
+import ProjectForm from '@/components/ProjectForm';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -61,6 +62,8 @@ const Index = () => {
   const [showEnhancedAdmin, setShowEnhancedAdmin] = useState(false);
   const [drillDownType, setDrillDownType] = useState<DrillDownType>(null);
   const [aiIntroductionCount, setAiIntroductionCount] = useState(0);
+  const [projectFormOpen, setProjectFormOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<any>(null);
 
   // Filter and sort contacts
   const filteredContacts = useMemo(() => {
@@ -499,6 +502,11 @@ const Index = () => {
           contacts={contacts} 
           onNavigate={handleNavigateToSection}
           onDrillDown={handleDrillDown}
+          onCreateProject={() => setProjectFormOpen(true)}
+          onEditProject={(project) => {
+            setEditingProject(project);
+            setProjectFormOpen(true);
+          }}
         />
 
         {/* Smart Dashboard - Legacy Support */}
@@ -687,6 +695,20 @@ const Index = () => {
         onClose={handleCloseOpportunityForm}
         onSave={handleSaveOpportunity}
         isEditing={!!editingOpportunity}
+      />
+
+      <ProjectForm
+        project={editingProject}
+        isOpen={projectFormOpen}
+        onClose={() => {
+          setProjectFormOpen(false);
+          setEditingProject(null);
+        }}
+        onSave={(project) => {
+          console.log('Save project:', project);
+          setProjectFormOpen(false);
+          setEditingProject(null);
+        }}
       />
     </div>
   );

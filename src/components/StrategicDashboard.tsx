@@ -24,7 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Contact } from '@/types/contact';
 import { format, isThisWeek, addDays, startOfWeek, endOfWeek } from 'date-fns';
 
-interface StrategicGoal {
+interface Project {
   id: string;
   title: string;
   description: string;
@@ -34,6 +34,13 @@ interface StrategicGoal {
   deadline?: Date;
   priority: 'high' | 'medium' | 'low';
   relatedContacts: string[];
+  status: 'planning' | 'active' | 'completed' | 'paused';
+  milestones: Array<{
+    id: string;
+    title: string;
+    completed: boolean;
+    dueDate?: Date;
+  }>;
 }
 
 interface ActionableInsight {
@@ -60,10 +67,12 @@ interface StrategicDashboardProps {
   contacts: Contact[];
   onNavigate: (destination: string, context?: any) => void;
   onDrillDown: (type: string, filters?: any) => void;
+  onCreateProject?: () => void;
+  onEditProject?: (project: Project) => void;
 }
 
-const StrategicDashboard = ({ contacts, onNavigate, onDrillDown }: StrategicDashboardProps) => {
-  const [goals, setGoals] = useState<StrategicGoal[]>([]);
+const StrategicDashboard = ({ contacts, onNavigate, onDrillDown, onCreateProject, onEditProject }: StrategicDashboardProps) => {
+  const [projects, setProjects] = useState<Project[]>([]);
   const [insights, setInsights] = useState<ActionableInsight[]>([]);
   const [metrics, setMetrics] = useState<NetworkMetrics>({
     connectionVelocity: 0,
@@ -108,18 +117,25 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown }: StrategicDash
 
       setMetrics(calculatedMetrics);
 
-      // Generate strategic goals
-      const strategicGoals: StrategicGoal[] = [
+      // Generate financing projects
+      const financingProjects: Project[] = [
         {
           id: 'fundraising-q1',
-          title: 'Q1 Fundraising Target',
+          title: 'Q1 Research Funding Campaign',
           description: 'Secure CHF 2M in research funding through strategic partnerships',
           type: 'fundraising',
           targetValue: 2000000,
           currentValue: 750000,
-          deadline: new Date(2024, 2, 31), // March 31, 2024
+          deadline: new Date(2024, 2, 31),
           priority: 'high',
-          relatedContacts: highValueContacts.map(c => c.id).slice(0, 5)
+          relatedContacts: highValueContacts.map(c => c.id).slice(0, 5),
+          status: 'active',
+          milestones: [
+            { id: 'm1', title: 'Prepare funding proposals', completed: true },
+            { id: 'm2', title: 'Contact key investors', completed: true },
+            { id: 'm3', title: 'Negotiate terms', completed: false, dueDate: new Date(2024, 1, 15) },
+            { id: 'm4', title: 'Finalize agreements', completed: false, dueDate: new Date(2024, 2, 31) }
+          ]
         },
         {
           id: 'partnership-expansion',
@@ -128,26 +144,39 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown }: StrategicDash
           type: 'partnership',
           targetValue: 12,
           currentValue: 4,
-          deadline: new Date(2024, 5, 30), // June 30, 2024
+          deadline: new Date(2024, 5, 30),
           priority: 'medium',
-          relatedContacts: contacts.filter(c => c.company).map(c => c.id).slice(0, 8)
+          relatedContacts: contacts.filter(c => c.company).map(c => c.id).slice(0, 8),
+          status: 'active',
+          milestones: [
+            { id: 'm1', title: 'Identify target companies', completed: true },
+            { id: 'm2', title: 'Initial outreach', completed: true },
+            { id: 'm3', title: 'Proposal presentations', completed: false, dueDate: new Date(2024, 3, 15) },
+            { id: 'm4', title: 'Partnership agreements', completed: false, dueDate: new Date(2024, 5, 30) }
+          ]
         },
         {
           id: 'policy-influence',
-          title: 'Swiss AI Policy Influence',
+          title: 'Swiss AI Policy Initiative',
           description: 'Active participation in 5 key policy consultations',
           type: 'policy',
           targetValue: 5,
           currentValue: 2,
-          deadline: new Date(2024, 11, 31), // Dec 31, 2024
+          deadline: new Date(2024, 11, 31),
           priority: 'high',
           relatedContacts: contacts.filter(c => 
             c.tags.some(tag => tag.toLowerCase().includes('policy') || tag.toLowerCase().includes('government'))
-          ).map(c => c.id)
+          ).map(c => c.id),
+          status: 'planning',
+          milestones: [
+            { id: 'm1', title: 'Map policy landscape', completed: true },
+            { id: 'm2', title: 'Engage government contacts', completed: false, dueDate: new Date(2024, 6, 30) },
+            { id: 'm3', title: 'Submit consultation responses', completed: false, dueDate: new Date(2024, 10, 31) }
+          ]
         }
       ];
 
-      setGoals(strategicGoals);
+      setProjects(financingProjects);
 
       // Generate actionable insights
       const actionableInsights = generateActionableInsights(contacts);
@@ -379,41 +408,66 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown }: StrategicDash
 
       {/* Strategic Goals & Insights */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Strategic Goals */}
+        {/* Project Financing Goals */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" />
-              Strategic Goals
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-primary" />
+                Project Financing Goals
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={onCreateProject}
+              >
+                New Project
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {goals.map(goal => (
-              <div key={goal.id} className="space-y-2">
+            {projects.map(project => (
+              <div 
+                key={project.id} 
+                className="space-y-3 p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => onEditProject?.(project)}
+              >
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-medium">{goal.title}</h4>
-                  <Badge variant={goal.priority === 'high' ? 'destructive' : goal.priority === 'medium' ? 'default' : 'secondary'}>
-                    {goal.priority}
-                  </Badge>
+                  <h4 className="text-sm font-medium">{project.title}</h4>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={project.status === 'active' ? 'default' : project.status === 'completed' ? 'secondary' : 'outline'}>
+                      {project.status}
+                    </Badge>
+                    <Badge variant={project.priority === 'high' ? 'destructive' : project.priority === 'medium' ? 'default' : 'secondary'}>
+                      {project.priority}
+                    </Badge>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground">{goal.description}</p>
-                {goal.targetValue && (
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span>{((goal.currentValue / goal.targetValue) * 100).toFixed(0)}% Complete</span>
+                <p className="text-xs text-muted-foreground">{project.description}</p>
+                
+                {/* Milestones Progress */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>Milestones: {project.milestones.filter(m => m.completed).length}/{project.milestones.length}</span>
+                    {project.targetValue && (
                       <span>
-                        {goal.type === 'fundraising' 
-                          ? `${new Intl.NumberFormat('en-CH', { style: 'currency', currency: 'CHF', minimumFractionDigits: 0 }).format(goal.currentValue)} / ${new Intl.NumberFormat('en-CH', { style: 'currency', currency: 'CHF', minimumFractionDigits: 0 }).format(goal.targetValue)}`
-                          : `${goal.currentValue} / ${goal.targetValue}`
+                        {project.type === 'fundraising' 
+                          ? `${new Intl.NumberFormat('en-CH', { style: 'currency', currency: 'CHF', minimumFractionDigits: 0 }).format(project.currentValue)} / ${new Intl.NumberFormat('en-CH', { style: 'currency', currency: 'CHF', minimumFractionDigits: 0 }).format(project.targetValue)}`
+                          : `${project.currentValue} / ${project.targetValue}`
                         }
                       </span>
-                    </div>
-                    <Progress value={(goal.currentValue / goal.targetValue) * 100} className="h-2" />
+                    )}
                   </div>
-                )}
-                {goal.deadline && (
+                  <Progress 
+                    value={project.targetValue ? (project.currentValue / project.targetValue) * 100 : 
+                           (project.milestones.filter(m => m.completed).length / project.milestones.length) * 100} 
+                    className="h-2" 
+                  />
+                </div>
+                
+                {project.deadline && (
                   <p className="text-xs text-muted-foreground">
-                    Due: {format(goal.deadline, 'MMM d, yyyy')}
+                    Due: {format(project.deadline, 'MMM d, yyyy')}
                   </p>
                 )}
               </div>
