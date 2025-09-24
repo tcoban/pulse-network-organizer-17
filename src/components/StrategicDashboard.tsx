@@ -2,27 +2,21 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { 
   Target, 
   TrendingUp, 
   Users, 
-  Calendar, 
   Brain, 
   Zap, 
-  MapPin, 
   Clock,
   DollarSign,
-  Network,
-  Settings,
   ChevronRight,
-  Star,
   AlertCircle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Contact } from '@/types/contact';
-import { format, isThisWeek, addDays, startOfWeek, endOfWeek } from 'date-fns';
+import { format, addDays, startOfWeek, endOfWeek } from 'date-fns';
 
 interface Project {
   id: string;
@@ -117,66 +111,44 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown, onCreateProject
 
       setMetrics(calculatedMetrics);
 
-      // Generate financing projects
-      const financingProjects: Project[] = [
+      // Generate contact-centric projects
+      const contactProjects: Project[] = [
         {
-          id: 'fundraising-q1',
-          title: 'Q1 Research Funding Campaign',
-          description: 'Secure CHF 2M in research funding through strategic partnerships',
+          id: 'research-funding',
+          title: 'AI Research Funding Initiative',
+          description: 'Secure funding through strategic academic partnerships',
           type: 'fundraising',
           targetValue: 2000000,
           currentValue: 750000,
-          deadline: new Date(2024, 2, 31),
+          deadline: new Date(2024, 5, 30),
           priority: 'high',
-          relatedContacts: highValueContacts.map(c => c.id).slice(0, 5),
+          relatedContacts: highValueContacts.map(c => c.id).slice(0, 8),
           status: 'active',
           milestones: [
-            { id: 'm1', title: 'Prepare funding proposals', completed: true },
-            { id: 'm2', title: 'Contact key investors', completed: true },
-            { id: 'm3', title: 'Negotiate terms', completed: false, dueDate: new Date(2024, 1, 15) },
-            { id: 'm4', title: 'Finalize agreements', completed: false, dueDate: new Date(2024, 2, 31) }
+            { id: 'm1', title: 'Identify funding contacts', completed: true },
+            { id: 'm2', title: 'Schedule meetings', completed: false },
+            { id: 'm3', title: 'Submit proposals', completed: false }
           ]
         },
         {
-          id: 'partnership-expansion',
-          title: 'Industry Partnership Program',
-          description: 'Establish 12 new strategic industry partnerships',
+          id: 'academic-partnerships',
+          title: 'Swiss University Collaboration Network',
+          description: 'Establish partnerships with key academic institutions',
           type: 'partnership',
           targetValue: 12,
           currentValue: 4,
-          deadline: new Date(2024, 5, 30),
+          deadline: new Date(2024, 8, 30),
           priority: 'medium',
-          relatedContacts: contacts.filter(c => c.company).map(c => c.id).slice(0, 8),
+          relatedContacts: contacts.filter(c => c.company && c.company.toLowerCase().includes('university')).map(c => c.id),
           status: 'active',
           milestones: [
-            { id: 'm1', title: 'Identify target companies', completed: true },
-            { id: 'm2', title: 'Initial outreach', completed: true },
-            { id: 'm3', title: 'Proposal presentations', completed: false, dueDate: new Date(2024, 3, 15) },
-            { id: 'm4', title: 'Partnership agreements', completed: false, dueDate: new Date(2024, 5, 30) }
-          ]
-        },
-        {
-          id: 'policy-influence',
-          title: 'Swiss AI Policy Initiative',
-          description: 'Active participation in 5 key policy consultations',
-          type: 'policy',
-          targetValue: 5,
-          currentValue: 2,
-          deadline: new Date(2024, 11, 31),
-          priority: 'high',
-          relatedContacts: contacts.filter(c => 
-            c.tags.some(tag => tag.toLowerCase().includes('policy') || tag.toLowerCase().includes('government'))
-          ).map(c => c.id),
-          status: 'planning',
-          milestones: [
-            { id: 'm1', title: 'Map policy landscape', completed: true },
-            { id: 'm2', title: 'Engage government contacts', completed: false, dueDate: new Date(2024, 6, 30) },
-            { id: 'm3', title: 'Submit consultation responses', completed: false, dueDate: new Date(2024, 10, 31) }
+            { id: 'm1', title: 'Map university contacts', completed: true },
+            { id: 'm2', title: 'Initial outreach', completed: false }
           ]
         }
       ];
 
-      setProjects(financingProjects);
+      setProjects(contactProjects);
 
       // Generate actionable insights
       const actionableInsights = generateActionableInsights(contacts);
@@ -192,7 +164,7 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown, onCreateProject
   const generateActionableInsights = (contacts: Contact[]): ActionableInsight[] => {
     const insights: ActionableInsight[] = [];
 
-    // Find urgent follow-ups
+    // Find urgent follow-ups based on academic relationship value
     const urgentFollowups = contacts.filter(contact => {
       if (!contact.lastContact) return true;
       const daysSince = (Date.now() - contact.lastContact.getTime()) / (1000 * 60 * 60 * 24);
@@ -203,8 +175,8 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown, onCreateProject
       insights.push({
         id: 'urgent-followups',
         type: 'urgent',
-        title: `${urgentFollowups.length} High-Value Contacts Need Attention`,
-        description: 'Key contacts with high potential scores haven\'t been contacted in 90+ days',
+        title: `${urgentFollowups.length} Key Academic Contacts Need Follow-up`,
+        description: 'High-value academic contacts haven\'t been engaged in 90+ days',
         impact: 'high',
         effort: 'low',
         dueDate: addDays(new Date(), 3),
@@ -219,8 +191,8 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown, onCreateProject
       insights.push({
         id: 'strategic-intros',
         type: 'opportunity',
-        title: `${introOpportunities.length} Strategic Introduction Opportunities`,
-        description: 'High-value contacts with complementary needs and offerings identified',
+        title: `${introOpportunities.length} Academic Collaboration Opportunities`,
+        description: 'Contacts with complementary research interests and expertise identified',
         impact: 'high',
         effort: 'medium',
         relatedContacts: introOpportunities.slice(0, 4),
@@ -239,7 +211,7 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown, onCreateProject
       insights.push({
         id: 'meeting-prep',
         type: 'followup',
-        title: `${upcomingMeetings.length} Meetings Need Preparation`,
+        title: `${upcomingMeetings.length} Academic Meetings Need Preparation`,
         description: 'Upcoming meetings this week require strategic preparation',
         impact: 'medium',
         effort: 'medium',
@@ -249,28 +221,9 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown, onCreateProject
       });
     }
 
-    // Find relationship building opportunities
-    const newContacts = contacts.filter(contact => 
-      !contact.lastContact && 
-      contact.addedDate >= new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
-    );
-
-    if (newContacts.length > 0) {
-      insights.push({
-        id: 'relationship-building',
-        type: 'opportunity',
-        title: `${newContacts.length} New Contacts Need Initial Engagement`,
-        description: 'Recent contacts haven\'t been engaged yet - perfect for relationship building',
-        impact: 'medium',
-        effort: 'low',
-        relatedContacts: newContacts.slice(0, 5),
-        actionUrl: 'recent-interactions'
-      });
-    }
-
     return insights.sort((a, b) => {
       const impactScore = { high: 3, medium: 2, low: 1 };
-      const effortScore = { low: 3, medium: 2, high: 1 }; // Lower effort = higher score
+      const effortScore = { low: 3, medium: 2, high: 1 };
       
       const scoreA = impactScore[a.impact] * effortScore[a.effort];
       const scoreB = impactScore[b.impact] * effortScore[b.effort];
@@ -295,14 +248,14 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown, onCreateProject
         if (analyzed.has(pairKey)) continue;
         analyzed.add(pairKey);
 
-        // Strategic matching with higher standards
-        const hasStrategicMatch = (
+        // Academic matching with research focus
+        const hasAcademicMatch = (
           (contact1.potentialScore >= 4 || contact2.potentialScore >= 4) &&
           isKeywordMatch(contact1.offering, contact2.lookingFor) ||
           isKeywordMatch(contact2.offering, contact1.lookingFor)
         );
 
-        if (hasStrategicMatch) {
+        if (hasAcademicMatch) {
           if (!opportunities.some(c => c.id === contact1.id)) {
             opportunities.push(contact1);
           }
@@ -346,8 +299,8 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown, onCreateProject
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {[1, 2, 3].map(i => (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {[1, 2].map(i => (
           <Card key={i} className="animate-pulse">
             <CardHeader>
               <div className="h-4 bg-muted rounded w-3/4"></div>
@@ -371,7 +324,7 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown, onCreateProject
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
-            Network Performance Dashboard
+            Academic Network Performance
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -400,22 +353,28 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown, onCreateProject
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-indigo-600">{metrics.influenceScore}/100</div>
-              <div className="text-xs text-muted-foreground">Influence Score</div>
+              <div className="text-xs text-muted-foreground">Academic Influence</div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Strategic Goals & Insights */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Project Financing Goals */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-primary" />
-                Project Financing Goals
-              </div>
+      {/* Priority Actions - Consolidated Academic Dashboard */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-primary" />
+            Priority Actions
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Contact-Centric Projects */}
+          <div className="border-b pb-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                Contact-Driven Academic Projects
+              </h3>
               <Button 
                 size="sm" 
                 variant="outline"
@@ -423,147 +382,89 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown, onCreateProject
               >
                 New Project
               </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {projects.map(project => (
+            </div>
+            {projects.slice(0, 2).map(project => (
               <div 
                 key={project.id} 
-                className="space-y-3 p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                className="space-y-2 p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow mb-2"
                 onClick={() => onEditProject?.(project)}
               >
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-medium">{project.title}</h4>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={project.status === 'active' ? 'default' : project.status === 'completed' ? 'secondary' : 'outline'}>
-                      {project.status}
-                    </Badge>
-                    <Badge variant={project.priority === 'high' ? 'destructive' : project.priority === 'medium' ? 'default' : 'secondary'}>
-                      {project.priority}
-                    </Badge>
-                  </div>
+                  <Badge variant={project.status === 'active' ? 'default' : 'outline'}>
+                    {project.status}
+                  </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground">{project.description}</p>
-                
-                {/* Milestones Progress */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span>Milestones: {project.milestones.filter(m => m.completed).length}/{project.milestones.length}</span>
-                    {project.targetValue && (
-                      <span>
-                        {project.type === 'fundraising' 
-                          ? `${new Intl.NumberFormat('en-CH', { style: 'currency', currency: 'CHF', minimumFractionDigits: 0 }).format(project.currentValue)} / ${new Intl.NumberFormat('en-CH', { style: 'currency', currency: 'CHF', minimumFractionDigits: 0 }).format(project.targetValue)}`
-                          : `${project.currentValue} / ${project.targetValue}`
-                        }
-                      </span>
-                    )}
-                  </div>
-                  <Progress 
-                    value={project.targetValue ? (project.currentValue / project.targetValue) * 100 : 
-                           (project.milestones.filter(m => m.completed).length / project.milestones.length) * 100} 
-                    className="h-2" 
-                  />
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    {project.relatedContacts.length} contacts involved
+                  </span>
+                  {project.deadline && (
+                    <span className="text-muted-foreground">
+                      Due: {format(project.deadline, 'MMM dd, yyyy')}
+                    </span>
+                  )}
                 </div>
-                
-                {project.deadline && (
-                  <p className="text-xs text-muted-foreground">
-                    Due: {format(project.deadline, 'MMM d, yyyy')}
-                  </p>
-                )}
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Priority Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-primary" />
-              Priority Actions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {insights.slice(0, 4).map(insight => (
-              <div 
-                key={insight.id} 
-                className={`p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow ${getImpactColor(insight.impact)}`}
-                onClick={() => insight.actionUrl && onDrillDown(insight.actionUrl)}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="p-1 rounded">
+          {/* Actionable Insights */}
+          {insights.map(insight => (
+            <div 
+              key={insight.id} 
+              className="space-y-2 p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => insight.actionUrl && onDrillDown(insight.actionUrl)}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`p-1 rounded-full ${getImpactColor(insight.impact)}`}>
                     {getTypeIcon(insight.type)}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium">{insight.title}</h4>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">{insight.description}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge variant="outline" className="text-xs">
-                        {insight.impact} impact
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {insight.effort} effort
-                      </Badge>
-                    </div>
-                    {insight.dueDate && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Due: {format(insight.dueDate, 'MMM d')}
-                      </p>
+                  <h4 className="text-sm font-medium">{insight.title}</h4>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Badge variant="outline" className="text-xs">
+                    {insight.impact} impact
+                  </Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    {insight.effort} effort
+                  </Badge>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground ml-6">{insight.description}</p>
+              
+              {/* Related Contacts Preview */}
+              {insight.relatedContacts.length > 0 && (
+                <div className="ml-6 flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Contacts:</span>
+                  <div className="flex -space-x-1">
+                    {insight.relatedContacts.slice(0, 3).map((contact, index) => (
+                      <div 
+                        key={contact.id} 
+                        className="w-6 h-6 rounded-full bg-primary/10 border border-background flex items-center justify-center text-xs font-medium"
+                        title={contact.name}
+                      >
+                        {contact.name.charAt(0).toUpperCase()}
+                      </div>
+                    ))}
+                    {insight.relatedContacts.length > 3 && (
+                      <div className="w-6 h-6 rounded-full bg-muted border border-background flex items-center justify-center text-xs">
+                        +{insight.relatedContacts.length - 3}
+                      </div>
                     )}
                   </div>
                 </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+              )}
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Network className="h-5 w-5 text-primary" />
-            Strategic Actions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button 
-              variant="outline" 
-              className="h-auto p-4 flex flex-col items-center gap-2"
-              onClick={() => onNavigate('strategic-planning')}
-            >
-              <Target className="h-6 w-6" />
-              <span className="text-sm">Strategic Planning</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-auto p-4 flex flex-col items-center gap-2"
-              onClick={() => onNavigate('relationship-mapping')}
-            >
-              <Users className="h-6 w-6" />
-              <span className="text-sm">Relationship Map</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-auto p-4 flex flex-col items-center gap-2"
-              onClick={() => onNavigate('campaign-management')}
-            >
-              <Calendar className="h-6 w-6" />
-              <span className="text-sm">Campaign Manager</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-auto p-4 flex flex-col items-center gap-2"
-              onClick={() => onNavigate('analytics-insights')}
-            >
-              <Brain className="h-6 w-6" />
-              <span className="text-sm">AI Insights</span>
-            </Button>
-          </div>
+              {insight.dueDate && (
+                <div className="ml-6 text-xs text-muted-foreground">
+                  Due: {format(insight.dueDate, 'MMM dd, yyyy')}
+                </div>
+              )}
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>

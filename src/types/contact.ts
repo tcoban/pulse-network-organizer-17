@@ -67,6 +67,7 @@ export interface MeetingGoal {
   id: string;
   description: string;
   achieved: boolean;
+  relatedProject?: string; // ID of project related to this goal
 }
 
 export interface EventParticipation {

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Clock, TrendingUp, Users, Brain, Target, MapPin, Bell } from 'lucide-react';
+import { Calendar, Clock, TrendingUp, Users, Brain, Target } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Contact } from '@/types/contact';
 import { format, isThisWeek, addDays } from 'date-fns';
@@ -233,15 +232,6 @@ const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0, stats,
     return bestMatch;
   };
 
-  // Function to count contacts that are candidates for AI introduction analysis
-  const findIntroductionCandidates = (contacts: Contact[]) => {
-    return contacts.filter(contact => 
-      // Contact must have either offering or looking for information
-      (contact.offering && contact.offering.trim().length > 0) || 
-      (contact.lookingFor && contact.lookingFor.trim().length > 0)
-    );
-  };
-
   const getPriorityIcon = (type: DashboardPriority['type']) => {
     switch (type) {
       case 'scheduled_meeting':
@@ -277,288 +267,192 @@ const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0, stats,
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {[1, 2, 3].map(i => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader>
-              <div className="h-4 bg-muted rounded w-3/4"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="h-3 bg-muted rounded"></div>
-                <div className="h-3 bg-muted rounded w-5/6"></div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="mb-8">
+        <Card className="animate-pulse">
+          <CardHeader>
+            <div className="h-4 bg-muted rounded w-3/4"></div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="h-3 bg-muted rounded"></div>
+              <div className="h-3 bg-muted rounded w-5/6"></div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
     <div className="space-y-6 mb-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* This Week's Priorities */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" />
-              This Week's Priorities
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {priorities.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No urgent priorities this week</p>
-            ) : (
-              priorities.slice(0, 5).map(priority => (
-                <div 
-                  key={priority.id} 
-                  className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => onDrillDown?.(`priority-${priority.type}`)}
-                >
-                  <div className={`p-1 rounded ${getPriorityColor(priority.type)}`}>
-                    {getPriorityIcon(priority.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium truncate">{priority.title}</h4>
-                    {priority.description && (
-                      <p className="text-xs text-muted-foreground mt-1">{priority.description}</p>
-                    )}
-                    {priority.dueDate && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Due: {format(priority.dueDate, 'MMM d, yyyy')}
-                      </p>
-                    )}
-                    <p className="text-xs text-primary mt-1">Click to view details</p>
-                  </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Network Intelligence */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-primary" />
-              Network Intelligence
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Tabs defaultValue="trends" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="trends">Trends</TabsTrigger>
-                <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
-              </TabsList>
-              <TabsContent value="trends" className="space-y-3">
-                {networkTrends.length === 0 ? (
-                  <div className="space-y-3">
-                    <div 
-                      className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
-                      onClick={() => onDrillDown?.('trending-topics')}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium">AI Policy Discussions</h4>
-                        <Badge variant="secondary">
-                          <TrendingUp className="h-3 w-3 mr-1" />
-                          8.5
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">Trending in your network: Swiss AI governance framework</p>
-                      <p className="text-xs text-primary mt-1">Click to explore</p>
-                    </div>
-                  </div>
-                ) : (
-                  networkTrends.map(trend => (
-                    <div 
-                      key={trend.id} 
-                      className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
-                      onClick={() => onDrillDown?.(`trend-${trend.id}`)}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium">{trend.topic}</h4>
-                        <Badge variant="secondary">
-                          <TrendingUp className="h-3 w-3 mr-1" />
-                          {trend.trendScore}
-                        </Badge>
-                      </div>
-                      {trend.description && (
-                        <p className="text-xs text-muted-foreground">{trend.description}</p>
-                      )}
-                      <p className="text-xs text-primary mt-1">Click to explore</p>
-                    </div>
-                  ))
-                )}
-              </TabsContent>
-              <TabsContent value="opportunities" className="space-y-3">
-                <div 
-                  className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => onDrillDown?.('cross-connections')}
-                >
-                  <h4 className="text-sm font-medium mb-2">Cross-Connection Opportunities</h4>
-                  <p className="text-xs text-muted-foreground mb-1">
-                    {contacts.filter(c => c.offering && c.lookingFor).length} contacts ready for strategic introductions
-                  </p>
-                  <p className="text-xs text-primary">Click to view matches</p>
-                </div>
-                <div 
-                  className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => onDrillDown?.('collaboration-insights')}
-                >
-                  <h4 className="text-sm font-medium mb-2">AI Collaboration Insights</h4>
-                  <p className="text-xs text-muted-foreground mb-1">
-                    {Math.floor(Math.random() * 5) + 2} high-value collaboration opportunities detected
-                  </p>
-                  <p className="text-xs text-primary">Click to analyze</p>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-
-        {/* Policy Calendar */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
-              Policy Calendar
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {policyEvents.length === 0 ? (
-              <div className="space-y-3">
-                <div 
-                  className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => onDrillDown?.('policy-consultation')}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium">Swiss AI Regulation Consultation</h4>
-                    <Badge className={getEventTypeColor('consultation')}>Consultation</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-1">Deadline: March 15, 2024</p>
-                  <p className="text-xs text-muted-foreground mb-1">Public consultation on AI governance framework</p>
-                  <p className="text-xs text-primary">Click to prepare response</p>
-                </div>
-                <div 
-                  className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => onDrillDown?.('digital-economy-summit')}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium">Digital Economy Summit</h4>
-                    <Badge className={getEventTypeColor('conference')}>Conference</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-1">Date: April 22-23, 2024</p>
-                  <p className="text-xs text-muted-foreground mb-1">Annual conference on digital transformation</p>
-                  <p className="text-xs text-primary">Click to plan participation</p>
-                </div>
-              </div>
-            ) : (
-              policyEvents.slice(0, 5).map(event => (
-                <div 
-                  key={event.id} 
-                  className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => onDrillDown?.(`policy-event-${event.id}`)}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium">{event.title}</h4>
-                    <Badge className={getEventTypeColor(event.eventType)}>
-                      {event.eventType}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-1">
-                    {format(event.date, 'MMM d, yyyy')}
-                  </p>
-                  {event.description && (
-                    <p className="text-xs text-muted-foreground mb-1">{event.description}</p>
-                  )}
-                  <p className="text-xs text-primary">Click to take action</p>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Action Items */}
+      {/* Single Academic Networking Dashboard */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-primary" />
-            Action Items
+            <Brain className="h-5 w-5 text-primary" />
+            Academic Network Insights
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div 
-              className={`flex items-center justify-between p-4 rounded-lg border ${
-                onDrillDown ? 'cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-200' : ''
-              }`}
-              onClick={() => onDrillDown?.('auto-introductions')}
-            >
-              <div>
-                <h4 className="text-sm font-medium">Auto-Introduction Ready</h4>
-                <p className="text-xs text-muted-foreground">
-                  {aiIntroductionCount > 0 ? `${aiIntroductionCount} AI-verified introduction opportunities` : 'Run AI analysis to find introduction opportunities'}
+          <Tabs defaultValue="priorities" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="priorities">Weekly Focus</TabsTrigger>
+              <TabsTrigger value="opportunities">Connection Opportunities</TabsTrigger>
+              <TabsTrigger value="trends">Network Trends</TabsTrigger>
+              <TabsTrigger value="policy">Policy & Events</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="priorities" className="space-y-3 mt-4">
+              <h3 className="text-sm font-medium mb-3">This Week's Academic Focus</h3>
+              {priorities.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No urgent priorities this week</p>
+              ) : (
+                priorities.slice(0, 5).map(priority => (
+                  <div 
+                    key={priority.id} 
+                    className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => onDrillDown?.(`priority-${priority.type}`)}
+                  >
+                    <div className={`p-1 rounded ${getPriorityColor(priority.type)}`}>
+                      {getPriorityIcon(priority.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-medium truncate">{priority.title}</h4>
+                      {priority.description && (
+                        <p className="text-xs text-muted-foreground mt-1">{priority.description}</p>
+                      )}
+                      {priority.dueDate && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Due: {format(priority.dueDate, 'MMM d, yyyy')}
+                        </p>
+                      )}
+                      <p className="text-xs text-primary mt-1">Click to take action</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </TabsContent>
+
+            <TabsContent value="opportunities" className="space-y-3 mt-4">
+              <h3 className="text-sm font-medium mb-3">Strategic Connection Opportunities</h3>
+              <div 
+                className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => onDrillDown?.('cross-connections')}
+              >
+                <h4 className="text-sm font-medium mb-2">Cross-Connection Opportunities</h4>
+                <p className="text-xs text-muted-foreground mb-1">
+                  {contacts.filter(c => c.offering && c.lookingFor).length} contacts ready for strategic introductions
                 </p>
-                {onDrillDown && (
-                  <p className="text-xs text-primary mt-1">Click to drill down</p>
-                )}
+                <p className="text-xs text-primary">Click to view matches</p>
               </div>
-              <Badge variant="outline">{aiIntroductionCount}</Badge>
-            </div>
-            <div 
-              className={`flex items-center justify-between p-4 rounded-lg border ${
-                onActionDrillDown ? 'cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-200' : ''
-              }`}
-              onClick={() => onActionDrillDown?.('opportunity-matches')}
-            >
-              <div>
-                <h4 className="text-sm font-medium">Open Matches</h4>
-                <p className="text-xs text-muted-foreground">
-                  Potential connections
+              <div 
+                className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => onDrillDown?.('collaboration-insights')}
+              >
+                <h4 className="text-sm font-medium mb-2">AI Collaboration Insights</h4>
+                <p className="text-xs text-muted-foreground mb-1">
+                  {Math.floor(Math.random() * 5) + 2} high-value collaboration opportunities detected
                 </p>
-                {onActionDrillDown && (
-                  <p className="text-xs text-primary mt-1">Click to drill down</p>
-                )}
+                <p className="text-xs text-primary">Click to analyze</p>
               </div>
-              <Badge variant="outline">{stats?.openMatches || 0}</Badge>
-            </div>
-            <div 
-              className={`flex items-center justify-between p-4 rounded-lg border ${
-                onActionDrillDown ? 'cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-200' : ''
-              }`}
-              onClick={() => onActionDrillDown?.('follow-up-alerts')}
-            >
-              <div>
-                <h4 className="text-sm font-medium">Re-engagement Needed</h4>
-                <p className="text-xs text-muted-foreground">
-                  90+ days since contact
-                </p>
-                {onActionDrillDown && (
-                  <p className="text-xs text-primary mt-1">Click to drill down</p>
-                )}
-              </div>
-              <Badge variant="outline">{stats?.needsReengagement || 0}</Badge>
-            </div>
-            <div 
-              className={`flex items-center justify-between p-4 rounded-lg border ${
-                onDrillDown ? 'cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-200' : ''
-              }`}
-              onClick={() => onDrillDown?.('follow-up-alerts')}
-            >
-              <div>
-                <h4 className="text-sm font-medium">Follow-up Alerts</h4>
-                <p className="text-xs text-muted-foreground">
-                  {priorities.filter(p => p.type === 'follow_up_action').length} contacts need relationship maintenance
-                </p>
-                {onDrillDown && (
-                  <p className="text-xs text-primary mt-1">Click to drill down</p>
-                )}
-              </div>
-              <Badge variant="outline">{priorities.filter(p => p.type === 'follow_up_action').length}</Badge>
-            </div>
-          </div>
+            </TabsContent>
+
+            <TabsContent value="trends" className="space-y-3 mt-4">
+              <h3 className="text-sm font-medium mb-3">Trending Topics in Your Network</h3>
+              {networkTrends.length === 0 ? (
+                <div className="space-y-3">
+                  <div 
+                    className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => onDrillDown?.('trending-topics')}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-medium">AI Policy Discussions</h4>
+                      <Badge variant="secondary">
+                        <TrendingUp className="h-3 w-3 mr-1" />
+                        8.5
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Trending in your network: Swiss AI governance framework</p>
+                    <p className="text-xs text-primary mt-1">Click to explore connections</p>
+                  </div>
+                </div>
+              ) : (
+                networkTrends.map(trend => (
+                  <div 
+                    key={trend.id} 
+                    className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => onDrillDown?.(`trend-${trend.id}`)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-medium">{trend.topic}</h4>
+                      <Badge variant="secondary">
+                        <TrendingUp className="h-3 w-3 mr-1" />
+                        {trend.trendScore}
+                      </Badge>
+                    </div>
+                    {trend.description && (
+                      <p className="text-xs text-muted-foreground">{trend.description}</p>
+                    )}
+                    <p className="text-xs text-primary mt-1">Click to explore connections</p>
+                  </div>
+                ))
+              )}
+            </TabsContent>
+
+            <TabsContent value="policy" className="space-y-3 mt-4">
+              <h3 className="text-sm font-medium mb-3">Policy Events & Academic Calendar</h3>
+              {policyEvents.length === 0 ? (
+                <div className="space-y-3">
+                  <div 
+                    className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => onDrillDown?.('policy-consultation')}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-medium">Swiss AI Regulation Consultation</h4>
+                      <Badge className={getEventTypeColor('consultation')}>Consultation</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-1">Deadline: March 15, 2024</p>
+                    <p className="text-xs text-muted-foreground mb-1">Public consultation on AI governance framework</p>
+                    <p className="text-xs text-primary">Click to prepare response</p>
+                  </div>
+                  <div 
+                    className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => onDrillDown?.('digital-economy-summit')}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-medium">Digital Economy Summit</h4>
+                      <Badge className={getEventTypeColor('conference')}>Conference</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-1">Date: April 22-23, 2024</p>
+                    <p className="text-xs text-muted-foreground mb-1">Annual conference on digital transformation</p>
+                    <p className="text-xs text-primary">Click to plan participation</p>
+                  </div>
+                </div>
+              ) : (
+                policyEvents.slice(0, 5).map(event => (
+                  <div 
+                    key={event.id} 
+                    className="p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => onDrillDown?.(`policy-${event.id}`)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-medium">{event.title}</h4>
+                      <Badge className={getEventTypeColor(event.eventType)}>
+                        {event.eventType}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      {event.eventType === 'deadline' ? 'Deadline' : 'Date'}: {format(event.date, 'MMM dd, yyyy')}
+                    </p>
+                    {event.description && (
+                      <p className="text-xs text-muted-foreground mb-1">{event.description}</p>
+                    )}
+                    <p className="text-xs text-primary">Click to view details</p>
+                  </div>
+                ))
+              )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
