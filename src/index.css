@@ -8,42 +8,65 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 248 50% 98%;
-    --foreground: 220 20% 15%;
+    --background: 220 15% 97%;
+    --foreground: 220 25% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 15%;
+    --card-foreground: 220 25% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 15%;
+    --popover-foreground: 220 25% 12%;
 
-    --primary: 215 85% 50%;
+    --primary: 215 90% 55%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 215 85% 55%;
+    --primary-hover: 215 90% 60%;
+    --primary-glow: 215 100% 70%;
 
-    --secondary: 210 20% 95%;
-    --secondary-foreground: 220 20% 25%;
+    --secondary: 210 25% 94%;
+    --secondary-foreground: 220 25% 20%;
 
-    --muted: 210 30% 96%;
-    --muted-foreground: 220 15% 55%;
+    --muted: 210 35% 95%;
+    --muted-foreground: 220 18% 50%;
 
-    --accent: 280 85% 60%;
+    --accent: 280 90% 62%;
     --accent-foreground: 0 0% 100%;
 
-    --success: 145 65% 50%;
+    --success: 145 70% 48%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 35 85% 55%;
+    --warning: 35 90% 52%;
     --warning-foreground: 0 0% 100%;
 
-    --destructive: 0 75% 55%;
+    --destructive: 0 80% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 25% 88%;
-    --input: 215 25% 92%;
-    --ring: 215 85% 50%;
+    --border: 215 30% 85%;
+    --input: 215 30% 90%;
+    --ring: 215 90% 55%;
 
     --radius: 0.5rem;
+
+    /* Strategic UI enhancement colors */
+    --strategic-blue: 215 90% 55%;
+    --strategic-purple: 280 90% 62%;
+    --strategic-green: 145 70% 48%;
+    --strategic-orange: 35 90% 52%;
+    --strategic-red: 0 80% 52%;
+
+    /* Metrics colors */
+    --metric-high: 145 70% 48%;
+    --metric-medium: 35 90% 52%;
+    --metric-low: 0 80% 52%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-strategic: linear-gradient(135deg, hsl(var(--strategic-blue)), hsl(var(--strategic-purple)));
+    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(145 70% 60%));
+
+    /* Shadows */
+    --shadow-strategic: 0 8px 25px -8px hsl(var(--primary) / 0.15);
+    --shadow-card: 0 4px 15px -4px hsl(220 25% 12% / 0.08);
+    --shadow-glow: 0 0 30px hsl(var(--primary-glow) / 0.3);
 
     --sidebar-background: 0 0% 98%;
 

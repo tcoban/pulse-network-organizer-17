@@ -27,7 +27,8 @@ export default {
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))',
-					hover: 'hsl(var(--primary-hover))'
+					hover: 'hsl(var(--primary-hover))',
+					glow: 'hsl(var(--primary-glow))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -53,6 +54,18 @@ export default {
 					DEFAULT: 'hsl(var(--warning))',
 					foreground: 'hsl(var(--warning-foreground))'
 				},
+				strategic: {
+					blue: 'hsl(var(--strategic-blue))',
+					purple: 'hsl(var(--strategic-purple))',
+					green: 'hsl(var(--strategic-green))',
+					orange: 'hsl(var(--strategic-orange))',
+					red: 'hsl(var(--strategic-red))'
+				},
+				metric: {
+					high: 'hsl(var(--metric-high))',
+					medium: 'hsl(var(--metric-medium))',
+					low: 'hsl(var(--metric-low))'
+				},
 				popover: {
 					DEFAULT: 'hsl(var(--popover))',
 					foreground: 'hsl(var(--popover-foreground))'
@@ -76,6 +89,16 @@ export default {
 				lg: 'var(--radius)',
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
+			},
+			backgroundImage: {
+				'gradient-primary': 'var(--gradient-primary)',
+				'gradient-strategic': 'var(--gradient-strategic)',
+				'gradient-success': 'var(--gradient-success)'
+			},
+			boxShadow: {
+				'strategic': 'var(--shadow-strategic)',
+				'card': 'var(--shadow-card)',
+				'glow': 'var(--shadow-glow)'
 			},
 			keyframes: {
 				'accordion-down': {

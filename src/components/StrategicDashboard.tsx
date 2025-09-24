@@ -280,10 +280,10 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown, onCreateProject
 
   const getImpactColor = (impact: string) => {
     switch (impact) {
-      case 'high': return 'text-red-600 bg-red-50 border-red-200';
-      case 'medium': return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'low': return 'text-green-600 bg-green-50 border-green-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+      case 'high': return 'text-metric-high bg-metric-high/10 border-metric-high/20';
+      case 'medium': return 'text-metric-medium bg-metric-medium/10 border-metric-medium/20';
+      case 'low': return 'text-metric-low bg-metric-low/10 border-metric-low/20';
+      default: return 'text-muted-foreground bg-muted border-border';
     }
   };
 
@@ -320,51 +320,62 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown, onCreateProject
   return (
     <div className="space-y-6 mb-8">
       {/* Network Performance Metrics */}
-      <Card>
+      <Card className="bg-gradient-strategic text-white shadow-strategic">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
+          <CardTitle className="flex items-center gap-2 text-white">
+            <TrendingUp className="h-6 w-6" />
             Academic Network Performance
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{metrics.connectionVelocity}</div>
-              <div className="text-xs text-muted-foreground">New Connections/Week</div>
+              <div className="text-3xl font-bold mb-1">{metrics.connectionVelocity}</div>
+              <div className="text-sm opacity-90">New Connections</div>
+              <div className="text-xs opacity-75">per week</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{metrics.engagementRate}%</div>
-              <div className="text-xs text-muted-foreground">Engagement Rate</div>
+              <div className="text-3xl font-bold mb-1">{metrics.engagementRate}%</div>
+              <div className="text-sm opacity-90">Engagement Rate</div>
+              <div className="text-xs opacity-75">active contacts</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">{metrics.introductionSuccess}</div>
-              <div className="text-xs text-muted-foreground">Introductions Made</div>
+              <div className="text-3xl font-bold mb-1">{metrics.introductionSuccess}</div>
+              <div className="text-sm opacity-90">Introductions</div>
+              <div className="text-xs opacity-75">this month</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-2xl font-bold mb-1">
                 {new Intl.NumberFormat('en-CH', { 
                   style: 'currency', 
                   currency: 'CHF',
+                  notation: 'compact',
                   minimumFractionDigits: 0 
                 }).format(metrics.pipelineValue)}
               </div>
-              <div className="text-xs text-muted-foreground">Pipeline Value</div>
+              <div className="text-sm opacity-90">Pipeline Value</div>
+              <div className="text-xs opacity-75">estimated</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-indigo-600">{metrics.influenceScore}/100</div>
-              <div className="text-xs text-muted-foreground">Academic Influence</div>
+              <div className="text-3xl font-bold mb-1">{metrics.influenceScore}</div>
+              <div className="text-sm opacity-90">Influence Score</div>
+              <div className="text-xs opacity-75">out of 100</div>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Priority Actions - Consolidated Academic Dashboard */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-primary" />
-            Priority Actions
+      <Card className="shadow-card">
+        <CardHeader className="bg-gradient-to-r from-background to-muted/50">
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Target className="h-6 w-6 text-primary" />
+              Priority Actions & Strategic Impact
+            </div>
+            <Badge className="bg-gradient-primary text-white border-0">
+              {insights.length} Actions Identified
+            </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -383,88 +394,202 @@ const StrategicDashboard = ({ contacts, onNavigate, onDrillDown, onCreateProject
                 New Project
               </Button>
             </div>
-            {projects.slice(0, 2).map(project => (
-              <div 
-                key={project.id} 
-                className="space-y-2 p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow mb-2"
-                onClick={() => onEditProject?.(project)}
-              >
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-medium">{project.title}</h4>
-                  <Badge variant={project.status === 'active' ? 'default' : 'outline'}>
-                    {project.status}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">{project.description}</p>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">
-                    {project.relatedContacts.length} contacts involved
-                  </span>
-                  {project.deadline && (
-                    <span className="text-muted-foreground">
-                      Due: {format(project.deadline, 'MMM dd, yyyy')}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Actionable Insights */}
-          {insights.map(insight => (
-            <div 
-              key={insight.id} 
-              className="space-y-2 p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => insight.actionUrl && onDrillDown(insight.actionUrl)}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <div className={`p-1 rounded-full ${getImpactColor(insight.impact)}`}>
-                    {getTypeIcon(insight.type)}
+            {projects.slice(0, 2).map(project => {
+              const progress = project.targetValue ? Math.round((project.currentValue / project.targetValue) * 100) : 0;
+              return (
+                <div 
+                  key={project.id} 
+                  className="group p-4 rounded-xl border-2 border-border hover:border-primary/30 cursor-pointer hover:shadow-strategic transition-all duration-300 mb-3 bg-gradient-to-br from-card to-muted/20"
+                  onClick={() => onEditProject?.(project)}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
+                        {project.title}
+                      </h4>
+                      <p className="text-sm text-muted-foreground mb-2">{project.description}</p>
+                    </div>
+                    <Badge 
+                      variant={project.status === 'active' ? 'default' : 'outline'}
+                      className={project.status === 'active' ? 'bg-gradient-success text-white border-0' : ''}
+                    >
+                      {project.status}
+                    </Badge>
                   </div>
-                  <h4 className="text-sm font-medium">{insight.title}</h4>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Badge variant="outline" className="text-xs">
-                    {insight.impact} impact
-                  </Badge>
-                  <Badge variant="secondary" className="text-xs">
-                    {insight.effort} effort
-                  </Badge>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground ml-6">{insight.description}</p>
-              
-              {/* Related Contacts Preview */}
-              {insight.relatedContacts.length > 0 && (
-                <div className="ml-6 flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Contacts:</span>
-                  <div className="flex -space-x-1">
-                    {insight.relatedContacts.slice(0, 3).map((contact, index) => (
-                      <div 
-                        key={contact.id} 
-                        className="w-6 h-6 rounded-full bg-primary/10 border border-background flex items-center justify-center text-xs font-medium"
-                        title={contact.name}
-                      >
-                        {contact.name.charAt(0).toUpperCase()}
+                  
+                  {project.targetValue && (
+                    <div className="mb-3">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-muted-foreground">Progress</span>
+                        <span className="font-medium">{progress}%</span>
                       </div>
-                    ))}
-                    {insight.relatedContacts.length > 3 && (
-                      <div className="w-6 h-6 rounded-full bg-muted border border-background flex items-center justify-center text-xs">
-                        +{insight.relatedContacts.length - 3}
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div 
+                          className="bg-gradient-success h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(progress, 100)}%` }}
+                        ></div>
                       </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-4">
+                      <span className="flex items-center gap-1 text-muted-foreground">
+                        <Users className="h-3 w-3" />
+                        {project.relatedContacts.length} contacts
+                      </span>
+                      {project.type === 'fundraising' && project.targetValue && (
+                        <span className="flex items-center gap-1 text-strategic-blue font-medium">
+                          <DollarSign className="h-3 w-3" />
+                          {new Intl.NumberFormat('en-CH', { 
+                            style: 'currency', 
+                            currency: 'CHF',
+                            notation: 'compact'
+                          }).format(project.currentValue)} / {new Intl.NumberFormat('en-CH', { 
+                            style: 'currency', 
+                            currency: 'CHF',
+                            notation: 'compact'
+                          }).format(project.targetValue)}
+                        </span>
+                      )}
+                    </div>
+                    {project.deadline && (
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {format(project.deadline, 'MMM dd')}
+                      </span>
                     )}
                   </div>
                 </div>
-              )}
+              );
+            })}
+          </div>
 
-              {insight.dueDate && (
-                <div className="ml-6 text-xs text-muted-foreground">
-                  Due: {format(insight.dueDate, 'MMM dd, yyyy')}
+          {/* Impact/Effort Matrix Visualization */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            {/* High Impact Actions */}
+            <div className="bg-gradient-to-br from-metric-high/5 to-metric-high/10 rounded-xl p-4 border border-metric-high/20">
+              <h3 className="text-sm font-semibold text-metric-high mb-3 flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                High Impact Actions ({insights.filter(i => i.impact === 'high').length})
+              </h3>
+              {insights.filter(i => i.impact === 'high').slice(0, 2).map(insight => (
+                <div key={insight.id} className="text-xs text-muted-foreground mb-2">
+                  • {insight.title}
                 </div>
-              )}
+              ))}
             </div>
-          ))}
+            
+            {/* Quick Wins */}
+            <div className="bg-gradient-to-br from-strategic-green/5 to-strategic-green/10 rounded-xl p-4 border border-strategic-green/20">
+              <h3 className="text-sm font-semibold text-strategic-green mb-3 flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Quick Wins ({insights.filter(i => i.effort === 'low').length})
+              </h3>
+              {insights.filter(i => i.effort === 'low').slice(0, 2).map(insight => (
+                <div key={insight.id} className="text-xs text-muted-foreground mb-2">
+                  • {insight.title}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Strategic Actions List */}
+          <div className="space-y-3">
+            {insights.map((insight, index) => {
+              const impactValue = { high: 3, medium: 2, low: 1 }[insight.impact];
+              const effortValue = { low: 3, medium: 2, high: 1 }[insight.effort];
+              const strategicScore = impactValue * effortValue;
+              
+              return (
+                <div 
+                  key={insight.id} 
+                  className="group p-4 rounded-xl border-2 border-border hover:border-primary/30 cursor-pointer hover:shadow-strategic transition-all duration-300 bg-gradient-to-r from-card to-muted/10"
+                  onClick={() => insight.actionUrl && onDrillDown(insight.actionUrl)}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-start gap-3 flex-1">
+                      <div className={`p-2 rounded-lg ${getImpactColor(insight.impact)}`}>
+                        {getTypeIcon(insight.type)}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
+                          {insight.title}
+                        </h4>
+                        <p className="text-sm text-muted-foreground">{insight.description}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant="outline" 
+                          className={`text-xs ${insight.impact === 'high' ? 'border-metric-high text-metric-high' : insight.impact === 'medium' ? 'border-metric-medium text-metric-medium' : 'border-metric-low text-metric-low'}`}
+                        >
+                          {insight.impact} impact
+                        </Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {insight.effort} effort
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {[...Array(strategicScore)].map((_, i) => (
+                          <div key={i} className="w-2 h-2 rounded-full bg-primary"></div>
+                        ))}
+                        <span className="text-xs text-muted-foreground ml-1">Priority</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Enhanced Contact Visualization */}
+                  {insight.relatedContacts.length > 0 && (
+                    <div className="flex items-center justify-between bg-muted/30 rounded-lg p-3 mt-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-foreground">Related Contacts:</span>
+                        <div className="flex -space-x-2">
+                          {insight.relatedContacts.slice(0, 4).map((contact, index) => (
+                            <div 
+                              key={contact.id} 
+                              className="w-8 h-8 rounded-full bg-gradient-primary border-2 border-background flex items-center justify-center text-xs font-bold text-white shadow-sm"
+                              title={contact.name}
+                            >
+                              {contact.name.charAt(0).toUpperCase()}
+                            </div>
+                          ))}
+                          {insight.relatedContacts.length > 4 && (
+                            <div className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-medium">
+                              +{insight.relatedContacts.length - 4}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {insight.dueDate && (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          Due {format(insight.dueDate, 'MMM dd')}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  <div className="mt-3 flex items-center justify-end">
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="text-primary hover:text-primary-foreground hover:bg-primary group-hover:shadow-sm transition-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        insight.actionUrl && onDrillDown(insight.actionUrl);
+                      }}
+                    >
+                      Take Action
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </CardContent>
       </Card>
     </div>

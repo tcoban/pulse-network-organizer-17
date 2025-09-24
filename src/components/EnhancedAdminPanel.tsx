@@ -297,62 +297,89 @@ const EnhancedAdminPanel = () => {
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
+            <Card className="bg-gradient-to-br from-strategic-blue/5 to-strategic-blue/10 border-strategic-blue/20 shadow-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium text-strategic-blue">Total Users</CardTitle>
+                <div className="p-2 rounded-lg bg-strategic-blue/10">
+                  <Users className="h-5 w-5 text-strategic-blue" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{systemStats.totalUsers}</div>
-                <p className="text-xs text-muted-foreground">
-                  {systemStats.activeUsers} active this month
+                <div className="text-3xl font-bold text-foreground mb-1">{systemStats.totalUsers}</div>
+                <p className="text-sm text-muted-foreground">
+                  <span className="text-strategic-green font-medium">{systemStats.activeUsers}</span> active this month
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gradient-to-br from-strategic-purple/5 to-strategic-purple/10 border-strategic-purple/20 shadow-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Contacts</CardTitle>
-                <Database className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium text-strategic-purple">Contacts</CardTitle>
+                <div className="p-2 rounded-lg bg-strategic-purple/10">
+                  <Database className="h-5 w-5 text-strategic-purple" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{systemStats.totalContacts}</div>
-                <p className="text-xs text-muted-foreground">
-                  {Math.floor(systemStats.totalContacts / systemStats.totalUsers)} avg per user
+                <div className="text-3xl font-bold text-foreground mb-1">{systemStats.totalContacts}</div>
+                <p className="text-sm text-muted-foreground">
+                  <span className="text-strategic-purple font-medium">{Math.floor(systemStats.totalContacts / Math.max(systemStats.totalUsers, 1))}</span> avg per user
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-gradient-to-br from-strategic-green/5 to-strategic-green/10 border-strategic-green/20 shadow-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">System Health</CardTitle>
-                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium text-strategic-green">System Health</CardTitle>
+                <div className="p-2 rounded-lg bg-strategic-green/10">
+                  <BarChart3 className="h-5 w-5 text-strategic-green" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{systemStats.systemUptime.toFixed(1)}%</div>
-                <p className="text-xs text-muted-foreground">Uptime last 30 days</p>
+                <div className="text-3xl font-bold text-foreground mb-1">{systemStats.systemUptime.toFixed(1)}%</div>
+                <p className="text-sm text-muted-foreground">
+                  <span className="text-strategic-green font-medium">Excellent</span> uptime last 30 days
+                </p>
               </CardContent>
             </Card>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent System Activity</CardTitle>
+          <Card className="shadow-card">
+            <CardHeader className="bg-gradient-to-r from-background to-muted/30">
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                Real-Time System Activity
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="p-0">
+              <div className="space-y-0">
                 {[
-                  { time: '2 minutes ago', event: 'LinkedIn integration synchronized', type: 'success' },
-                  { time: '15 minutes ago', event: '3 new contacts imported', type: 'info' },
-                  { time: '1 hour ago', event: 'Weekly analytics report generated', type: 'info' },
-                  { time: '3 hours ago', event: 'User sarah.mueller@example.com promoted to admin', type: 'warning' }
+                  { time: '2 minutes ago', event: 'LinkedIn integration synchronized', type: 'success', icon: Webhook },
+                  { time: '15 minutes ago', event: '3 new contacts imported', type: 'info', icon: Users },
+                  { time: '1 hour ago', event: 'Weekly analytics report generated', type: 'info', icon: BarChart3 },
+                  { time: '3 hours ago', event: 'User sarah.mueller@example.com promoted to admin', type: 'warning', icon: Crown }
                 ].map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between py-2 border-b last:border-0">
-                    <div>
-                      <p className="text-sm">{activity.event}</p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
+                  <div key={index} className="flex items-center justify-between p-4 border-b last:border-0 hover:bg-muted/20 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${
+                        activity.type === 'success' ? 'bg-strategic-green/10 text-strategic-green' :
+                        activity.type === 'warning' ? 'bg-strategic-orange/10 text-strategic-orange' :
+                        'bg-strategic-blue/10 text-strategic-blue'
+                      }`}>
+                        <activity.icon className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{activity.event}</p>
+                        <p className="text-xs text-muted-foreground">{activity.time}</p>
+                      </div>
                     </div>
-                    <Badge variant={activity.type === 'success' ? 'default' : activity.type === 'warning' ? 'destructive' : 'secondary'}>
+                    <Badge 
+                      variant="outline" 
+                      className={
+                        activity.type === 'success' ? 'border-strategic-green text-strategic-green bg-strategic-green/5' :
+                        activity.type === 'warning' ? 'border-strategic-orange text-strategic-orange bg-strategic-orange/5' :
+                        'border-strategic-blue text-strategic-blue bg-strategic-blue/5'
+                      }
+                    >
                       {activity.type}
                     </Badge>
                   </div>
@@ -364,12 +391,13 @@ const EnhancedAdminPanel = () => {
 
         {/* System Settings Tab */}
         <TabsContent value="system" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Brain className="h-5 w-5" />
+          <Card className="shadow-card bg-gradient-to-br from-card to-muted/10">
+            <CardHeader className="bg-gradient-to-r from-strategic-purple/5 to-strategic-blue/5 border-b">
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <Brain className="h-6 w-6 text-strategic-purple" />
                 AI & Intelligence Settings
               </CardTitle>
+              <p className="text-sm text-muted-foreground">Configure intelligent matching and priority algorithms</p>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -445,21 +473,25 @@ const EnhancedAdminPanel = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Settings</CardTitle>
+          <Card className="shadow-card bg-gradient-to-br from-card to-strategic-blue/5">
+            <CardHeader className="border-b bg-gradient-to-r from-strategic-blue/5 to-strategic-green/5">
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-strategic-blue" />
+                Notification & Communication Settings
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">Control how the system communicates with users</p>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6 pt-6">
               {Object.entries(settings.notificationSettings).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor={key}>
+                <div key={key} className="flex items-center justify-between p-4 rounded-xl border border-border hover:border-primary/30 transition-colors bg-gradient-to-r from-card to-muted/10">
+                  <div className="flex-1">
+                    <Label htmlFor={key} className="text-base font-medium text-foreground">
                       {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
                     </Label>
-                    <p className="text-xs text-muted-foreground">
-                      {key === 'emailAlerts' && 'Send email notifications for urgent actions'}
-                      {key === 'weeklyReports' && 'Weekly network activity summaries'}
-                      {key === 'urgentFollowups' && 'Immediate alerts for high-priority follow-ups'}
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {key === 'emailAlerts' && 'Instant email notifications for critical actions and opportunities'}
+                      {key === 'weeklyReports' && 'Comprehensive weekly summaries of network activity and insights'}
+                      {key === 'urgentFollowups' && 'Priority alerts for high-value contacts requiring immediate attention'}
                     </p>
                   </div>
                   <Switch
@@ -472,6 +504,7 @@ const EnhancedAdminPanel = () => {
                         [key]: checked
                       }
                     }))}
+                    className="ml-4"
                   />
                 </div>
               ))}
