@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,21 +37,33 @@ interface ProjectFormProps {
 }
 
 const ProjectForm = ({ project, isOpen, onClose, onSave }: ProjectFormProps) => {
-  const [formData, setFormData] = useState<Project>(() => ({
-    id: project?.id || crypto.randomUUID(),
-    title: project?.title || '',
-    description: project?.description || '',
-    type: project?.type || 'fundraising',
-    targetValue: project?.targetValue || 0,
-    currentValue: project?.currentValue || 0,
-    deadline: project?.deadline || undefined,
-    priority: project?.priority || 'medium',
-    relatedContacts: project?.relatedContacts || [],
-    status: project?.status || 'planning',
-    milestones: project?.milestones || []
-  }));
+  const getDefaultFormData = (): Project => ({
+    id: crypto.randomUUID(),
+    title: '',
+    description: '',
+    type: 'fundraising',
+    targetValue: 0,
+    currentValue: 0,
+    deadline: undefined,
+    priority: 'medium',
+    relatedContacts: [],
+    status: 'planning',
+    milestones: []
+  });
 
+  const [formData, setFormData] = useState<Project>(getDefaultFormData);
   const [newMilestone, setNewMilestone] = useState('');
+
+  // Reset form data when project changes or dialog opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      if (project) {
+        setFormData({ ...project });
+      } else {
+        setFormData(getDefaultFormData());
+      }
+    }
+  }, [project, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

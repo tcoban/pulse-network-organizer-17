@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ContactOpportunity, MeetingGoal } from '@/types/contact';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,21 +32,30 @@ interface OpportunityFormProps {
 
 const OpportunityForm = ({ opportunity, isOpen, onClose, onSave, isEditing = false }: OpportunityFormProps) => {
   const { toast } = useToast();
-  const [formData, setFormData] = useState<Partial<ContactOpportunity>>(() => {
-    if (opportunity) return { ...opportunity };
-    
-    return {
-      title: '',
-      type: 'meeting',
-      date: new Date(),
-      location: '',
-      description: '',
-      registrationStatus: 'considering',
-      meetingGoals: []
-    };
+  
+  const getDefaultFormData = () => ({
+    title: '',
+    type: 'meeting' as const,
+    date: new Date(),
+    location: '',
+    description: '',
+    registrationStatus: 'considering' as const,
+    meetingGoals: []
   });
 
+  const [formData, setFormData] = useState<Partial<ContactOpportunity>>(getDefaultFormData);
   const [newGoal, setNewGoal] = useState('');
+
+  // Reset form data when opportunity changes or dialog opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      if (opportunity) {
+        setFormData({ ...opportunity });
+      } else {
+        setFormData(getDefaultFormData());
+      }
+    }
+  }, [opportunity, isOpen]);
 
   const handleInputChange = (field: keyof ContactOpportunity, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));

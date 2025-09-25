@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Contact, ContactPreferences } from '@/types/contact';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { Button } from '@/components/ui/button';
@@ -34,38 +34,47 @@ interface ContactFormProps {
 const ContactForm = ({ contact, isOpen, onClose, onSave, isEditing = false }: ContactFormProps) => {
   const { toast } = useToast();
   const { teamMembers } = useTeamMembers();
-  const [formData, setFormData] = useState<Partial<Contact>>(() => {
-    if (contact) return { ...contact };
-    
-    return {
-      name: '',
-      email: '',
-      phone: '',
-      company: '',
-      position: '',
-      notes: '',
-      tags: [],
-      referredBy: '',
-      currentProjects: '',
-      mutualBenefit: '',
-      offering: '',
-      lookingFor: '',
-      affiliation: '',
-      cooperationRating: 3,
-      potentialScore: 3,
-      assignedTo: teamMembers[0]?.id || '',
-      socialLinks: { linkedin: '', twitter: '', github: '' },
-      preferences: {
-        language: 'English',
-        preferredChannel: 'email',
-        availableTimes: '',
-        meetingLocation: ''
-      },
-      upcomingOpportunities: []
-    };
+  
+  const getDefaultFormData = (): Partial<Contact> => ({
+    name: '',
+    email: '',
+    phone: '',
+    company: '',
+    position: '',
+    notes: '',
+    tags: [],
+    referredBy: '',
+    currentProjects: '',
+    mutualBenefit: '',
+    offering: '',
+    lookingFor: '',
+    affiliation: '',
+    cooperationRating: 3,
+    potentialScore: 3,
+    assignedTo: teamMembers[0]?.id || '',
+    socialLinks: { linkedin: '', twitter: '', github: '' },
+    preferences: {
+      language: 'English',
+      preferredChannel: 'email' as const,
+      availableTimes: '',
+      meetingLocation: ''
+    },
+    upcomingOpportunities: []
   });
 
+  const [formData, setFormData] = useState<Partial<Contact>>(getDefaultFormData);
   const [newTag, setNewTag] = useState('');
+
+  // Reset form data when contact changes or dialog opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      if (contact) {
+        setFormData({ ...contact });
+      } else {
+        setFormData(getDefaultFormData());
+      }
+    }
+  }, [contact, isOpen, teamMembers]);
 
   const handleInputChange = (field: keyof Contact, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
