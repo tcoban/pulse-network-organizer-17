@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Clock, TrendingUp, Users, Brain, Target } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -326,7 +327,17 @@ const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0, stats,
                           Due: {format(priority.dueDate, 'MMM d, yyyy')}
                         </p>
                       )}
-                      <p className="text-xs text-primary mt-1">Click to take action</p>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="text-primary hover:text-primary-foreground hover:bg-primary mt-2 text-xs h-6"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDrillDown?.(`take-action-${priority.type}`);
+                        }}
+                      >
+                        Take Action
+                      </Button>
                     </div>
                   </div>
                 ))

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { addDays } from 'date-fns';
 import { Contact, ContactOpportunity } from '@/types/contact';
 import { useContacts } from '@/hooks/useContacts';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,6 +17,7 @@ import AdvancedSearch from '@/components/AdvancedSearch';
 import AdminPanel from '@/components/AdminPanel';
 import EnhancedAdminPanel from '@/components/EnhancedAdminPanel';
 import ProjectForm from '@/components/ProjectForm';
+import BulkActionMode from '@/components/BulkActionMode';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -64,6 +66,8 @@ const Index = () => {
   const [aiIntroductionCount, setAiIntroductionCount] = useState(0);
   const [projectFormOpen, setProjectFormOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<any>(null);
+  const [showBulkActionMode, setShowBulkActionMode] = useState(false);
+  const [bulkActionContacts, setBulkActionContacts] = useState<Contact[]>([]);
 
   // Filter and sort contacts
   const filteredContacts = useMemo(() => {
@@ -225,6 +229,17 @@ const Index = () => {
     }
   };
 
+  const handleTakeAction = (actionType: string, preSelectedContacts?: Contact[]) => {
+    if (preSelectedContacts && preSelectedContacts.length > 0) {
+      // Scenario B: Direct action from dashboard with pre-selected contacts
+      setBulkActionContacts(preSelectedContacts);
+      setShowBulkActionMode(true);
+    } else {
+      // Scenario A: Go to operations mode first
+      setIsOperationsMode(true);
+    }
+  };
+
   const handleUpdateContact = async (updatedContact: Contact) => {
     try {
       await updateContact(updatedContact.id, updatedContact);
@@ -297,10 +312,14 @@ const Index = () => {
       <OperationsMode
         contacts={contacts}
         onClose={() => setIsOperationsMode(false)}
-        onContactUpdate={(updatedContacts) => {
-          // This is a workaround since OperationsMode expects array but we have individual update
-          // We'll need to refactor OperationsMode later to use the new hook pattern
-          console.log('Operations mode update not yet implemented with new database pattern');
+        onContactUpdate={(data: any) => {
+          if (data?.action === 'bulkAction' && data?.contacts) {
+            setBulkActionContacts(data.contacts);
+            setIsOperationsMode(false);
+            setShowBulkActionMode(true);
+          } else {
+            console.log('Operations mode update not yet implemented with new database pattern');
+          }
         }}
       />
     );
@@ -355,6 +374,22 @@ const Index = () => {
           {showEnhancedAdmin ? <EnhancedAdminPanel /> : <AdminPanel />}
         </main>
       </div>
+    );
+  }
+
+  if (showBulkActionMode) {
+    return (
+      <BulkActionMode 
+        selectedContacts={bulkActionContacts}
+        onBack={() => {
+          setShowBulkActionMode(false);
+          setBulkActionContacts([]);
+        }}
+        onActionComplete={() => {
+          setShowBulkActionMode(false);
+          setBulkActionContacts([]);
+        }}
+      />
     );
   }
 
@@ -512,7 +547,28 @@ const Index = () => {
         {/* Smart Dashboard - Legacy Support */}
         <SmartDashboard 
           contacts={contacts} 
-          onDrillDown={handleAutomationDrillDown} 
+          onDrillDown={(type: string) => {
+            if (type.startsWith('take-action-')) {
+              const actionType = type.replace('take-action-', '');
+              // Filter contacts based on action type for direct bulk action
+              const relevantContacts = contacts.filter(contact => {
+                switch (actionType) {
+                  case 'followup':
+                    return !contact.lastContact || 
+                      (Date.now() - contact.lastContact.getTime()) / (1000 * 60 * 60 * 24) > 30;
+                  case 'meeting-prep':
+                    return contact.upcomingOpportunities?.some(opp => 
+                      opp.date >= new Date() && opp.date <= addDays(new Date(), 7)
+                    );
+                  default:
+                    return contact.cooperationRating >= 4 || contact.potentialScore >= 4;
+                }
+              });
+              handleTakeAction(actionType, relevantContacts);
+            } else {
+              handleAutomationDrillDown(type as any);
+            }
+          }} 
           aiIntroductionCount={aiIntroductionCount}
           stats={{ openMatches: stats.openMatches, needsReengagement: stats.needsReengagement }}
           onActionDrillDown={handleDrillDown}

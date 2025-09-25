@@ -54,7 +54,7 @@ interface FilterCriteria {
 interface OperationsModeProps {
   contacts: Contact[];
   onClose: () => void;
-  onContactUpdate: (contacts: Contact[]) => void;
+  onContactUpdate: (data: Contact[] | { action: string; contacts: Contact[] }) => void;
 }
 
 const OperationsMode = ({ contacts, onClose, onContactUpdate }: OperationsModeProps) => {
@@ -495,9 +495,16 @@ const OperationsMode = ({ contacts, onClose, onContactUpdate }: OperationsModePr
                         <Download className="h-4 w-4 mr-2" />
                         Export
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          const selectedContactObjects = contacts.filter(c => selectedContacts.includes(c.id));
+                          onContactUpdate?.({ action: 'bulkAction', contacts: selectedContactObjects });
+                        }}
+                      >
                         <Send className="h-4 w-4 mr-2" />
-                        Bulk Action
+                        Start Campaign Manager
                       </Button>
                     </>
                   )}
