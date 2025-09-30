@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Loader2 } from 'lucide-react';
+import ForgotPasswordForm from '@/components/ForgotPasswordForm';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthGateProps {
   children: React.ReactNode;
@@ -13,9 +15,11 @@ interface AuthGateProps {
 
 const AuthGate = ({ children }: AuthGateProps) => {
   const { user, loading, signIn, signUp } = useAuth();
+  const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   if (loading) {
     return (
@@ -32,16 +36,45 @@ const AuthGate = ({ children }: AuthGateProps) => {
     const handleSignIn = async (e: React.FormEvent) => {
       e.preventDefault();
       setIsSubmitting(true);
-      await signIn(email, password);
+      const { error } = await signIn(email, password);
       setIsSubmitting(false);
+      
+      if (error) {
+        toast({
+          title: "Sign in failed",
+          description: error.message || "Invalid email or password",
+          variant: "destructive",
+        });
+      }
     };
 
     const handleSignUp = async (e: React.FormEvent) => {
       e.preventDefault();
       setIsSubmitting(true);
-      await signUp(email, password);
+      const { error } = await signUp(email, password);
       setIsSubmitting(false);
+      
+      if (error) {
+        toast({
+          title: "Sign up failed",
+          description: error.message || "Failed to create account",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Account created",
+          description: "Please check your email to verify your account",
+        });
+      }
     };
+
+    if (showForgotPassword) {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <ForgotPasswordForm onBack={() => setShowForgotPassword(false)} />
+        </div>
+      );
+    }
 
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -101,6 +134,15 @@ const AuthGate = ({ children }: AuthGateProps) => {
                       'Sign In'
                     )}
                   </Button>
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      Forgot your password?
+                    </button>
+                  </div>
                 </form>
               </TabsContent>
               
