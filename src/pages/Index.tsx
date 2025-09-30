@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { addDays } from 'date-fns';
 import { Contact, ContactOpportunity } from '@/types/contact';
 import { useContacts } from '@/hooks/useContacts';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Header';
 import ContactCard from '@/components/ContactCard';
 import ClickableStatsCard from '@/components/ClickableStatsCard';
