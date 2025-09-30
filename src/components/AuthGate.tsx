@@ -1,3 +1,4 @@
+// AuthGate component for authentication
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
