@@ -63,15 +63,46 @@ const LLMIntroductionAnalysis: React.FC<LLMIntroductionAnalysisProps> = ({
 
   const analyzeIntroductions = async () => {
     setAnalyzing(true);
+    
+    // Show immediate feedback
+    toast({
+      title: "AI Analysis Starting",
+      description: `Analyzing ${contacts.length} contacts with Lovable AI...`,
+    });
+
     try {
       const { data, error } = await supabase.functions.invoke('analyze-introduction-matches', {
         body: { contacts }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Better error handling
+        if (error.message?.includes('429')) {
+          toast({
+            title: "Rate Limit Reached",
+            description: "Too many requests. Please wait a moment and try again.",
+            variant: "destructive",
+          });
+        } else if (error.message?.includes('402')) {
+          toast({
+            title: "Credits Needed",
+            description: "Please add credits to continue using AI features.",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       setAnalyzedPairs(data.pairs || []);
       setHasAnalyzed(true);
+      
+      // Success feedback
+      toast({
+        title: "Analysis Complete!",
+        description: `Found ${data.pairs?.length || 0} potential matches`,
+      });
       
       // Notify parent component of the analysis result
       onAnalysisComplete?.(data.pairs?.length || 0);

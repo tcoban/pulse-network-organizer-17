@@ -59,19 +59,27 @@ const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0, stats,
     try {
       setLoading(true);
 
-      // Generate smart priorities based on contacts
+      // Generate smart priorities client-side (instant)
       const generatedPriorities = generateSmartPriorities(contacts);
       setPriorities(generatedPriorities);
 
-      // Fetch network trends
-      const { data: trendsData } = await supabase
-        .from('network_trends')
-        .select('*')
-        .order('trend_score', { ascending: false })
-        .limit(5);
+      // Parallel fetch for better performance
+      const [trendsData, eventsData] = await Promise.all([
+        supabase
+          .from('network_trends')
+          .select('id, topic, trend_score, description, contacts_mentioned')
+          .order('trend_score', { ascending: false })
+          .limit(5),
+        supabase
+          .from('policy_events')
+          .select('id, title, event_type, date, description, importance_level')
+          .gte('date', new Date().toISOString())
+          .order('date', { ascending: true })
+          .limit(10)
+      ]);
 
-      if (trendsData) {
-        setNetworkTrends(trendsData.map(trend => ({
+      if (trendsData.data) {
+        setNetworkTrends(trendsData.data.map(trend => ({
           id: trend.id,
           topic: trend.topic,
           trendScore: trend.trend_score,
@@ -80,16 +88,8 @@ const SmartDashboard = ({ contacts, onDrillDown, aiIntroductionCount = 0, stats,
         })));
       }
 
-      // Fetch policy events
-      const { data: eventsData } = await supabase
-        .from('policy_events')
-        .select('*')
-        .gte('date', new Date().toISOString())
-        .order('date', { ascending: true })
-        .limit(10);
-
-      if (eventsData) {
-        setPolicyEvents(eventsData.map(event => ({
+      if (eventsData.data) {
+        setPolicyEvents(eventsData.data.map(event => ({
           id: event.id,
           title: event.title,
           eventType: event.event_type as 'consultation' | 'conference' | 'deadline',

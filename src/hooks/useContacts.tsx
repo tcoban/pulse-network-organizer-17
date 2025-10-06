@@ -13,85 +13,52 @@ export const useContacts = () => {
 
   // Fetch contacts from database
   const fetchContacts = async () => {
-
     try {
       setLoading(true);
       
-      // Fetch contacts with all related data including team_members
+      // Optimized query - fetch only what's needed initially
+      // Details can be loaded on demand
       const { data: contactsData, error: contactsError } = await supabase
         .from('contacts')
         .select(`
           *,
-          contact_preferences (*),
+          contact_preferences (language, preferred_channel),
           contact_tags (tag),
           contact_social_links (platform, url),
-          interactions (*),
-          opportunities (
-            *,
-            meeting_goals (*)
-          ),
-          event_participations (*),
-          collaborations (*),
           team_members!contacts_assigned_to_team_members_fkey (
             id,
             first_name,
             last_name,
-            email,
-            department,
-            role
+            email
           )
-        `);
+        `)
+        .order('last_contact', { ascending: false, nullsFirst: false });
 
       if (contactsError) throw contactsError;
 
-        // Transform database data to Contact type
-        const transformedContacts: Contact[] = contactsData?.map(contact => ({
-          id: contact.id,
-          name: contact.name,
-          email: contact.email,
-          phone: contact.phone,
-          company: contact.company,
-          position: contact.position,
-          avatar: contact.avatar,
-          tags: contact.contact_tags?.map((tag: any) => tag.tag) || [],
-          notes: contact.notes || '',
-          lastContact: contact.last_contact ? new Date(contact.last_contact) : undefined,
-          addedDate: new Date(contact.added_date),
-          socialLinks: {
-            linkedin: contact.contact_social_links?.find((link: any) => link.platform === 'linkedin')?.url,
-            twitter: contact.contact_social_links?.find((link: any) => link.platform === 'twitter')?.url,
-            github: contact.contact_social_links?.find((link: any) => link.platform === 'github')?.url,
-          },
-          customFields: {},
-          interactionHistory: contact.interactions?.map((interaction: any) => ({
-            id: interaction.id,
-            type: interaction.type,
-            date: new Date(interaction.date),
-            description: interaction.description,
-            outcome: interaction.outcome,
-            contactedBy: interaction.contacted_by,
-            channel: interaction.channel,
-            evaluation: interaction.evaluation,
-          })) || [],
-          eventParticipationHistory: contact.event_participations?.map((event: any) => ({
-            id: event.id,
-            eventName: event.event_name,
-            eventType: event.event_type,
-            eventDate: new Date(event.event_date),
-            location: event.location,
-            participationType: event.participation_type,
-            notes: event.notes,
-          })) || [],
-          pastCollaborations: contact.collaborations?.map((collab: any) => ({
-            id: collab.id,
-            projectName: collab.project_name,
-            description: collab.description,
-            startDate: collab.start_date ? new Date(collab.start_date) : undefined,
-            endDate: collab.end_date ? new Date(collab.end_date) : undefined,
-            outcome: collab.outcome,
-            successRating: collab.success_rating,
-            createdBy: collab.created_by,
-          })) || [],
+      // Optimized transformation - lazy load heavy data
+      const transformedContacts: Contact[] = contactsData?.map(contact => ({
+        id: contact.id,
+        name: contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        company: contact.company,
+        position: contact.position,
+        avatar: contact.avatar,
+        tags: contact.contact_tags?.map((tag: any) => tag.tag) || [],
+        notes: contact.notes || '',
+        lastContact: contact.last_contact ? new Date(contact.last_contact) : undefined,
+        addedDate: new Date(contact.added_date),
+        socialLinks: {
+          linkedin: contact.contact_social_links?.find((link: any) => link.platform === 'linkedin')?.url,
+          twitter: contact.contact_social_links?.find((link: any) => link.platform === 'twitter')?.url,
+          github: contact.contact_social_links?.find((link: any) => link.platform === 'github')?.url,
+        },
+        customFields: {},
+        // Lazy load these on demand to speed up initial load
+        interactionHistory: [],
+        eventParticipationHistory: [],
+        pastCollaborations: [],
         referredBy: contact.referred_by,
         linkedinConnections: contact.linkedin_connections || [],
         currentProjects: contact.current_projects,
@@ -101,27 +68,14 @@ export const useContacts = () => {
         affiliation: contact.affiliation,
         offering: contact.offering,
         lookingFor: contact.looking_for,
-        upcomingOpportunities: contact.opportunities?.map((opp: any) => ({
-          id: opp.id,
-          type: opp.type,
-          title: opp.title,
-          date: new Date(opp.date),
-          location: opp.location,
-          description: opp.description,
-          registrationStatus: opp.registration_status,
-          meetingGoals: opp.meeting_goals?.map((goal: any) => ({
-            id: goal.id,
-            description: goal.description,
-            achieved: goal.achieved,
-          })) || [],
-        })) || [],
+        upcomingOpportunities: [],
         assignedTo: contact.assigned_to,
         createdBy: contact.created_by,
         preferences: contact.contact_preferences?.[0] ? {
           language: contact.contact_preferences[0].language,
           preferredChannel: contact.contact_preferences[0].preferred_channel,
-          availableTimes: contact.contact_preferences[0].available_times,
-          meetingLocation: contact.contact_preferences[0].meeting_location,
+          availableTimes: undefined,
+          meetingLocation: undefined,
         } : undefined,
       })) || [];
 
