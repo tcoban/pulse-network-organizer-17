@@ -1,1 +1,4 @@
 project_id = "olrjeneqkojowyyhqzln"
+
+[functions.analyze-introduction-matches]
+verify_jwt = false
