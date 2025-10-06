@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,39 +21,51 @@ serve(async (req) => {
 
   try {
     const { contacts }: AnalysisRequest = await req.json()
+    console.log(`Analyzing ${contacts.length} contacts for matches`)
 
-    // Create introduction pairs for analysis
+    // Create introduction pairs for analysis - optimized filtering
     const pairs: ContactPair[] = []
+    const validContacts = contacts.filter(c => c.offering || c.lookingFor)
     
-    for (let i = 0; i < contacts.length; i++) {
-      for (let j = i + 1; j < contacts.length; j++) {
-        const contact1 = contacts[i]
-        const contact2 = contacts[j]
-        
-        if (contact1.lookingFor || contact1.offering || contact2.lookingFor || contact2.offering) {
-          pairs.push({ contact1, contact2 })
-        }
-      }
-    }
-
-    // Analyze each pair with LLM
-    const analyzedPairs = []
-    
-    for (const pair of pairs.slice(0, 15)) { // Analyze more pairs
-      const analysis = await analyzeContactPair(pair)
-      if (analysis.isMatch) {
-        analyzedPairs.push({
-          ...pair,
-          matchReason: analysis.reason,
-          matchScore: analysis.confidence,
-          matchType: analysis.matchType,
-          interpretation: analysis.interpretation || getConfidenceInterpretation(analysis.confidence)
+    for (let i = 0; i < validContacts.length; i++) {
+      for (let j = i + 1; j < validContacts.length; j++) {
+        pairs.push({ 
+          contact1: validContacts[i], 
+          contact2: validContacts[j] 
         })
       }
     }
 
+    console.log(`Generated ${pairs.length} pairs, analyzing top 20`)
+
+    // Batch analyze pairs with Lovable AI (faster and free)
+    const analyzedPairs = []
+    const pairsToAnalyze = pairs.slice(0, 20) // Analyze more pairs with faster model
+
+    // Process in batches of 5 for better performance
+    const batchSize = 5
+    for (let i = 0; i < pairsToAnalyze.length; i += batchSize) {
+      const batch = pairsToAnalyze.slice(i, i + batchSize)
+      const batchPromises = batch.map(pair => analyzeContactPair(pair))
+      const batchResults = await Promise.all(batchPromises)
+      
+      // Filter and add successful matches
+      batchResults.forEach((analysis, idx) => {
+        if (analysis.isMatch && analysis.confidence > 30) {
+          analyzedPairs.push({
+            ...batch[idx],
+            matchReason: analysis.reason,
+            matchScore: analysis.confidence,
+            matchType: analysis.matchType,
+            interpretation: analysis.interpretation
+          })
+        }
+      })
+    }
+
     // Sort by confidence score
     analyzedPairs.sort((a, b) => b.matchScore - a.matchScore)
+    console.log(`Found ${analyzedPairs.length} matches`)
 
     return new Response(
       JSON.stringify({ pairs: analyzedPairs }),
@@ -74,98 +85,92 @@ serve(async (req) => {
   }
 })
 
-function getConfidenceInterpretation(confidence: number): string {
-  if (confidence >= 80) return "Excellent match - strong potential for meaningful collaboration";
-  if (confidence >= 65) return "Good match - clear synergies identified";
-  if (confidence >= 50) return "Moderate match - some alignment found, worth exploring";
-  if (confidence >= 35) return "Weak match - limited connections but networking value possible";
-  return "Minimal match - very speculative introduction";
-}
-
 async function analyzeContactPair(pair: ContactPair) {
   const { contact1, contact2 } = pair
   
-  const prompt = `
-You are an expert networking facilitator. Analyze these two professional contacts to determine if they would benefit from an introduction.
+  const prompt = `Analyze if these professionals should be introduced:
 
-Contact 1:
-- Name: ${contact1.name}
-- Position: ${contact1.position || 'Not specified'}
-- Company: ${contact1.company || 'Not specified'}
-- What they're offering: ${contact1.offering || 'Not specified'}
-- What they're looking for: ${contact1.lookingFor || 'Not specified'}
-- Current projects: ${contact1.currentProjects || 'Not specified'}
-- Affiliation: ${contact1.affiliation || 'Not specified'}
+Contact 1: ${contact1.name} - ${contact1.position || 'N/A'} at ${contact1.company || 'N/A'}
+Offering: ${contact1.offering || 'N/A'}
+Looking for: ${contact1.lookingFor || 'N/A'}
 
-Contact 2:
-- Name: ${contact2.name}
-- Position: ${contact2.position || 'Not specified'}
-- Company: ${contact2.company || 'Not specified'}
-- What they're offering: ${contact2.offering || 'Not specified'}
-- What they're looking for: ${contact2.lookingFor || 'Not specified'}
-- Current projects: ${contact2.currentProjects || 'Not specified'}
-- Affiliation: ${contact2.affiliation || 'Not specified'}
+Contact 2: ${contact2.name} - ${contact2.position || 'N/A'} at ${contact2.company || 'N/A'}
+Offering: ${contact2.offering || 'N/A'}
+Looking for: ${contact2.lookingFor || 'N/A'}
 
-Analyze if these contacts would benefit from an introduction based on:
-1. Complementary needs and offerings
-2. Potential business synergies
-3. Professional alignment
-4. Shared interests or projects
-5. Network value
-
-Respond in JSON format:
-{
-  "isMatch": boolean,
-  "confidence": number (0-100),
-  "reason": "Detailed explanation of why they should be introduced",
-  "matchType": "need-offering" | "business-synergy" | "professional-alignment" | "project-collaboration" | "network-expansion",
-  "interpretation": "Brief explanation of the confidence level and what it means"
-}
-
-Include matches with confidence > 30. Lower confidence matches can still provide networking value.
-`
+Rate match confidence (0-100) and explain why. Focus on complementary needs/offerings.`
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash', // Fast and free during promotion
         messages: [
           {
             role: 'system',
-            content: 'You are an expert networking facilitator with deep understanding of business relationships and professional synergies.'
+            content: 'You are a networking expert. Respond ONLY with valid JSON.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.3,
-        max_tokens: 500
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "analyze_match",
+              description: "Analyze if two contacts should be introduced",
+              parameters: {
+                type: "object",
+                properties: {
+                  isMatch: { type: "boolean" },
+                  confidence: { type: "number", minimum: 0, maximum: 100 },
+                  reason: { type: "string" },
+                  matchType: { 
+                    type: "string", 
+                    enum: ["need-offering", "business-synergy", "professional-alignment", "project-collaboration", "network-expansion"]
+                  },
+                  interpretation: { type: "string" }
+                },
+                required: ["isMatch", "confidence", "reason", "matchType", "interpretation"],
+                additionalProperties: false
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "analyze_match" } }
       }),
     })
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`)
+      if (response.status === 429) {
+        console.error('Rate limited by Lovable AI')
+        return { isMatch: false, confidence: 0, reason: 'Rate limited', matchType: 'none', interpretation: 'Try again later' }
+      }
+      if (response.status === 402) {
+        console.error('Payment required for Lovable AI')
+        return { isMatch: false, confidence: 0, reason: 'No credits', matchType: 'none', interpretation: 'Add credits' }
+      }
+      throw new Error(`AI gateway error: ${response.status}`)
     }
 
     const data = await response.json()
-    const content = data.choices[0].message.content
-
-    try {
-      const analysis = JSON.parse(content)
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0]
+    
+    if (toolCall?.function?.arguments) {
+      const analysis = JSON.parse(toolCall.function.arguments)
       return analysis
-    } catch (parseError) {
-      console.error('Failed to parse LLM response:', content)
-      return { isMatch: false, confidence: 0, reason: 'Analysis failed', matchType: 'none', interpretation: 'Technical error occurred' }
     }
 
+    return { isMatch: false, confidence: 0, reason: 'No analysis', matchType: 'none', interpretation: 'Error' }
+
   } catch (error) {
-    console.error('Error calling OpenAI API:', error)
-    return { isMatch: false, confidence: 0, reason: 'Analysis failed', matchType: 'none', interpretation: 'API error occurred' }
+    console.error('Error analyzing pair:', error)
+    return { isMatch: false, confidence: 0, reason: 'Analysis failed', matchType: 'none', interpretation: 'Technical error' }
   }
 }
