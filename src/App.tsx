@@ -5,7 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import AuthGate from "@/components/AuthGate";
+import { Navigation } from "@/components/Navigation";
 import Index from "./pages/Index";
+import Settings from "./pages/Settings";
+import Team from "./pages/Team";
+import Goals from "./pages/Goals";
 import NotFound from "./pages/NotFound";
 import ResetPasswordForm from "@/components/ResetPasswordForm";
 
@@ -22,11 +26,19 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPasswordForm />} />
             <Route path="/*" element={
               <AuthGate>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
+                <div className="flex min-h-screen w-full">
+                  <Navigation />
+                  <main className="flex-1">
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/team" element={<Team />} />
+                      <Route path="/goals" element={<Goals />} />
+                      <Route path="/admin" element={<Index />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </main>
+                </div>
               </AuthGate>
             } />
           </Routes>

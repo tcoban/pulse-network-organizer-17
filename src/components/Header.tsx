@@ -3,7 +3,8 @@ import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
-import { Search, Plus, User, Users, LogOut, Crown } from 'lucide-react';
+import { Search, Plus, User, Users, LogOut, Crown, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface HeaderProps {
   searchTerm: string;
@@ -63,6 +64,13 @@ const Header = ({ searchTerm, setSearchTerm, setShowForm, setShowAdvancedSearch,
             <DropdownMenuContent align="end">
               <DropdownMenuItem disabled className="text-xs text-muted-foreground">
                 {user?.email}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/settings">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Link>
               </DropdownMenuItem>
               {isAdmin && (
                 <>
