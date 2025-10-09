@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { addDays } from 'date-fns';
 import { Contact, ContactOpportunity } from '@/types/contact';
 import { useContacts } from '@/hooks/useContacts';
@@ -46,14 +47,18 @@ import {
 } from '@/components/ui/select';
 
 const Index = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { contacts, loading: contactsLoading, error: contactsError, createContact, updateContact, deleteContact } = useContacts();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Check URL parameter for view mode
+  const viewParam = searchParams.get('view');
+  const [isTeamOpportunitiesMode, setIsTeamOpportunitiesMode] = useState(viewParam === 'opportunities');
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isOperationsMode, setIsOperationsMode] = useState(false);
-  const [isTeamOpportunitiesMode, setIsTeamOpportunitiesMode] = useState(false);
   const [contactFormOpen, setContactFormOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [opportunityFormOpen, setOpportunityFormOpen] = useState(false);
@@ -68,6 +73,12 @@ const Index = () => {
   const [editingProject, setEditingProject] = useState<any>(null);
   const [showBulkActionMode, setShowBulkActionMode] = useState(false);
   const [bulkActionContacts, setBulkActionContacts] = useState<Contact[]>([]);
+
+  // Sync URL param with team opportunities mode
+  useEffect(() => {
+    const viewParam = searchParams.get('view');
+    setIsTeamOpportunitiesMode(viewParam === 'opportunities');
+  }, [searchParams]);
 
   // Filter and sort contacts
   const filteredContacts = useMemo(() => {
