@@ -12,6 +12,7 @@ import Team from "./pages/Team";
 import Goals from "./pages/Goals";
 import NotFound from "./pages/NotFound";
 import ResetPasswordForm from "@/components/ResetPasswordForm";
+import AdminPanel from "@/components/AdminPanel";
 
 const queryClient = new QueryClient();
 
@@ -34,7 +35,7 @@ const App = () => (
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/team" element={<Team />} />
                       <Route path="/goals" element={<Goals />} />
-                      <Route path="/admin" element={<Index />} />
+                      <Route path="/admin" element={<AdminPanel />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </main>
