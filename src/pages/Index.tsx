@@ -5,7 +5,6 @@ import { Contact, ContactOpportunity } from '@/types/contact';
 import { useContacts } from '@/hooks/useContacts';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Header';
-import ContactCard from '@/components/ContactCard';
 import ClickableStatsCard from '@/components/ClickableStatsCard';
 import { DrillDownView, DrillDownType } from '@/components/DrillDownView';
 import OperationsMode from '@/components/OperationsMode';
@@ -14,59 +13,34 @@ import OpportunityForm from '@/components/OpportunityForm';
 import TeamOpportunities from '@/components/TeamOpportunities';
 import SmartDashboard from '@/components/SmartDashboard';
 import StrategicDashboard from '@/components/StrategicDashboard';
-import AdvancedSearch from '@/components/AdvancedSearch';
-import AdminPanel from '@/components/AdminPanel';
-import EnhancedAdminPanel from '@/components/EnhancedAdminPanel';
 import ProjectForm from '@/components/ProjectForm';
 import BulkActionMode from '@/components/BulkActionMode';
 
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Users, 
   Building2, 
   Calendar, 
   Tag,
-  Filter,
-  Grid,
-  List,
-  Network,
-  Clock,
-  Settings,
   CalendarDays,
-  Brain,
-  Crown
+  Settings
 } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
 
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { contacts, loading: contactsLoading, error: contactsError, createContact, updateContact, deleteContact } = useContacts();
   const { user } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
   
   // Check URL parameter for view mode
   const viewParam = searchParams.get('view');
   const [isTeamOpportunitiesMode, setIsTeamOpportunitiesMode] = useState(viewParam === 'opportunities');
-  const [selectedTag, setSelectedTag] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<string>('name');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isOperationsMode, setIsOperationsMode] = useState(false);
   const [contactFormOpen, setContactFormOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [opportunityFormOpen, setOpportunityFormOpen] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<ContactOpportunity | null>(null);
   const [selectedContactForOpportunity, setSelectedContactForOpportunity] = useState<Contact | null>(null);
-  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [showEnhancedAdmin, setShowEnhancedAdmin] = useState(false);
   const [drillDownType, setDrillDownType] = useState<DrillDownType>(null);
   const [aiIntroductionCount, setAiIntroductionCount] = useState(0);
   const [projectFormOpen, setProjectFormOpen] = useState(false);
@@ -80,55 +54,6 @@ const Index = () => {
     setIsTeamOpportunitiesMode(viewParam === 'opportunities');
   }, [searchParams]);
 
-  // Filter and sort contacts
-  const filteredContacts = useMemo(() => {
-    let filtered = contacts.filter(contact => {
-      const matchesSearch = contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          contact.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          contact.email.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesTag = selectedTag === 'all' || contact.tags.includes(selectedTag);
-      
-      return matchesSearch && matchesTag;
-    });
-
-    // Sort contacts
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return a.name.localeCompare(b.name);
-        case 'company':
-          return (a.company || '').localeCompare(b.company || '');
-        case 'lastContact':
-          const aDate = a.lastContact?.getTime() || 0;
-          const bDate = b.lastContact?.getTime() || 0;
-          return bDate - aDate;
-        case 'added':
-          return b.addedDate.getTime() - a.addedDate.getTime();
-        case 'cooperationRating':
-          return b.cooperationRating - a.cooperationRating; // Higher ratings first
-        case 'potentialScore':
-          return b.potentialScore - a.potentialScore; // Higher scores first
-        case 'tag':
-          const aTag = a.tags[0] || '';
-          const bTag = b.tags[0] || '';
-          return aTag.localeCompare(bTag);
-        default:
-          return 0;
-      }
-    });
-
-    return filtered;
-  }, [contacts, searchQuery, selectedTag, sortBy]);
-
-  // Get all unique tags
-  const allTags = useMemo(() => {
-    const tagSet = new Set<string>();
-    contacts.forEach(contact => {
-      contact.tags.forEach(tag => tagSet.add(tag));
-    });
-    return Array.from(tagSet).sort();
-  }, [contacts]);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -144,6 +69,13 @@ const Index = () => {
     ).length;
 
     const companies = new Set(contacts.map(c => c.company).filter(Boolean)).size;
+
+    // Get unique tags
+    const tagSet = new Set<string>();
+    contacts.forEach(contact => {
+      contact.tags.forEach(tag => tagSet.add(tag));
+    });
+    const tags = tagSet.size;
 
     // Calculate potential matches (basic keyword matching for now)
     const contactsWithData = contacts.filter(c => c.offering && c.lookingFor);
@@ -172,7 +104,7 @@ const Index = () => {
         );
         
         if (hasMatch) {
-          matchCount++; // Count each match once, not twice
+          matchCount++;
         }
       }
     }
@@ -181,11 +113,11 @@ const Index = () => {
       total: contacts.length,
       recentContacts,
       companies,
-      tags: allTags.length,
+      tags,
       openMatches: matchCount,
       needsReengagement
     };
-  }, [contacts, allTags]);
+  }, [contacts]);
 
   const handleAddContact = () => {
     setContactFormOpen(true);
@@ -340,10 +272,10 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header 
-          searchTerm={searchQuery}
-          setSearchTerm={setSearchQuery}
+          searchTerm=""
+          setSearchTerm={() => {}}
           setShowForm={setContactFormOpen}
-          setShowAdvancedSearch={setShowAdvancedSearch}
+          setShowAdvancedSearch={() => {}}
         />
         <main className="p-6">
           <div className="mb-6">
@@ -351,38 +283,13 @@ const Index = () => {
               onClick={() => setIsTeamOpportunitiesMode(false)}
               variant="outline"
             >
-              ← Back to Contacts
+              ← Back to Dashboard
             </Button>
           </div>
           <TeamOpportunities 
             contacts={contacts}
             onUpdateContact={handleUpdateContact}
           />
-        </main>
-      </div>
-    );
-  }
-
-  if (showAdminPanel) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header 
-          searchTerm={searchQuery}
-          setSearchTerm={setSearchQuery}
-          setShowForm={setContactFormOpen}
-          setShowAdvancedSearch={setShowAdvancedSearch}
-          onShowAdminPanel={() => setShowAdminPanel(true)}
-        />
-        <main className="p-6">
-          <div className="mb-6">
-            <Button
-              onClick={() => setShowAdminPanel(false)}
-              variant="outline"
-            >
-              ← Back to Contacts
-            </Button>
-          </div>
-          {showEnhancedAdmin ? <EnhancedAdminPanel /> : <AdminPanel />}
         </main>
       </div>
     );
@@ -404,36 +311,6 @@ const Index = () => {
     );
   }
 
-  if (showEnhancedAdmin) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header 
-          searchTerm={searchQuery}
-          setSearchTerm={setSearchQuery}
-          setShowForm={setContactFormOpen}
-          setShowAdvancedSearch={setShowAdvancedSearch}
-          onShowAdminPanel={() => setShowAdminPanel(true)}
-        />
-        <main className="p-6">
-          <div className="mb-6 flex justify-between items-center">
-            <Button
-              onClick={() => setShowEnhancedAdmin(false)}
-              variant="outline"
-            >
-              ← Back to Contacts
-            </Button>
-            <Button
-              onClick={() => setShowAdminPanel(true)}
-              variant="outline"
-            >
-              Basic Admin Panel
-            </Button>
-          </div>
-          <EnhancedAdminPanel />
-        </main>
-      </div>
-    );
-  }
 
   // Filter contacts based on drill-down type
   const getDrillDownContacts = (type: DrillDownType) => {
@@ -463,11 +340,10 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header 
-          searchTerm={searchQuery}
-          setSearchTerm={setSearchQuery}
+          searchTerm=""
+          setSearchTerm={() => {}}
           setShowForm={setContactFormOpen}
-          setShowAdvancedSearch={setShowAdvancedSearch}
-          onShowAdminPanel={() => setShowAdminPanel(true)}
+          setShowAdvancedSearch={() => {}}
         />
         <main className="p-6">
           <DrillDownView
@@ -490,11 +366,10 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header 
-        searchTerm={searchQuery}
-        setSearchTerm={setSearchQuery}
+        searchTerm=""
+        setSearchTerm={() => {}}
         setShowForm={setContactFormOpen}
-        setShowAdvancedSearch={setShowAdvancedSearch}
-        onShowAdminPanel={() => setShowAdminPanel(true)}
+        setShowAdvancedSearch={() => {}}
       />
 
       <main className="p-6">
@@ -584,166 +459,6 @@ const Index = () => {
           stats={{ openMatches: stats.openMatches, needsReengagement: stats.needsReengagement }}
           onActionDrillDown={handleDrillDown}
         />
-
-        {/* Advanced Search */}
-        {showAdvancedSearch && (
-          <AdvancedSearch 
-            contacts={contacts} 
-            onSelectContact={(contact) => {
-              handleViewDetails(contact);
-              setShowAdvancedSearch(false);
-            }}
-          />
-        )}
-
-
-        {/* Filters and Controls */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center space-x-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Filter by tag:</span>
-            </div>
-            
-            <div className="flex flex-wrap gap-2">
-              <Badge 
-                variant={selectedTag === 'all' ? 'default' : 'outline'}
-                className="cursor-pointer"
-                onClick={() => setSelectedTag('all')}
-              >
-                All ({contacts.length})
-              </Badge>
-              {allTags.map(tag => (
-                <Badge
-                  key={tag}
-                  variant={selectedTag === tag ? 'default' : 'outline'}
-                  className="cursor-pointer"
-                  onClick={() => setSelectedTag(tag)}
-                >
-                  {tag} ({contacts.filter(c => c.tags.includes(tag)).length})
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <Button
-              onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
-              variant="outline"
-              className="border-purple-200 text-purple-700 hover:bg-purple-50"
-            >
-              <Brain className="h-4 w-4 mr-2" />
-              AI Search
-            </Button>
-
-            <Button
-              onClick={() => setIsTeamOpportunitiesMode(true)}
-              variant="outline"
-              className="border-blue-200 text-blue-700 hover:bg-blue-50"
-            >
-              <CalendarDays className="h-4 w-4 mr-2" />
-              Team Opportunities
-            </Button>
-            
-            <Button
-              onClick={() => setIsOperationsMode(true)}
-              variant="outline"
-              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-            >
-              <Settings className="h-4 w-4 mr-2" />
-              Operations Mode
-            </Button>
-            
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name">Sort by Name</SelectItem>
-                <SelectItem value="company">Sort by Company</SelectItem>
-                <SelectItem value="lastContact">Last Contact</SelectItem>
-                <SelectItem value="added">Recently Added</SelectItem>
-                <SelectItem value="cooperationRating">Cooperation Level</SelectItem>
-                <SelectItem value="potentialScore">Potential Score</SelectItem>
-                <SelectItem value="tag">Sort by Tag</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="flex border rounded-lg p-1">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Results count */}
-        <div className="mb-6">
-          <p className="text-sm text-muted-foreground">
-            Showing {filteredContacts.length} of {contacts.length} contacts
-          </p>
-        </div>
-
-        {/* Contact Grid */}
-        {contactsLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-              <div key={i} className="animate-pulse">
-                <div className="bg-card rounded-lg border p-4 space-y-3">
-                  <div className="h-4 bg-muted rounded w-3/4"></div>
-                  <div className="h-3 bg-muted rounded w-1/2"></div>
-                  <div className="h-3 bg-muted rounded"></div>
-                  <div className="h-3 bg-muted rounded w-5/6"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className={viewMode === 'grid' 
-            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            : "space-y-4"
-          }>
-          {filteredContacts.map(contact => (
-            <ContactCard
-              key={contact.id}
-              contact={contact}
-              onEdit={handleEditContact}
-              onDelete={handleDeleteContact}
-              onViewDetails={handleViewDetails}
-              onUpdateContact={handleUpdateContact}
-              onAddOpportunity={() => handleAddOpportunity(contact)}
-              onEditOpportunity={(opportunity) => handleEditOpportunity(opportunity, contact)}
-            />
-          ))}
-          </div>
-        )}
-
-        {filteredContacts.length === 0 && (
-          <div className="text-center py-12">
-            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">No contacts found</h3>
-            <p className="text-muted-foreground mb-4">
-              {searchQuery || selectedTag !== 'all' 
-                ? 'Try adjusting your search or filter criteria.'
-                : 'Get started by adding your first contact.'
-              }
-            </p>
-            <Button onClick={handleAddContact} className="bg-primary hover:bg-primary-hover">
-              Add Your First Contact
-            </Button>
-          </div>
-        )}
       </main>
 
       {/* Contact Form */}
