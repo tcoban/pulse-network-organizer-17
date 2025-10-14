@@ -21,9 +21,14 @@ export function Navigation() {
       icon: LayoutDashboard
     },
     {
+      title: 'Contacts',
+      href: '/contacts',
+      icon: Users
+    },
+    {
       title: 'Team Opportunities',
       href: '/?view=opportunities',
-      icon: Users
+      icon: UsersRound
     },
     {
       title: 'Goals',

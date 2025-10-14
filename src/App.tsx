@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import AuthGate from "@/components/AuthGate";
 import { Navigation } from "@/components/Navigation";
 import Index from "./pages/Index";
+import Contacts from "./pages/Contacts";
 import Settings from "./pages/Settings";
 import Team from "./pages/Team";
 import Goals from "./pages/Goals";
@@ -32,6 +33,7 @@ const App = () => (
                   <main className="flex-1">
                     <Routes>
                       <Route path="/" element={<Index />} />
+                      <Route path="/contacts" element={<Contacts />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/team" element={<Team />} />
                       <Route path="/goals" element={<Goals />} />
