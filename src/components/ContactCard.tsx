@@ -1,7 +1,7 @@
 import { Contact, ContactOpportunity } from '@/types/contact';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { OpportunityDetails } from './OpportunityDetails';
 import HistoryTabs from './HistoryTabs';
@@ -144,6 +144,7 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
           <Avatar className="h-12 w-12">
+            {contact.avatar && <AvatarImage src={contact.avatar} alt={contact.name} />}
             <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
               {getInitials(contact.name)}
             </AvatarFallback>
@@ -356,6 +357,7 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
           <Avatar className="h-12 w-12">
+            {contact.avatar && <AvatarImage src={contact.avatar} alt={contact.name} />}
             <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
               {getInitials(contact.name)}
             </AvatarFallback>
