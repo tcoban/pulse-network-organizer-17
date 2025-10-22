@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Clock, MapPin, Users, CheckCircle2, FileText, Edit } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, CheckCircle2, FileText, Edit, Cloud, User as UserIcon } from "lucide-react";
 import { format, isToday, addDays } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { MeetingOutcomeDialog } from "./MeetingOutcomeDialog";
+import { getTypeColor } from "@/utils/opportunityHelpers";
 import type { Contact } from "@/types/contact";
 
 interface CalendarEvent {
@@ -21,6 +22,8 @@ interface CalendarEvent {
   contact_ids: string[];
   meeting_prep_sent: boolean;
   outcome_captured: boolean;
+  opportunity_type?: string;
+  source?: string;
   contacts?: Contact[];
 }
 
@@ -185,8 +188,13 @@ export function UpcomingMeetingsWidget({ contacts }: UpcomingMeetingsWidgetProps
               >
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <h4 className="font-semibold truncate">{event.event_title}</h4>
+                      {event.opportunity_type && (
+                        <Badge className={getTypeColor(event.opportunity_type as any)} variant="outline">
+                          {event.opportunity_type}
+                        </Badge>
+                      )}
                       {event.outcome_captured && (
                         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                           <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -195,9 +203,24 @@ export function UpcomingMeetingsWidget({ contacts }: UpcomingMeetingsWidgetProps
                       )}
                     </div>
                     <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        <span>{formatMeetingTime(event.event_start)}</span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          <span>{formatMeetingTime(event.event_start)}</span>
+                        </div>
+                        <div className="flex items-center text-xs">
+                          {event.source === 'm365_sync' || !event.source ? (
+                            <>
+                              <Cloud className="h-3 w-3 mr-1" />
+                              Outlook
+                            </>
+                          ) : (
+                            <>
+                              <UserIcon className="h-3 w-3 mr-1" />
+                              Manual
+                            </>
+                          )}
+                        </div>
                       </div>
                       {event.location && (
                         <div className="flex items-center gap-1">

@@ -11,3 +11,12 @@ verify_jwt = true
 
 [functions.sync-email-interactions]
 verify_jwt = true
+
+[functions.detect-duplicate-opportunities]
+verify_jwt = true
+
+[functions.sync-opportunity-to-calendar]
+verify_jwt = true
+
+[functions.delete-opportunity-from-calendar]
+verify_jwt = true

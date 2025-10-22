@@ -24,8 +24,12 @@ export type Database = {
           id: string
           location: string | null
           meeting_prep_sent: boolean | null
+          opportunity_type:
+            | Database["public"]["Enums"]["opportunity_type"]
+            | null
           outcome_captured: boolean | null
           outlook_event_id: string
+          source: string | null
           updated_at: string | null
         }
         Insert: {
@@ -37,8 +41,12 @@ export type Database = {
           id?: string
           location?: string | null
           meeting_prep_sent?: boolean | null
+          opportunity_type?:
+            | Database["public"]["Enums"]["opportunity_type"]
+            | null
           outcome_captured?: boolean | null
           outlook_event_id: string
+          source?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -50,8 +58,12 @@ export type Database = {
           id?: string
           location?: string | null
           meeting_prep_sent?: boolean | null
+          opportunity_type?:
+            | Database["public"]["Enums"]["opportunity_type"]
+            | null
           outcome_captured?: boolean | null
           outlook_event_id?: string
+          source?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -592,6 +604,7 @@ export type Database = {
           description: string
           id: string
           opportunity_id: string | null
+          related_project: string | null
           updated_at: string | null
         }
         Insert: {
@@ -600,6 +613,7 @@ export type Database = {
           description: string
           id?: string
           opportunity_id?: string | null
+          related_project?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -608,6 +622,7 @@ export type Database = {
           description?: string
           id?: string
           opportunity_id?: string | null
+          related_project?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -652,8 +667,10 @@ export type Database = {
       }
       opportunities: {
         Row: {
+          calendar_event_id: string | null
           contact_id: string | null
           created_at: string | null
+          created_by: string | null
           date: string
           description: string | null
           id: string
@@ -661,13 +678,17 @@ export type Database = {
           registration_status:
             | Database["public"]["Enums"]["registration_status"]
             | null
+          source: string | null
+          synced_to_calendar: boolean | null
           title: string
           type: Database["public"]["Enums"]["opportunity_type"]
           updated_at: string | null
         }
         Insert: {
+          calendar_event_id?: string | null
           contact_id?: string | null
           created_at?: string | null
+          created_by?: string | null
           date: string
           description?: string | null
           id?: string
@@ -675,13 +696,17 @@ export type Database = {
           registration_status?:
             | Database["public"]["Enums"]["registration_status"]
             | null
+          source?: string | null
+          synced_to_calendar?: boolean | null
           title: string
           type: Database["public"]["Enums"]["opportunity_type"]
           updated_at?: string | null
         }
         Update: {
+          calendar_event_id?: string | null
           contact_id?: string | null
           created_at?: string | null
+          created_by?: string | null
           date?: string
           description?: string | null
           id?: string
@@ -689,11 +714,20 @@ export type Database = {
           registration_status?:
             | Database["public"]["Enums"]["registration_status"]
             | null
+          source?: string | null
+          synced_to_calendar?: boolean | null
           title?: string
           type?: Database["public"]["Enums"]["opportunity_type"]
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "opportunities_calendar_event_id_fkey"
+            columns: ["calendar_event_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "opportunities_contact_id_fkey"
             columns: ["contact_id"]

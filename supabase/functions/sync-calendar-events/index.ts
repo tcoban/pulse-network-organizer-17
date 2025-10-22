@@ -65,18 +65,75 @@ serve(async (req) => {
     for (const event of mockCalendarEvents) {
       const contactIds = event.attendees.map(a => a.id);
 
-      const { error: upsertError } = await supabase
-        .from('calendar_events')
-        .upsert({
-          outlook_event_id: event.id,
-          event_title: event.subject,
-          event_start: event.start,
-          event_end: event.end,
-          location: event.location,
-          contact_ids: contactIds,
-        }, { onConflict: 'outlook_event_id' });
+      // Smart opportunity matching - check if there's an existing opportunity with similar details
+      let opportunityType = null;
+      const titleLower = event.subject.toLowerCase();
+      
+      if (titleLower.includes('conference') || titleLower.includes('summit')) {
+        opportunityType = 'conference';
+      } else if (titleLower.includes('event') || titleLower.includes('workshop')) {
+        opportunityType = 'event';
+      } else if (titleLower.includes('meeting') || titleLower.includes('call') || titleLower.includes('discussion')) {
+        opportunityType = 'meeting';
+      } else {
+        opportunityType = 'meeting'; // default
+      }
 
-      if (!upsertError) {
+      // Check if calendar event already exists
+      const { data: existingEvent } = await supabase
+        .from('calendar_events')
+        .select('id')
+        .eq('outlook_event_id', event.id)
+        .single();
+
+      const eventData = {
+        outlook_event_id: event.id,
+        event_title: event.subject,
+        event_start: event.start,
+        event_end: event.end,
+        location: event.location,
+        contact_ids: contactIds,
+        opportunity_type: opportunityType,
+        source: 'm365_sync',
+      };
+
+      const { data: calendarEvent, error: upsertError } = await supabase
+        .from('calendar_events')
+        .upsert(eventData, { onConflict: 'outlook_event_id' })
+        .select()
+        .single();
+
+      if (!upsertError && calendarEvent) {
+        // Try to match with existing opportunities
+        if (contactIds.length > 0) {
+          const startDate = new Date(event.start);
+          const twoHoursBefore = new Date(startDate.getTime() - 2 * 60 * 60 * 1000);
+          const twoHoursAfter = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+
+          const { data: matchingOpps } = await supabase
+            .from('opportunities')
+            .select('id, title, calendar_event_id, synced_to_calendar')
+            .in('contact_id', contactIds)
+            .gte('date', twoHoursBefore.toISOString())
+            .lte('date', twoHoursAfter.toISOString())
+            .is('calendar_event_id', null);
+
+          // Link the first matching opportunity if found
+          if (matchingOpps && matchingOpps.length > 0) {
+            const matchedOpp = matchingOpps[0];
+            await supabase
+              .from('opportunities')
+              .update({
+                calendar_event_id: calendarEvent.id,
+                synced_to_calendar: true,
+                source: 'm365_sync'
+              })
+              .eq('id', matchedOpp.id);
+
+            console.log(`Linked opportunity "${matchedOpp.title}" to calendar event "${event.subject}"`);
+          }
+        }
+
         syncResults.push({ action: 'synced', event: event.subject });
       }
     }
