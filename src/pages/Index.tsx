@@ -15,6 +15,7 @@ import SmartDashboard from '@/components/SmartDashboard';
 import StrategicDashboard from '@/components/StrategicDashboard';
 import ProjectForm from '@/components/ProjectForm';
 import BulkActionMode from '@/components/BulkActionMode';
+import { UpcomingMeetingsWidget } from '@/components/UpcomingMeetingsWidget';
 
 import { Button } from '@/components/ui/button';
 import { 
@@ -418,8 +419,11 @@ const Index = () => {
           </div>
         </div>
 
+        {/* Upcoming Meetings Widget */}
+        <UpcomingMeetingsWidget contacts={contacts} />
+
         {/* Strategic Dashboard */}
-        <StrategicDashboard 
+        <StrategicDashboard
           contacts={contacts} 
           onNavigate={handleNavigateToSection}
           onDrillDown={handleDrillDown}
