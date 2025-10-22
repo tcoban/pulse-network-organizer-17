@@ -21,10 +21,11 @@ import {
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { CheckCircle2, AlertTriangle, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
-import { useOpportunities, type Opportunity } from '@/hooks/useOpportunities';
+import { CheckCircle2, AlertTriangle, Calendar as CalendarIcon, Loader2, Plus, X, Target } from 'lucide-react';
+import { useOpportunities, type Opportunity, type MeetingGoal } from '@/hooks/useOpportunities';
 import { inferOpportunityType, getTypeColor } from '@/utils/opportunityHelpers';
 import { DuplicateWarningDialog } from './DuplicateWarningDialog';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OpportunityFormEnhancedProps {
   contactId: string;
@@ -52,6 +53,9 @@ function OpportunityFormEnhanced({
     registration_status: 'considering' as 'considering' | 'registered' | 'confirmed',
   });
   
+  const [meetingGoals, setMeetingGoals] = useState<Array<{ id: string; description: string; achieved: boolean; related_project?: string }>>([]);
+  const [newGoalDescription, setNewGoalDescription] = useState('');
+  const [newGoalProject, setNewGoalProject] = useState('');
   const [addToCalendar, setAddToCalendar] = useState(false);
   const [saving, setSaving] = useState(false);
   const [duplicates, setDuplicates] = useState<any[]>([]);
@@ -69,6 +73,13 @@ function OpportunityFormEnhanced({
           registration_status: opportunity.registration_status || 'considering',
         });
         setAddToCalendar(opportunity.synced_to_calendar);
+        
+        // Load existing meeting goals
+        if (opportunity.id) {
+          loadMeetingGoals(opportunity.id);
+        } else {
+          setMeetingGoals(opportunity.meeting_goals || []);
+        }
       } else {
         setFormData({
           title: '',
@@ -79,10 +90,52 @@ function OpportunityFormEnhanced({
           registration_status: 'considering',
         });
         setAddToCalendar(false);
+        setMeetingGoals([]);
       }
       setDuplicates([]);
+      setNewGoalDescription('');
+      setNewGoalProject('');
     }
   }, [opportunity, isOpen]);
+
+  const loadMeetingGoals = async (opportunityId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('meeting_goals')
+        .select('*')
+        .eq('opportunity_id', opportunityId);
+      
+      if (error) throw error;
+      setMeetingGoals(data || []);
+    } catch (error) {
+      console.error('Error loading meeting goals:', error);
+    }
+  };
+
+  const addGoal = () => {
+    if (!newGoalDescription.trim()) return;
+    
+    const newGoal = {
+      id: `temp-${Date.now()}`,
+      description: newGoalDescription,
+      achieved: false,
+      related_project: newGoalProject || undefined,
+    };
+    
+    setMeetingGoals([...meetingGoals, newGoal]);
+    setNewGoalDescription('');
+    setNewGoalProject('');
+  };
+
+  const removeGoal = (goalId: string) => {
+    setMeetingGoals(meetingGoals.filter(g => g.id !== goalId));
+  };
+
+  const toggleGoalAchieved = (goalId: string) => {
+    setMeetingGoals(meetingGoals.map(g => 
+      g.id === goalId ? { ...g, achieved: !g.achieved } : g
+    ));
+  };
 
   const handleTitleChange = (title: string) => {
     setFormData(prev => ({
@@ -108,8 +161,20 @@ function OpportunityFormEnhanced({
         contact_id: contactId,
       };
 
+      let opportunityId: string | null = null;
+
       if (isEditing && opportunity) {
         await updateOpportunity(opportunity.id, opportunityData);
+        opportunityId = opportunity.id;
+        
+        // Update meeting goals
+        // First delete existing goals
+        const { error: deleteError } = await supabase
+          .from('meeting_goals')
+          .delete()
+          .eq('opportunity_id', opportunity.id);
+        
+        if (deleteError) throw deleteError;
       } else {
         const result = await createOpportunity(opportunityData, addToCalendar);
         
@@ -119,6 +184,24 @@ function OpportunityFormEnhanced({
           setSaving(false);
           return;
         }
+        
+        opportunityId = result?.id || null;
+      }
+      
+      // Insert meeting goals if we have an opportunity ID
+      if (opportunityId && meetingGoals.length > 0) {
+        const goalsToInsert = meetingGoals.map(goal => ({
+          opportunity_id: opportunityId,
+          description: goal.description,
+          achieved: goal.achieved,
+          related_project: goal.related_project,
+        }));
+        
+        const { error: goalsError } = await supabase
+          .from('meeting_goals')
+          .insert(goalsToInsert);
+        
+        if (goalsError) throw goalsError;
       }
       
       onClose();
@@ -244,6 +327,80 @@ function OpportunityFormEnhanced({
                 placeholder="Additional details about this opportunity"
                 rows={3}
               />
+            </div>
+
+            {/* Meeting Goals Section */}
+            <div className="space-y-3 border-t pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Target className="h-5 w-5 text-primary" />
+                <Label className="text-base font-semibold">Meeting Goals</Label>
+              </div>
+              
+              {/* Display existing goals */}
+              {meetingGoals.length > 0 && (
+                <div className="space-y-2">
+                  {meetingGoals.map((goal) => (
+                    <div key={goal.id} className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
+                      <Checkbox
+                        checked={goal.achieved}
+                        onCheckedChange={() => toggleGoalAchieved(goal.id)}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <p className={`text-sm ${goal.achieved ? 'line-through text-muted-foreground' : ''}`}>
+                          {goal.description}
+                        </p>
+                        {goal.related_project && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Project: {goal.related_project}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeGoal(goal.id)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* Add new goal */}
+              <div className="space-y-2">
+                <Input
+                  placeholder="Add a goal for this meeting..."
+                  value={newGoalDescription}
+                  onChange={(e) => setNewGoalDescription(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addGoal();
+                    }
+                  }}
+                />
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Related project (optional)"
+                    value={newGoalProject}
+                    onChange={(e) => setNewGoalProject(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addGoal}
+                    disabled={!newGoalDescription.trim()}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Goal
+                  </Button>
+                </div>
+              </div>
             </div>
 
             {!isEditing && (
