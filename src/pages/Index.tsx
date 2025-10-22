@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { addDays } from 'date-fns';
-import { Contact, ContactOpportunity } from '@/types/contact';
+import { Contact } from '@/types/contact';
 import { useContacts } from '@/hooks/useContacts';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Header';
@@ -9,7 +9,7 @@ import ClickableStatsCard from '@/components/ClickableStatsCard';
 import { DrillDownView, DrillDownType } from '@/components/DrillDownView';
 import OperationsMode from '@/components/OperationsMode';
 import ContactForm from '@/components/ContactForm';
-import OpportunityForm from '@/components/OpportunityForm';
+import OpportunityFormEnhanced from '@/components/OpportunityFormEnhanced';
 import TeamOpportunities from '@/components/TeamOpportunities';
 import SmartDashboard from '@/components/SmartDashboard';
 import StrategicDashboard from '@/components/StrategicDashboard';
@@ -40,8 +40,7 @@ const Index = () => {
   const [contactFormOpen, setContactFormOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [opportunityFormOpen, setOpportunityFormOpen] = useState(false);
-  const [editingOpportunity, setEditingOpportunity] = useState<ContactOpportunity | null>(null);
-  const [selectedContactForOpportunity, setSelectedContactForOpportunity] = useState<Contact | null>(null);
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [drillDownType, setDrillDownType] = useState<DrillDownType>(null);
   const [aiIntroductionCount, setAiIntroductionCount] = useState(0);
   const [projectFormOpen, setProjectFormOpen] = useState(false);
@@ -213,42 +212,13 @@ const Index = () => {
   };
 
   const handleAddOpportunity = (contact: Contact) => {
-    setSelectedContactForOpportunity(contact);
+    setSelectedContactId(contact.id);
     setOpportunityFormOpen(true);
-  };
-
-  const handleEditOpportunity = (opportunity: ContactOpportunity, contact: Contact) => {
-    setEditingOpportunity(opportunity);
-    setSelectedContactForOpportunity(contact);
-    setOpportunityFormOpen(true);
-  };
-
-  const handleSaveOpportunity = async (opportunityData: ContactOpportunity) => {
-    if (!selectedContactForOpportunity) return;
-
-    try {
-      const updatedContact = {
-        ...selectedContactForOpportunity,
-        upcomingOpportunities: editingOpportunity
-          ? selectedContactForOpportunity.upcomingOpportunities?.map(opp =>
-              opp.id === opportunityData.id ? opportunityData : opp
-            ) || []
-          : [...(selectedContactForOpportunity.upcomingOpportunities || []), opportunityData]
-      };
-
-      await updateContact(updatedContact.id, updatedContact);
-      
-      setEditingOpportunity(null);
-      setSelectedContactForOpportunity(null);
-    } catch (error) {
-      console.error('Error saving opportunity:', error);
-    }
   };
 
   const handleCloseOpportunityForm = () => {
     setOpportunityFormOpen(false);
-    setEditingOpportunity(null);
-    setSelectedContactForOpportunity(null);
+    setSelectedContactId(null);
   };
 
   if (isOperationsMode) {
@@ -355,7 +325,6 @@ const Index = () => {
             onViewDetails={handleViewDetails}
             onUpdateContact={handleUpdateContact}
             onAddOpportunity={handleAddOpportunity}
-            onEditOpportunity={handleEditOpportunity}
             onBack={() => setDrillDownType(null)}
             onAnalysisComplete={(count) => setAiIntroductionCount(count)}
           />
@@ -475,12 +444,10 @@ const Index = () => {
       />
 
       {/* Opportunity Form */}
-      <OpportunityForm
-        opportunity={editingOpportunity || undefined}
+      <OpportunityFormEnhanced
+        contactId={selectedContactId || ''}
         isOpen={opportunityFormOpen}
         onClose={handleCloseOpportunityForm}
-        onSave={handleSaveOpportunity}
-        isEditing={!!editingOpportunity}
       />
 
       <ProjectForm

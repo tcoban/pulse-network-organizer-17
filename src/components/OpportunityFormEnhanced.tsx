@@ -34,13 +34,13 @@ interface OpportunityFormEnhancedProps {
   isEditing?: boolean;
 }
 
-export const OpportunityFormEnhanced = ({ 
+function OpportunityFormEnhanced({
   contactId,
   opportunity, 
   isOpen, 
   onClose, 
   isEditing = false 
-}: OpportunityFormEnhancedProps) => {
+}: OpportunityFormEnhancedProps) {
   const { createOpportunity, updateOpportunity } = useOpportunities(contactId);
   
   const [formData, setFormData] = useState({
@@ -298,4 +298,6 @@ export const OpportunityFormEnhanced = ({
       />
     </>
   );
-};
+}
+
+export default OpportunityFormEnhanced;

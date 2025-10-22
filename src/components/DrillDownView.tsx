@@ -30,7 +30,6 @@ interface DrillDownViewProps {
   onViewDetails: (contact: Contact) => void;
   onUpdateContact: (contact: Contact) => void;
   onAddOpportunity: (contact: Contact) => void;
-  onEditOpportunity: (opportunity: any, contact: Contact) => void;
   onBack?: () => void;
   onAnalysisComplete?: (count: number) => void;
 }
@@ -42,7 +41,6 @@ interface LLMIntroductionAnalysisProps {
   onViewDetails: (contact: Contact) => void;
   onUpdateContact: (contact: Contact) => void;
   onAddOpportunity: (contact: Contact) => void;
-  onEditOpportunity: (opportunity: any, contact: Contact) => void;
   onAnalysisComplete?: (count: number) => void;
 }
 
@@ -53,7 +51,6 @@ const LLMIntroductionAnalysis: React.FC<LLMIntroductionAnalysisProps> = ({
   onViewDetails,
   onUpdateContact,
   onAddOpportunity,
-  onEditOpportunity,
   onAnalysisComplete
 }) => {
   const [analyzing, setAnalyzing] = useState(false);
@@ -290,7 +287,7 @@ const LLMIntroductionAnalysis: React.FC<LLMIntroductionAnalysisProps> = ({
                       onViewDetails={onViewDetails}
                       onUpdateContact={onUpdateContact}
                       onAddOpportunity={() => onAddOpportunity(pair.contact1)}
-                      onEditOpportunity={(opportunity) => onEditOpportunity(opportunity, pair.contact1)}
+                      
                     />
                   </div>
                   <div>
@@ -302,7 +299,7 @@ const LLMIntroductionAnalysis: React.FC<LLMIntroductionAnalysisProps> = ({
                       onViewDetails={onViewDetails}
                       onUpdateContact={onUpdateContact}
                       onAddOpportunity={() => onAddOpportunity(pair.contact2)}
-                      onEditOpportunity={(opportunity) => onEditOpportunity(opportunity, pair.contact2)}
+                      
                     />
                   </div>
                 </div>
@@ -332,7 +329,6 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
   onViewDetails,
   onUpdateContact,
   onAddOpportunity,
-  onEditOpportunity,
   onBack,
   onAnalysisComplete,
 }) => {
@@ -389,7 +385,6 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
             onViewDetails={onViewDetails}
             onUpdateContact={onUpdateContact}
             onAddOpportunity={() => onAddOpportunity(contact)}
-            onEditOpportunity={(opportunity) => onEditOpportunity(opportunity, contact)}
           />
         ))}
       </div>
@@ -432,7 +427,6 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
                   onViewDetails={onViewDetails}
                   onUpdateContact={onUpdateContact}
                   onAddOpportunity={() => onAddOpportunity(contact)}
-                  onEditOpportunity={(opportunity) => onEditOpportunity(opportunity, contact)}
                 />
                 ))}
               </div>
@@ -485,7 +479,6 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
                   onViewDetails={onViewDetails}
                   onUpdateContact={onUpdateContact}
                   onAddOpportunity={() => onAddOpportunity(contact)}
-                  onEditOpportunity={(opportunity) => onEditOpportunity(opportunity, contact)}
                 />
                 ))}
               </div>
@@ -721,7 +714,7 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
       onDeleteContact={onDeleteContact} 
       onViewDetails={onViewDetails} 
       onAddOpportunity={onAddOpportunity} 
-      onEditOpportunity={onEditOpportunity}
+      
       onAnalysisComplete={onAnalysisComplete}
     />;
   };
@@ -742,7 +735,7 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
             onViewDetails={onViewDetails}
             onUpdateContact={onUpdateContact}
             onAddOpportunity={() => onAddOpportunity(contact)}
-            onEditOpportunity={(opportunity) => onEditOpportunity(opportunity, contact)}
+            
           />
         ))}
       </div>
@@ -919,7 +912,7 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
                         onViewDetails={onViewDetails}
                         onUpdateContact={onUpdateContact}
                         onAddOpportunity={() => onAddOpportunity(match.contact1)}
-                        onEditOpportunity={(opportunity) => onEditOpportunity(opportunity, match.contact1)}
+                        
                       />
                       {match.contact1.offering && (
                         <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm">
@@ -938,7 +931,7 @@ export const DrillDownView: React.FC<DrillDownViewProps> = ({
                         onViewDetails={onViewDetails}
                         onUpdateContact={onUpdateContact}
                         onAddOpportunity={() => onAddOpportunity(match.contact2)}
-                        onEditOpportunity={(opportunity) => onEditOpportunity(opportunity, match.contact2)}
+                        
                       />
                       {match.contact2.lookingFor && (
                         <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">

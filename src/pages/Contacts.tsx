@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
-import { Contact, ContactOpportunity } from '@/types/contact';
+import { Contact } from '@/types/contact';
 import { useContacts } from '@/hooks/useContacts';
 import ContactCard from '@/components/ContactCard';
 import ContactForm from '@/components/ContactForm';
-import OpportunityForm from '@/components/OpportunityForm';
+import OpportunityFormEnhanced from '@/components/OpportunityFormEnhanced';
 import AdvancedSearch from '@/components/AdvancedSearch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,8 +34,7 @@ const Contacts = () => {
   const [contactFormOpen, setContactFormOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [opportunityFormOpen, setOpportunityFormOpen] = useState(false);
-  const [editingOpportunity, setEditingOpportunity] = useState<ContactOpportunity | null>(null);
-  const [selectedContactForOpportunity, setSelectedContactForOpportunity] = useState<Contact | null>(null);
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
 
   // Filter and sort contacts
@@ -136,42 +135,13 @@ const Contacts = () => {
   };
 
   const handleAddOpportunity = (contact: Contact) => {
-    setSelectedContactForOpportunity(contact);
+    setSelectedContactId(contact.id);
     setOpportunityFormOpen(true);
-  };
-
-  const handleEditOpportunity = (opportunity: ContactOpportunity, contact: Contact) => {
-    setEditingOpportunity(opportunity);
-    setSelectedContactForOpportunity(contact);
-    setOpportunityFormOpen(true);
-  };
-
-  const handleSaveOpportunity = async (opportunityData: ContactOpportunity) => {
-    if (!selectedContactForOpportunity) return;
-
-    try {
-      const updatedContact = {
-        ...selectedContactForOpportunity,
-        upcomingOpportunities: editingOpportunity
-          ? selectedContactForOpportunity.upcomingOpportunities?.map(opp =>
-              opp.id === opportunityData.id ? opportunityData : opp
-            ) || []
-          : [...(selectedContactForOpportunity.upcomingOpportunities || []), opportunityData]
-      };
-
-      await updateContact(updatedContact.id, updatedContact);
-      
-      setEditingOpportunity(null);
-      setSelectedContactForOpportunity(null);
-    } catch (error) {
-      console.error('Error saving opportunity:', error);
-    }
   };
 
   const handleCloseOpportunityForm = () => {
     setOpportunityFormOpen(false);
-    setEditingOpportunity(null);
-    setSelectedContactForOpportunity(null);
+    setSelectedContactId(null);
   };
 
   return (
@@ -329,7 +299,6 @@ const Contacts = () => {
                 onViewDetails={handleViewDetails}
                 onUpdateContact={handleUpdateContact}
                 onAddOpportunity={() => handleAddOpportunity(contact)}
-                onEditOpportunity={(opportunity) => handleEditOpportunity(opportunity, contact)}
               />
             ))}
           </div>
@@ -362,12 +331,10 @@ const Contacts = () => {
       />
 
       {/* Opportunity Form */}
-      <OpportunityForm
-        opportunity={editingOpportunity || undefined}
+      <OpportunityFormEnhanced
+        contactId={selectedContactId || ''}
         isOpen={opportunityFormOpen}
         onClose={handleCloseOpportunityForm}
-        onSave={handleSaveOpportunity}
-        isEditing={!!editingOpportunity}
       />
     </div>
   );

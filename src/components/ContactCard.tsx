@@ -1,4 +1,6 @@
-import { Contact, ContactOpportunity } from '@/types/contact';
+import { Contact } from '@/types/contact';
+import { Opportunity, useOpportunities } from '@/hooks/useOpportunities';
+import { getTypeColor } from '@/utils/opportunityHelpers';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -51,34 +53,22 @@ interface ContactCardProps {
   onViewDetails: (contact: Contact) => void;
   onUpdateContact?: (contact: Contact) => void;
   onAddOpportunity?: () => void;
-  onEditOpportunity?: (opportunity: ContactOpportunity) => void;
 }
 
-const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact, onAddOpportunity, onEditOpportunity }: ContactCardProps) => {
+const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact, onAddOpportunity }: ContactCardProps) => {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [selectedOpportunity, setSelectedOpportunity] = useState<ContactOpportunity | null>(null);
-  const [isOpportunityDialogOpen, setIsOpportunityDialogOpen] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [showOpportunityDetails, setShowOpportunityDetails] = useState(false);
   const { teamMembers, getTeamMemberName } = useTeamMembers();
-  const handleOpportunityClick = (opportunity: ContactOpportunity) => {
-    if (onEditOpportunity) {
-      onEditOpportunity(opportunity);
-    } else {
-      setSelectedOpportunity(opportunity);
-      setIsOpportunityDialogOpen(true);
-    }
+  const { opportunities, loading: opportunitiesLoading, syncOpportunityToCalendar } = useOpportunities(contact.id);
+  
+  const handleOpportunityClick = (opportunity: Opportunity) => {
+    setSelectedOpportunity(opportunity);
+    setShowOpportunityDetails(true);
   };
 
-  const handleOpportunitySave = (updatedOpportunity: ContactOpportunity) => {
-    if (!onUpdateContact) return;
-    
-    const updatedContact = {
-      ...contact,
-      upcomingOpportunities: contact.upcomingOpportunities?.map(opp => 
-        opp.id === updatedOpportunity.id ? updatedOpportunity : opp
-      ) || []
-    };
-    
-    onUpdateContact(updatedContact);
+  const handleSyncToCalendar = async (opportunityId: string) => {
+    await syncOpportunityToCalendar(opportunityId);
   };
 
   const handleAssignmentChange = (newAssignee: string) => {
@@ -283,9 +273,11 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
             </Button>
           )}
         </div>
-        {contact.upcomingOpportunities && contact.upcomingOpportunities.length > 0 ? (
+        {opportunitiesLoading ? (
+          <p className="text-xs text-muted-foreground">Loading opportunities...</p>
+        ) : opportunities.length > 0 ? (
             <div className="space-y-2">
-              {contact.upcomingOpportunities.slice(0, 2).map((opportunity) => (
+              {opportunities.slice(0, 2).map((opportunity) => (
                 <div 
                   key={opportunity.id} 
                   className="text-xs cursor-pointer hover:bg-accent/10 p-2 rounded transition-colors"
@@ -293,7 +285,7 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-foreground hover:text-primary">{opportunity.title}</span>
-                    <span className="text-muted-foreground">{formatOpportunityDate(opportunity.date)}</span>
+                    <span className="text-muted-foreground">{formatOpportunityDate(new Date(opportunity.date))}</span>
                   </div>
                   {opportunity.location && (
                     <div className="flex items-center mt-1 text-muted-foreground">
@@ -301,17 +293,11 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
                       <span>{opportunity.location}</span>
                     </div>
                   )}
-                  {opportunity.meetingGoals && opportunity.meetingGoals.length > 0 && (
-                    <div className="flex items-center mt-1 text-muted-foreground">
-                      <Target className="h-3 w-3 mr-1" />
-                      <span>{opportunity.meetingGoals.filter(g => g.achieved).length}/{opportunity.meetingGoals.length} goals</span>
-                    </div>
-                  )}
                 </div>
               ))}
-              {contact.upcomingOpportunities.length > 2 && (
+              {opportunities.length > 2 && (
                 <div className="text-xs text-muted-foreground">
-                  +{contact.upcomingOpportunities.length - 2} more opportunities
+                  +{opportunities.length - 2} more opportunities
                 </div>
               )}
             </div>
@@ -476,12 +462,17 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
     <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer group">
       {isFlipped ? renderBackView() : renderFrontView()}
       
-      <OpportunityDetails
-        opportunity={selectedOpportunity}
-        isOpen={isOpportunityDialogOpen}
-        onClose={() => setIsOpportunityDialogOpen(false)}
-        onSave={handleOpportunitySave}
-      />
+      {selectedOpportunity && (
+        <OpportunityDetails
+          opportunity={selectedOpportunity}
+          contactId={contact.id}
+          isOpen={showOpportunityDetails}
+          onClose={() => {
+            setShowOpportunityDetails(false);
+            setSelectedOpportunity(null);
+          }}
+        />
+      )}
     </Card>
   );
 };

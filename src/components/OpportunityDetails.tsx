@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ContactOpportunity, MeetingGoal } from '@/types/contact';
+import { Opportunity, MeetingGoal, useOpportunities } from '@/hooks/useOpportunities';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,19 +18,20 @@ import {
 import { format } from 'date-fns';
 
 interface OpportunityDetailsProps {
-  opportunity: ContactOpportunity | null;
+  opportunity: Opportunity | null;
+  contactId: string;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (opportunity: ContactOpportunity) => void;
 }
 
 export const OpportunityDetails = ({ 
   opportunity, 
+  contactId,
   isOpen, 
-  onClose, 
-  onSave 
+  onClose
 }: OpportunityDetailsProps) => {
-  const [editedOpportunity, setEditedOpportunity] = useState<ContactOpportunity | null>(null);
+  const { updateOpportunity } = useOpportunities(contactId);
+  const [editedOpportunity, setEditedOpportunity] = useState<Opportunity | null>(null);
   const [newGoalText, setNewGoalText] = useState('');
 
   // Initialize edited opportunity when opening
@@ -38,7 +39,7 @@ export const OpportunityDetails = ({
     if (opportunity && isOpen) {
       setEditedOpportunity({
         ...opportunity,
-        meetingGoals: opportunity.meetingGoals || []
+        meeting_goals: opportunity.meeting_goals || []
       });
     }
   }, [opportunity, isOpen]);
@@ -46,39 +47,47 @@ export const OpportunityDetails = ({
   if (!opportunity || !editedOpportunity) return null;
 
   const addGoal = () => {
-    if (!newGoalText.trim()) return;
+    if (!newGoalText.trim() || !editedOpportunity) return;
     
-    const newGoal: MeetingGoal = {
-      id: Date.now().toString(),
+    const newGoal = {
+      id: `temp-${Date.now()}`,
+      opportunity_id: editedOpportunity.id,
       description: newGoalText,
-      achieved: false
+      achieved: false,
+      related_project: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
 
     setEditedOpportunity({
       ...editedOpportunity,
-      meetingGoals: [...(editedOpportunity.meetingGoals || []), newGoal]
+      meeting_goals: [...(editedOpportunity.meeting_goals || []), newGoal]
     });
     setNewGoalText('');
   };
 
   const removeGoal = (goalId: string) => {
+    if (!editedOpportunity) return;
     setEditedOpportunity({
       ...editedOpportunity,
-      meetingGoals: editedOpportunity.meetingGoals?.filter(g => g.id !== goalId) || []
+      meeting_goals: editedOpportunity.meeting_goals?.filter(g => g.id !== goalId) || []
     });
   };
 
   const toggleGoalAchieved = (goalId: string) => {
+    if (!editedOpportunity) return;
     setEditedOpportunity({
       ...editedOpportunity,
-      meetingGoals: editedOpportunity.meetingGoals?.map(g => 
+      meeting_goals: editedOpportunity.meeting_goals?.map(g => 
         g.id === goalId ? { ...g, achieved: !g.achieved } : g
       ) || []
     });
   };
 
-  const handleSave = () => {
-    onSave(editedOpportunity);
+  const handleSave = async () => {
+    if (editedOpportunity) {
+      await updateOpportunity(editedOpportunity.id, editedOpportunity);
+    }
     onClose();
   };
 
@@ -102,8 +111,8 @@ export const OpportunityDetails = ({
     return status ? colors[status as keyof typeof colors] || '' : '';
   };
 
-  const achievedGoals = editedOpportunity.meetingGoals?.filter(g => g.achieved).length || 0;
-  const totalGoals = editedOpportunity.meetingGoals?.length || 0;
+  const achievedGoals = editedOpportunity?.meeting_goals?.filter(g => g.achieved).length || 0;
+  const totalGoals = editedOpportunity?.meeting_goals?.length || 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -122,9 +131,9 @@ export const OpportunityDetails = ({
               <Badge className={getTypeColor(opportunity.type)}>
                 {opportunity.type}
               </Badge>
-              {opportunity.registrationStatus && (
-                <Badge className={getStatusColor(opportunity.registrationStatus)}>
-                  {opportunity.registrationStatus}
+              {opportunity.registration_status && (
+                <Badge className={getStatusColor(opportunity.registration_status)}>
+                  {opportunity.registration_status}
                 </Badge>
               )}
             </div>
@@ -194,7 +203,7 @@ export const OpportunityDetails = ({
 
             {/* Goals List */}
             <div className="space-y-2">
-              {editedOpportunity.meetingGoals?.map((goal) => (
+              {editedOpportunity?.meeting_goals?.map((goal) => (
                 <div 
                   key={goal.id} 
                   className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors ${
@@ -230,7 +239,7 @@ export const OpportunityDetails = ({
                 </div>
               ))}
               
-              {(!editedOpportunity.meetingGoals || editedOpportunity.meetingGoals.length === 0) && (
+              {(!editedOpportunity?.meeting_goals || editedOpportunity.meeting_goals.length === 0) && (
                 <div className="text-center py-8 text-muted-foreground">
                   <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p>No meeting goals set yet</p>
