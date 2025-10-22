@@ -32,10 +32,10 @@ export const useUserGoals = () => {
         return;
       }
 
+      // Admins see ALL goals, regular users see only their own
       const { data, error: fetchError } = await supabase
         .from('user_goals')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
