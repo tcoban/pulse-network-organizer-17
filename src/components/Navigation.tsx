@@ -31,6 +31,11 @@ export function Navigation() {
       icon: UsersRound
     },
     {
+      title: 'Projects',
+      href: '/projects',
+      icon: Target
+    },
+    {
       title: 'Goals',
       href: '/goals',
       icon: Target

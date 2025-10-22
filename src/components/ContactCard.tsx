@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { OpportunityDetails } from './OpportunityDetails';
 import HistoryTabs from './HistoryTabs';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
-import { useUserGoals } from '@/hooks/useUserGoals';
+import { useGoals } from '@/hooks/useGoals';
 import { supabase } from '@/integrations/supabase/client';
 import { useState as useStateHook, useEffect } from 'react';
 import {
@@ -65,7 +65,7 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
   const [linkedGoals, setLinkedGoals] = useStateHook<Array<{ id: string; title: string; category: string; meetingCount: number }>>([]);
   const { teamMembers, getTeamMemberName } = useTeamMembers();
   const { opportunities, loading: opportunitiesLoading, syncOpportunityToCalendar } = useOpportunities(contact.id);
-  const { goals: userGoals } = useUserGoals();
+  const { goals: userGoals } = useGoals();
 
   // Fetch linked goals for this contact
   useEffect(() => {

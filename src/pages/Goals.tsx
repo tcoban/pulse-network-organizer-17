@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useGoals } from '@/hooks/useGoals';
+import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,89 +35,73 @@ interface Goal {
 }
 
 export default function Goals() {
-  const { user } = useAuth();
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { goals, loading, fetchGoals, updateGoal } = useGoals();
+  const { teamMembers } = useTeamMembers();
+  const { isAdmin } = useUserRole();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('active');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [teamMemberFilter, setTeamMemberFilter] = useState<string>('all');
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set());
+  const [goalsWithOpportunities, setGoalsWithOpportunities] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchGoals();
-  }, [user]);
+    fetchGoalsWithOpportunities();
+  }, [goals]);
 
-  const fetchGoals = async () => {
-    if (!user) return;
-
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('user_goals')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('target_date', { ascending: true, nullsFirst: false });
-
-      if (error) throw error;
-      
-      // Fetch related opportunities for each goal
-      const goalsWithOpportunities = await Promise.all(
-        (data || []).map(async (goal) => {
-          const { data: meetingGoals } = await supabase
-            .from('meeting_goals')
-            .select(`
+  const fetchGoalsWithOpportunities = async () => {
+    // Fetch related opportunities for each goal
+    const enrichedGoals = await Promise.all(
+      goals.map(async (goal) => {
+        const { data: meetingGoals } = await supabase
+          .from('meeting_goals')
+          .select(`
+            id,
+            achieved,
+            opportunity_id,
+            opportunities (
               id,
-              achieved,
-              opportunity_id,
-              opportunities (
-                id,
-                title,
-                date,
-                contact_id,
-                contacts (
-                  name
-                )
+              title,
+              date,
+              contact_id,
+              contacts (
+                name
               )
-            `)
-            .eq('user_goal_id', goal.id);
+            )
+          `)
+          .eq('user_goal_id', goal.id);
 
-          const opportunitiesMap = new Map();
-          meetingGoals?.forEach((mg: any) => {
-            if (mg.opportunities) {
-              const oppId = mg.opportunities.id;
-              if (!opportunitiesMap.has(oppId)) {
-                opportunitiesMap.set(oppId, {
-                  id: mg.opportunities.id,
-                  title: mg.opportunities.title,
-                  date: mg.opportunities.date,
-                  contact_id: mg.opportunities.contact_id,
-                  contact_name: mg.opportunities.contacts?.name || 'Unknown',
-                  achieved_goals_count: 0,
-                  total_goals_count: 0,
-                });
-              }
-              const opp = opportunitiesMap.get(oppId);
-              opp.total_goals_count++;
-              if (mg.achieved) opp.achieved_goals_count++;
+        const opportunitiesMap = new Map();
+        meetingGoals?.forEach((mg: any) => {
+          if (mg.opportunities) {
+            const oppId = mg.opportunities.id;
+            if (!opportunitiesMap.has(oppId)) {
+              opportunitiesMap.set(oppId, {
+                id: mg.opportunities.id,
+                title: mg.opportunities.title,
+                date: mg.opportunities.date,
+                contact_id: mg.opportunities.contact_id,
+                contact_name: mg.opportunities.contacts?.name || 'Unknown',
+                achieved_goals_count: 0,
+                total_goals_count: 0,
+              });
             }
-          });
+            const opp = opportunitiesMap.get(oppId);
+            opp.total_goals_count++;
+            if (mg.achieved) opp.achieved_goals_count++;
+          }
+        });
 
-          return {
-            ...goal,
-            relatedOpportunities: Array.from(opportunitiesMap.values()).sort(
-              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-            ),
-          };
-        })
-      );
+        return {
+          ...goal,
+          relatedOpportunities: Array.from(opportunitiesMap.values()).sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          ),
+        };
+      })
+    );
 
-      setGoals(goalsWithOpportunities);
-    } catch (error) {
-      console.error('Error fetching goals:', error);
-      toast.error('Failed to load goals');
-    } finally {
-      setLoading(false);
-    }
+    setGoalsWithOpportunities(enrichedGoals);
   };
 
   const toggleGoalExpanded = (goalId: string) => {
@@ -131,32 +117,27 @@ export default function Goals() {
   };
 
   const handleUpdateProgress = async (goalId: string, newProgress: number) => {
-    try {
-      const { error } = await supabase
-        .from('user_goals')
-        .update({ 
-          progress_percentage: newProgress,
-          status: newProgress === 100 ? 'completed' : 'active'
-        })
-        .eq('id', goalId);
-
-      if (error) throw error;
-      
-      await fetchGoals();
-      toast.success('Progress updated');
-    } catch (error) {
-      console.error('Error updating progress:', error);
-      toast.error('Failed to update progress');
-    }
+    await updateGoal(goalId, {
+      progress_percentage: newProgress,
+      status: newProgress === 100 ? 'completed' : 'active'
+    });
   };
 
   const categories = Array.from(new Set(goals.map(g => g.category)));
   
-  const filteredGoals = goals.filter(goal => {
+  const filteredGoals = goalsWithOpportunities.filter(goal => {
     const matchesStatus = statusFilter === 'all' || goal.status === statusFilter;
     const matchesCategory = categoryFilter === 'all' || goal.category === categoryFilter;
-    return matchesStatus && matchesCategory;
+    const matchesTeamMember = teamMemberFilter === 'all' || 
+      goal.assigned_to === teamMemberFilter ||
+      goal.assignments?.some((a: any) => a.team_member_id === teamMemberFilter);
+    return matchesStatus && matchesCategory && matchesTeamMember;
   });
+
+  const getTeamMemberName = (teamMemberId: string) => {
+    const member = teamMembers.find(m => m.id === teamMemberId);
+    return member ? `${member.firstName} ${member.lastName}` : 'Unknown';
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -192,7 +173,7 @@ export default function Goals() {
         </Button>
       </div>
 
-      <div className="flex gap-4 mb-6">
+      <div className="flex gap-4 mb-6 flex-wrap">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -219,6 +200,21 @@ export default function Goals() {
             ))}
           </SelectContent>
         </Select>
+        {isAdmin && (
+          <Select value={teamMemberFilter} onValueChange={setTeamMemberFilter}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Team Member" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Team Members</SelectItem>
+              {teamMembers.map(member => (
+                <SelectItem key={member.id} value={member.id}>
+                  {member.firstName} {member.lastName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -235,7 +231,21 @@ export default function Goals() {
                     {goal.status}
                   </Badge>
                 </div>
-                <Badge variant="outline" className="w-fit">{goal.category}</Badge>
+                <div className="flex gap-2 flex-wrap">
+                  <Badge variant="outline">{goal.category}</Badge>
+                  {goal.assigned_to && (
+                    <Badge variant="secondary" className="text-xs">
+                      <Users className="h-3 w-3 mr-1" />
+                      {getTeamMemberName(goal.assigned_to)}
+                    </Badge>
+                  )}
+                  {goal.assignments && goal.assignments.length > 0 && (
+                    <Badge variant="secondary" className="text-xs">
+                      <Users className="h-3 w-3 mr-1" />
+                      {goal.assignments.length} team member{goal.assignments.length > 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {goal.description && (

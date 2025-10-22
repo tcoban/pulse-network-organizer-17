@@ -47,7 +47,7 @@ export function AddGoalDialog({ open, onOpenChange, onGoalAdded }: AddGoalDialog
       setLoading(true);
       
       const { error } = await supabase
-        .from('user_goals')
+        .from('goals')
         .insert({
           user_id: user.id,
           title: formData.title,

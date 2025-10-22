@@ -17,7 +17,7 @@ import {
   X
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { useUserGoals } from '@/hooks/useUserGoals';
+import { useGoals } from '@/hooks/useGoals';
 import { supabase } from '@/integrations/supabase/client';
 
 interface OpportunityDetailsProps {
@@ -34,7 +34,7 @@ export const OpportunityDetails = ({
   onClose
 }: OpportunityDetailsProps) => {
   const { updateOpportunity } = useOpportunities(contactId);
-  const { goals: userGoals } = useUserGoals();
+  const { goals: userGoals } = useGoals();
   const [editedOpportunity, setEditedOpportunity] = useState<Opportunity | null>(null);
   const [newGoalText, setNewGoalText] = useState('');
   const [newGoalUserGoalId, setNewGoalUserGoalId] = useState<string>('');

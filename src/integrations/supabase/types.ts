@@ -465,6 +465,129 @@ export type Database = {
           },
         ]
       }
+      goal_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          goal_id: string | null
+          id: string
+          team_member_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          goal_id?: string | null
+          id?: string
+          team_member_id?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          goal_id?: string | null
+          id?: string
+          team_member_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goal_assignments_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goal_assignments_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goals: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          linked_opportunity_id: string | null
+          progress_percentage: number | null
+          status: string | null
+          target_date: string | null
+          target_id: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          linked_opportunity_id?: string | null
+          progress_percentage?: number | null
+          status?: string | null
+          target_date?: string | null
+          target_id?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          linked_opportunity_id?: string | null
+          progress_percentage?: number | null
+          status?: string | null
+          target_date?: string | null
+          target_id?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goals_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "targets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_goals_linked_opportunity_id_fkey"
+            columns: ["linked_opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_goals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       integration_configs: {
         Row: {
           config: Json
@@ -600,6 +723,7 @@ export type Database = {
       meeting_goals: {
         Row: {
           achieved: boolean | null
+          assigned_to: string | null
           created_at: string | null
           description: string
           id: string
@@ -610,6 +734,7 @@ export type Database = {
         }
         Insert: {
           achieved?: boolean | null
+          assigned_to?: string | null
           created_at?: string | null
           description: string
           id?: string
@@ -620,6 +745,7 @@ export type Database = {
         }
         Update: {
           achieved?: boolean | null
+          assigned_to?: string | null
           created_at?: string | null
           description?: string
           id?: string
@@ -629,6 +755,13 @@ export type Database = {
           user_goal_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "meeting_goals_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "meeting_goals_opportunity_id_fkey"
             columns: ["opportunity_id"]
@@ -640,7 +773,7 @@ export type Database = {
             foreignKeyName: "meeting_goals_user_goal_id_fkey"
             columns: ["user_goal_id"]
             isOneToOne: false
-            referencedRelation: "user_goals"
+            referencedRelation: "goals"
             referencedColumns: ["id"]
           },
         ]
@@ -848,6 +981,108 @@ export type Database = {
         }
         Relationships: []
       }
+      project_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          id: string
+          project_id: string | null
+          role: string | null
+          team_member_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          project_id?: string | null
+          role?: string | null
+          team_member_id?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          project_id?: string | null
+          role?: string | null
+          team_member_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_assignments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_assignments_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          created_at: string | null
+          current_value: number | null
+          deadline: string | null
+          description: string | null
+          id: string
+          owner_id: string | null
+          priority: string
+          status: string
+          target_value: number | null
+          title: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_value?: number | null
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          owner_id?: string | null
+          priority?: string
+          status?: string
+          target_value?: number | null
+          title: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_value?: number | null
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          owner_id?: string | null
+          priority?: string
+          status?: string
+          target_value?: number | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_settings: {
         Row: {
           category: string
@@ -922,6 +1157,96 @@ export type Database = {
           },
         ]
       }
+      target_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          id: string
+          target_id: string | null
+          team_member_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          target_id?: string | null
+          team_member_id?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          target_id?: string | null
+          team_member_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "target_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "target_assignments_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "targets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "target_assignments_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      targets: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          progress_percentage: number | null
+          project_id: string | null
+          status: string | null
+          target_date: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          progress_percentage?: number | null
+          project_id?: string | null
+          status?: string | null
+          target_date?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          progress_percentage?: number | null
+          project_id?: string | null
+          status?: string | null
+          target_date?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "targets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_members: {
         Row: {
           bio: string | null
@@ -963,63 +1288,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
-      }
-      user_goals: {
-        Row: {
-          category: string
-          created_at: string | null
-          description: string | null
-          id: string
-          linked_opportunity_id: string | null
-          progress_percentage: number | null
-          status: string | null
-          target_date: string | null
-          title: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          category: string
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          linked_opportunity_id?: string | null
-          progress_percentage?: number | null
-          status?: string | null
-          target_date?: string | null
-          title: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          category?: string
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          linked_opportunity_id?: string | null
-          progress_percentage?: number | null
-          status?: string | null
-          target_date?: string | null
-          title?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_goals_linked_opportunity_id_fkey"
-            columns: ["linked_opportunity_id"]
-            isOneToOne: false
-            referencedRelation: "opportunities"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_goals_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_preferences: {
         Row: {

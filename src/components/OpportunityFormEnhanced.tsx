@@ -26,7 +26,7 @@ import { useOpportunities, type Opportunity, type MeetingGoal } from '@/hooks/us
 import { inferOpportunityType, getTypeColor } from '@/utils/opportunityHelpers';
 import { DuplicateWarningDialog } from './DuplicateWarningDialog';
 import { supabase } from '@/integrations/supabase/client';
-import { useUserGoals } from '@/hooks/useUserGoals';
+import { useGoals } from '@/hooks/useGoals';
 
 interface OpportunityFormEnhancedProps {
   contactId: string;
@@ -44,7 +44,7 @@ function OpportunityFormEnhanced({
   isEditing = false 
 }: OpportunityFormEnhancedProps) {
   const { createOpportunity, updateOpportunity } = useOpportunities(contactId);
-  const { goals: userGoals } = useUserGoals();
+  const { goals: userGoals } = useGoals();
   
   const [formData, setFormData] = useState({
     title: '',
