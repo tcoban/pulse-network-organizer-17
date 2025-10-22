@@ -606,6 +606,7 @@ export type Database = {
           opportunity_id: string | null
           related_project: string | null
           updated_at: string | null
+          user_goal_id: string | null
         }
         Insert: {
           achieved?: boolean | null
@@ -615,6 +616,7 @@ export type Database = {
           opportunity_id?: string | null
           related_project?: string | null
           updated_at?: string | null
+          user_goal_id?: string | null
         }
         Update: {
           achieved?: boolean | null
@@ -624,6 +626,7 @@ export type Database = {
           opportunity_id?: string | null
           related_project?: string | null
           updated_at?: string | null
+          user_goal_id?: string | null
         }
         Relationships: [
           {
@@ -631,6 +634,13 @@ export type Database = {
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_goals_user_goal_id_fkey"
+            columns: ["user_goal_id"]
+            isOneToOne: false
+            referencedRelation: "user_goals"
             referencedColumns: ["id"]
           },
         ]

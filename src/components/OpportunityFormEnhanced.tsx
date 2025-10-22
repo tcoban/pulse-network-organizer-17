@@ -21,11 +21,12 @@ import {
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { CheckCircle2, AlertTriangle, Calendar as CalendarIcon, Loader2, Plus, X, Target } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, Calendar as CalendarIcon, Loader2, Plus, X, Target, Sparkles } from 'lucide-react';
 import { useOpportunities, type Opportunity, type MeetingGoal } from '@/hooks/useOpportunities';
 import { inferOpportunityType, getTypeColor } from '@/utils/opportunityHelpers';
 import { DuplicateWarningDialog } from './DuplicateWarningDialog';
 import { supabase } from '@/integrations/supabase/client';
+import { useUserGoals } from '@/hooks/useUserGoals';
 
 interface OpportunityFormEnhancedProps {
   contactId: string;
@@ -43,6 +44,7 @@ function OpportunityFormEnhanced({
   isEditing = false 
 }: OpportunityFormEnhancedProps) {
   const { createOpportunity, updateOpportunity } = useOpportunities(contactId);
+  const { goals: userGoals } = useUserGoals();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -53,9 +55,10 @@ function OpportunityFormEnhanced({
     registration_status: 'considering' as 'considering' | 'registered' | 'confirmed',
   });
   
-  const [meetingGoals, setMeetingGoals] = useState<Array<{ id: string; description: string; achieved: boolean; related_project?: string }>>([]);
+  const [meetingGoals, setMeetingGoals] = useState<Array<{ id: string; description: string; achieved: boolean; related_project?: string; user_goal_id?: string }>>([]);
   const [newGoalDescription, setNewGoalDescription] = useState('');
   const [newGoalProject, setNewGoalProject] = useState('');
+  const [newGoalUserGoalId, setNewGoalUserGoalId] = useState<string>('');
   const [addToCalendar, setAddToCalendar] = useState(false);
   const [saving, setSaving] = useState(false);
   const [duplicates, setDuplicates] = useState<any[]>([]);
@@ -120,11 +123,19 @@ function OpportunityFormEnhanced({
       description: newGoalDescription,
       achieved: false,
       related_project: newGoalProject || undefined,
+      user_goal_id: newGoalUserGoalId || undefined,
     };
     
     setMeetingGoals([...meetingGoals, newGoal]);
     setNewGoalDescription('');
     setNewGoalProject('');
+    setNewGoalUserGoalId('');
+  };
+
+  const updateGoalUserGoal = (goalId: string, userGoalId: string) => {
+    setMeetingGoals(meetingGoals.map(g => 
+      g.id === goalId ? { ...g, user_goal_id: userGoalId || undefined } : g
+    ));
   };
 
   const removeGoal = (goalId: string) => {
@@ -195,6 +206,7 @@ function OpportunityFormEnhanced({
           description: goal.description,
           achieved: goal.achieved,
           related_project: goal.related_project,
+          user_goal_id: goal.user_goal_id || null,
         }));
         
         const { error: goalsError } = await supabase
@@ -339,33 +351,64 @@ function OpportunityFormEnhanced({
               {/* Display existing goals */}
               {meetingGoals.length > 0 && (
                 <div className="space-y-2">
-                  {meetingGoals.map((goal) => (
-                    <div key={goal.id} className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
-                      <Checkbox
-                        checked={goal.achieved}
-                        onCheckedChange={() => toggleGoalAchieved(goal.id)}
-                        className="mt-1"
-                      />
-                      <div className="flex-1">
-                        <p className={`text-sm ${goal.achieved ? 'line-through text-muted-foreground' : ''}`}>
-                          {goal.description}
-                        </p>
-                        {goal.related_project && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Project: {goal.related_project}
+                  {meetingGoals.map((goal) => {
+                    const linkedGoal = userGoals.find(ug => ug.id === goal.user_goal_id);
+                    return (
+                      <div key={goal.id} className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
+                        <Checkbox
+                          checked={goal.achieved}
+                          onCheckedChange={() => toggleGoalAchieved(goal.id)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1 space-y-2">
+                          <p className={`text-sm ${goal.achieved ? 'line-through text-muted-foreground' : ''}`}>
+                            {goal.description}
                           </p>
-                        )}
+                          {goal.related_project && (
+                            <p className="text-xs text-muted-foreground">
+                              Project: {goal.related_project}
+                            </p>
+                          )}
+                          <Select
+                            value={goal.user_goal_id || 'none'}
+                            onValueChange={(value) => updateGoalUserGoal(goal.id, value === 'none' ? '' : value)}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder="Link to strategic goal..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">
+                                <span className="text-muted-foreground">No strategic goal</span>
+                              </SelectItem>
+                              {userGoals.map(ug => (
+                                <SelectItem key={ug.id} value={ug.id}>
+                                  🎯 {ug.title} ({ug.progress_percentage}%)
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {linkedGoal && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <Badge variant="outline" className="text-xs">
+                                {linkedGoal.category}
+                              </Badge>
+                              <span className="text-muted-foreground">
+                                {linkedGoal.progress_percentage}% complete
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeGoal(goal.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeGoal(goal.id)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
               
@@ -389,6 +432,21 @@ function OpportunityFormEnhanced({
                     onChange={(e) => setNewGoalProject(e.target.value)}
                     className="flex-1"
                   />
+                  <Select value={newGoalUserGoalId} onValueChange={setNewGoalUserGoalId}>
+                    <SelectTrigger className="w-64">
+                      <SelectValue placeholder="Link to goal..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">
+                        <span className="text-muted-foreground">No strategic goal</span>
+                      </SelectItem>
+                      {userGoals.filter(g => g.status === 'active').map(ug => (
+                        <SelectItem key={ug.id} value={ug.id}>
+                          🎯 {ug.title} ({ug.progress_percentage}%)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Button
                     type="button"
                     variant="outline"
@@ -397,7 +455,7 @@ function OpportunityFormEnhanced({
                     disabled={!newGoalDescription.trim()}
                   >
                     <Plus className="h-4 w-4 mr-1" />
-                    Add Goal
+                    Add
                   </Button>
                 </div>
               </div>

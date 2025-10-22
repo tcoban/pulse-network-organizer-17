@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button';
 import { OpportunityDetails } from './OpportunityDetails';
 import HistoryTabs from './HistoryTabs';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { useUserGoals } from '@/hooks/useUserGoals';
+import { supabase } from '@/integrations/supabase/client';
+import { useState as useStateHook, useEffect } from 'react';
 import {
   Select,
   SelectContent,
@@ -56,11 +59,72 @@ interface ContactCardProps {
 }
 
 const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact, onAddOpportunity }: ContactCardProps) => {
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
-  const [showOpportunityDetails, setShowOpportunityDetails] = useState(false);
+  const [isFlipped, setIsFlipped] = useStateHook(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useStateHook<Opportunity | null>(null);
+  const [showOpportunityDetails, setShowOpportunityDetails] = useStateHook(false);
+  const [linkedGoals, setLinkedGoals] = useStateHook<Array<{ id: string; title: string; category: string; meetingCount: number }>>([]);
   const { teamMembers, getTeamMemberName } = useTeamMembers();
   const { opportunities, loading: opportunitiesLoading, syncOpportunityToCalendar } = useOpportunities(contact.id);
+  const { goals: userGoals } = useUserGoals();
+
+  // Fetch linked goals for this contact
+  useEffect(() => {
+    const fetchLinkedGoals = async () => {
+      try {
+        // Get all opportunities for this contact
+        const { data: contactOpps } = await supabase
+          .from('opportunities')
+          .select('id')
+          .eq('contact_id', contact.id);
+
+        if (!contactOpps || contactOpps.length === 0) {
+          setLinkedGoals([]);
+          return;
+        }
+
+        const oppIds = contactOpps.map(o => o.id);
+
+        // Get all meeting goals for these opportunities
+        const { data: meetingGoals } = await supabase
+          .from('meeting_goals')
+          .select('user_goal_id')
+          .in('opportunity_id', oppIds)
+          .not('user_goal_id', 'is', null);
+
+        if (!meetingGoals) {
+          setLinkedGoals([]);
+          return;
+        }
+
+        // Count meetings per goal
+        const goalCounts = new Map<string, number>();
+        meetingGoals.forEach(mg => {
+          if (mg.user_goal_id) {
+            goalCounts.set(mg.user_goal_id, (goalCounts.get(mg.user_goal_id) || 0) + 1);
+          }
+        });
+
+        // Map to goal details
+        const goalsData = Array.from(goalCounts.entries())
+          .map(([goalId, count]) => {
+            const goal = userGoals.find(g => g.id === goalId);
+            return goal ? {
+              id: goalId,
+              title: goal.title,
+              category: goal.category,
+              meetingCount: count
+            } : null;
+          })
+          .filter(Boolean) as Array<{ id: string; title: string; category: string; meetingCount: number }>;
+
+        setLinkedGoals(goalsData);
+      } catch (error) {
+        console.error('Error fetching linked goals:', error);
+      }
+    };
+
+    fetchLinkedGoals();
+  }, [contact.id, userGoals, opportunities]);
   
   const handleOpportunityClick = (opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity);
@@ -216,6 +280,23 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
           </Select>
         </div>
       </div>
+
+      {/* Contributing to Goals */}
+      {linkedGoals.length > 0 && (
+        <div className="bg-primary/10 rounded-lg p-3 mb-4">
+          <div className="flex items-center text-sm font-medium mb-2">
+            <Target className="h-4 w-4 mr-2" />
+            Contributing to Goals
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {linkedGoals.map(goal => (
+              <Badge key={goal.id} variant="outline" className="text-xs">
+                {goal.title} • {goal.meetingCount} meeting{goal.meetingCount !== 1 ? 's' : ''}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Last Contact Details */}
       {(() => {
