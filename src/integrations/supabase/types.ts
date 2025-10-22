@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      calendar_events: {
+        Row: {
+          contact_ids: string[] | null
+          created_at: string | null
+          event_end: string
+          event_start: string
+          event_title: string
+          id: string
+          location: string | null
+          meeting_prep_sent: boolean | null
+          outcome_captured: boolean | null
+          outlook_event_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          contact_ids?: string[] | null
+          created_at?: string | null
+          event_end: string
+          event_start: string
+          event_title: string
+          id?: string
+          location?: string | null
+          meeting_prep_sent?: boolean | null
+          outcome_captured?: boolean | null
+          outlook_event_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          contact_ids?: string[] | null
+          created_at?: string | null
+          event_end?: string
+          event_start?: string
+          event_title?: string
+          id?: string
+          location?: string | null
+          meeting_prep_sent?: boolean | null
+          outcome_captured?: boolean | null
+          outlook_event_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       collaborations: {
         Row: {
           contact_id: string | null
@@ -326,6 +368,47 @@ export type Database = {
           },
         ]
       }
+      email_interactions: {
+        Row: {
+          contact_id: string | null
+          created_at: string | null
+          id: string
+          outlook_message_id: string
+          response_received: boolean | null
+          sent_at: string
+          sentiment_score: number | null
+          subject: string | null
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string | null
+          id?: string
+          outlook_message_id: string
+          response_received?: boolean | null
+          sent_at: string
+          sentiment_score?: number | null
+          subject?: string | null
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string | null
+          id?: string
+          outlook_message_id?: string
+          response_received?: boolean | null
+          sent_at?: string
+          sentiment_score?: number | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_interactions_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_participations: {
         Row: {
           contact_id: string | null
@@ -466,6 +549,42 @@ export type Database = {
           },
         ]
       }
+      m365_sync_status: {
+        Row: {
+          created_at: string | null
+          delta_token: string | null
+          id: string
+          is_mock: boolean | null
+          last_sync_at: string | null
+          resource_type: string
+          sync_errors: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          delta_token?: string | null
+          id?: string
+          is_mock?: boolean | null
+          last_sync_at?: string | null
+          resource_type: string
+          sync_errors?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          delta_token?: string | null
+          id?: string
+          is_mock?: boolean | null
+          last_sync_at?: string | null
+          resource_type?: string
+          sync_errors?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       meeting_goals: {
         Row: {
           achieved: boolean | null
@@ -577,6 +696,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "opportunities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      outlook_contact_mappings: {
+        Row: {
+          contact_id: string | null
+          created_at: string | null
+          id: string
+          last_synced_at: string | null
+          outlook_contact_id: string
+          sync_direction: string
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_synced_at?: string | null
+          outlook_contact_id: string
+          sync_direction: string
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_synced_at?: string | null
+          outlook_contact_id?: string
+          sync_direction?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outlook_contact_mappings_contact_id_fkey"
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"

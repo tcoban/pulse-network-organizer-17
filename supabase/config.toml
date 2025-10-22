@@ -2,3 +2,12 @@ project_id = "olrjeneqkojowyyhqzln"
 
 [functions.analyze-introduction-matches]
 verify_jwt = false
+
+[functions.sync-outlook-contacts]
+verify_jwt = true
+
+[functions.sync-calendar-events]
+verify_jwt = true
+
+[functions.sync-email-interactions]
+verify_jwt = true

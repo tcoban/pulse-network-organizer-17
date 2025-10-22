@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { Loader2, User, Bell, Settings2, Shield } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { M365SyncPanel } from '@/components/M365SyncPanel';
 
 export default function Settings() {
   const { user } = useAuth();
@@ -196,6 +197,8 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="preferences" className="space-y-4">
+          <M365SyncPanel />
+          
           <Card>
             <CardHeader>
               <CardTitle>Display Preferences</CardTitle>
