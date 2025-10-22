@@ -322,14 +322,46 @@ const AdminPanel = () => {
 
   const fetchTags = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch all unique tags from contact_tags and get tag_definitions
+      const { data: contactTags, error: tagsError } = await supabase
+        .from('contact_tags')
+        .select('tag');
+
+      if (tagsError) throw tagsError;
+
+      // Get unique tag names
+      const uniqueTags = [...new Set(contactTags?.map(t => t.tag) || [])];
+
+      // Fetch tag definitions
+      const { data: definitions, error: defsError } = await supabase
         .from('tag_definitions')
         .select('*')
         .order('category', { ascending: true })
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
-      setTags(data || []);
+      if (defsError) throw defsError;
+
+      // Merge: create tag definitions for tags that exist but don't have definitions
+      const tagDefinitionsMap = new Map(definitions?.map(d => [d.name, d]) || []);
+      
+      const allTags: TagDefinition[] = uniqueTags.map(tagName => {
+        const existing = tagDefinitionsMap.get(tagName);
+        if (existing) {
+          return existing;
+        }
+        // Create temporary definition for tags without metadata
+        return {
+          id: `temp-${tagName}`,
+          name: tagName,
+          category: 'Uncategorized',
+          color: '#6B7280',
+          description: 'Auto-discovered tag (needs definition)',
+          display_order: 999,
+          is_active: true
+        };
+      });
+
+      setTags(allTags);
     } catch (error) {
       console.error('Error fetching tags:', error);
       toast({
