@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   CalendarDays, 
   MapPin, 
@@ -16,6 +17,8 @@ import {
   X
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { useUserGoals } from '@/hooks/useUserGoals';
+import { supabase } from '@/integrations/supabase/client';
 
 interface OpportunityDetailsProps {
   opportunity: Opportunity | null;
@@ -31,8 +34,10 @@ export const OpportunityDetails = ({
   onClose
 }: OpportunityDetailsProps) => {
   const { updateOpportunity } = useOpportunities(contactId);
+  const { goals: userGoals } = useUserGoals();
   const [editedOpportunity, setEditedOpportunity] = useState<Opportunity | null>(null);
   const [newGoalText, setNewGoalText] = useState('');
+  const [newGoalUserGoalId, setNewGoalUserGoalId] = useState<string>('');
 
   // Initialize edited opportunity when opening
   React.useEffect(() => {
@@ -66,22 +71,71 @@ export const OpportunityDetails = ({
     setNewGoalText('');
   };
 
-  const removeGoal = (goalId: string) => {
+  const removeGoal = async (goalId: string) => {
     if (!editedOpportunity) return;
-    setEditedOpportunity({
-      ...editedOpportunity,
-      meeting_goals: editedOpportunity.meeting_goals?.filter(g => g.id !== goalId) || []
-    });
+    
+    try {
+      const { error } = await supabase
+        .from('meeting_goals')
+        .delete()
+        .eq('id', goalId);
+
+      if (error) throw error;
+
+      setEditedOpportunity({
+        ...editedOpportunity,
+        meeting_goals: editedOpportunity.meeting_goals?.filter(g => g.id !== goalId) || []
+      });
+    } catch (error) {
+      console.error('Error removing goal:', error);
+    }
   };
 
-  const toggleGoalAchieved = (goalId: string) => {
+  const toggleGoalAchieved = async (goalId: string) => {
     if (!editedOpportunity) return;
-    setEditedOpportunity({
-      ...editedOpportunity,
-      meeting_goals: editedOpportunity.meeting_goals?.map(g => 
-        g.id === goalId ? { ...g, achieved: !g.achieved } : g
-      ) || []
-    });
+    
+    const goal = editedOpportunity.meeting_goals?.find(g => g.id === goalId);
+    if (!goal) return;
+
+    try {
+      const { error } = await supabase
+        .from('meeting_goals')
+        .update({ achieved: !goal.achieved })
+        .eq('id', goalId);
+
+      if (error) throw error;
+
+      setEditedOpportunity({
+        ...editedOpportunity,
+        meeting_goals: editedOpportunity.meeting_goals?.map(g => 
+          g.id === goalId ? { ...g, achieved: !g.achieved } : g
+        ) || []
+      });
+    } catch (error) {
+      console.error('Error toggling goal:', error);
+    }
+  };
+
+  const updateGoalUserGoal = async (goalId: string, userGoalId: string) => {
+    try {
+      const { error } = await supabase
+        .from('meeting_goals')
+        .update({ user_goal_id: userGoalId || null })
+        .eq('id', goalId);
+
+      if (error) throw error;
+
+      if (editedOpportunity) {
+        setEditedOpportunity({
+          ...editedOpportunity,
+          meeting_goals: editedOpportunity.meeting_goals?.map(g => 
+            g.id === goalId ? { ...g, user_goal_id: userGoalId || undefined } as any : g
+          ) || []
+        });
+      }
+    } catch (error) {
+      console.error('Error updating goal link:', error);
+    }
   };
 
   const handleSave = async () => {
@@ -189,55 +243,100 @@ export const OpportunityDetails = ({
             </div>
 
             {/* Add New Goal */}
-            <div className="flex space-x-2">
+            <div className="space-y-2">
               <Input
                 placeholder="Add a meeting goal..."
                 value={newGoalText}
                 onChange={(e) => setNewGoalText(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && addGoal()}
               />
-              <Button onClick={addGoal} size="sm">
-                <Plus className="h-4 w-4" />
-              </Button>
+              <div className="flex space-x-2">
+                <Select value={newGoalUserGoalId} onValueChange={setNewGoalUserGoalId}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Link to strategic goal (optional)..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">No strategic goal</SelectItem>
+                    {userGoals.filter(g => g.status === 'active').map(ug => (
+                      <SelectItem key={ug.id} value={ug.id}>
+                        🎯 {ug.title} ({ug.progress_percentage}%)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={addGoal} size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add
+                </Button>
+              </div>
             </div>
 
             {/* Goals List */}
             <div className="space-y-2">
-              {editedOpportunity?.meeting_goals?.map((goal) => (
-                <div 
-                  key={goal.id} 
-                  className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors ${
-                    goal.achieved 
-                      ? 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800' 
-                      : 'bg-background border-border'
-                  }`}
-                >
-                  <Checkbox
-                    checked={goal.achieved}
-                    onCheckedChange={() => toggleGoalAchieved(goal.id)}
-                  />
-                  <span 
-                    className={`flex-1 ${
+              {editedOpportunity?.meeting_goals?.map((goal: any) => {
+                const linkedGoal = userGoals.find(ug => ug.id === goal.user_goal_id);
+                return (
+                  <div 
+                    key={goal.id} 
+                    className={`p-3 rounded-lg border transition-colors ${
                       goal.achieved 
-                        ? 'line-through text-muted-foreground' 
-                        : 'text-foreground'
+                        ? 'bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800' 
+                        : 'bg-background border-border'
                     }`}
                   >
-                    {goal.description}
-                  </span>
-                  {goal.achieved && (
-                    <Check className="h-4 w-4 text-green-600" />
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeGoal(goal.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
+                    <div className="flex items-start space-x-3">
+                      <Checkbox
+                        checked={goal.achieved}
+                        onCheckedChange={() => toggleGoalAchieved(goal.id)}
+                        className="mt-1"
+                      />
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className={`flex-1 ${goal.achieved ? 'line-through text-muted-foreground' : ''}`}>
+                            {goal.description}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeGoal(goal.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <Select
+                          value={goal.user_goal_id || 'none'}
+                          onValueChange={(value) => updateGoalUserGoal(goal.id, value === 'none' ? '' : value)}
+                        >
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Link to strategic goal..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">
+                              <span className="text-muted-foreground">No strategic goal</span>
+                            </SelectItem>
+                            {userGoals.map(ug => (
+                              <SelectItem key={ug.id} value={ug.id}>
+                                🎯 {ug.title} ({ug.progress_percentage}%)
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {linkedGoal && (
+                          <div className="flex items-center gap-2 text-xs">
+                            <Badge variant="outline" className="text-xs">
+                              {linkedGoal.category}
+                            </Badge>
+                            <span className="text-muted-foreground">
+                              {linkedGoal.progress_percentage}% complete
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
               
               {(!editedOpportunity?.meeting_goals || editedOpportunity.meeting_goals.length === 0) && (
                 <div className="text-center py-8 text-muted-foreground">
