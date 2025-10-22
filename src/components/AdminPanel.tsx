@@ -406,18 +406,44 @@ const AdminPanel = () => {
   };
 
   const updateTag = async (tagId: string, updates: Partial<TagDefinition>) => {
+    // Check if this is a temp tag that needs to be created first
+    const isTempTag = tagId.startsWith('temp-');
+    
     try {
-      const { error } = await supabase
-        .from('tag_definitions')
-        .update(updates)
-        .eq('id', tagId);
+      if (isTempTag) {
+        // Create a new tag definition for temp tags
+        const { error } = await supabase
+          .from('tag_definitions')
+          .insert({
+            name: updates.name || tagId.replace('temp-', ''),
+            category: updates.category || 'Uncategorized',
+            color: updates.color || '#6B7280',
+            description: updates.description,
+            parent_id: updates.parent_id,
+            display_order: updates.display_order || 999,
+            is_active: updates.is_active ?? true
+          });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Tag updated",
-        description: "Tag has been updated successfully"
-      });
+        toast({
+          title: "Tag created",
+          description: "Tag definition has been created successfully"
+        });
+      } else {
+        // Update existing tag definition
+        const { error } = await supabase
+          .from('tag_definitions')
+          .update(updates)
+          .eq('id', tagId);
+
+        if (error) throw error;
+
+        toast({
+          title: "Tag updated",
+          description: "Tag has been updated successfully"
+        });
+      }
 
       fetchTags();
       setIsTagDialogOpen(false);
@@ -432,18 +458,47 @@ const AdminPanel = () => {
     }
   };
 
-  const deleteTag = async (tagId: string) => {
-    if (!confirm('Are you sure you want to delete this tag? This action cannot be undone.')) {
+  const deleteTag = async (tagId: string, tagName?: string) => {
+    // Check if this is a temp tag (doesn't exist in tag_definitions)
+    const isTempTag = tagId.startsWith('temp-');
+    
+    const confirmMessage = isTempTag
+      ? 'This will delete all instances of this tag from contacts. This action cannot be undone.'
+      : 'Are you sure you want to delete this tag definition and all instances from contacts? This action cannot be undone.';
+    
+    if (!confirm(confirmMessage)) {
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from('tag_definitions')
-        .delete()
-        .eq('id', tagId);
+      if (isTempTag) {
+        // For temp tags, delete from contact_tags
+        const actualTagName = tagId.replace('temp-', '');
+        const { error } = await supabase
+          .from('contact_tags')
+          .delete()
+          .eq('tag', actualTagName);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // For real tag definitions, delete from tag_definitions
+        // Also delete all contact_tags with this tag name
+        const tag = tags.find(t => t.id === tagId);
+        if (tag) {
+          // Delete from contact_tags first
+          await supabase
+            .from('contact_tags')
+            .delete()
+            .eq('tag', tag.name);
+        }
+        
+        const { error } = await supabase
+          .from('tag_definitions')
+          .delete()
+          .eq('id', tagId);
+
+        if (error) throw error;
+      }
 
       toast({
         title: "Tag deleted",
