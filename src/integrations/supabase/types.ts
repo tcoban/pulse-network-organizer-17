@@ -1012,6 +1012,13 @@ export type Database = {
             referencedRelation: "opportunities"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_goals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_preferences: {
@@ -1065,7 +1072,7 @@ export type Database = {
     }
     Functions: {
       get_current_user_role: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
       has_role: {
@@ -1075,10 +1082,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      make_first_user_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      make_first_user_admin: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"

@@ -52,31 +52,59 @@ export const OpportunityDetails = ({
   if (!opportunity || !editedOpportunity) return null;
 
   const addGoal = async () => {
-    if (!newGoalText.trim() || !editedOpportunity) return;
+    if (!editedOpportunity) return;
     
-    try {
-      // Insert the new goal directly to database
-      const { data: newGoal, error } = await supabase
-        .from('meeting_goals')
-        .insert({
-          opportunity_id: editedOpportunity.id,
-          description: newGoalText,
-          achieved: false,
-          user_goal_id: (newGoalUserGoalId && newGoalUserGoalId !== 'none') ? newGoalUserGoalId : null
-        })
-        .select()
-        .single();
+    // If selecting existing goal
+    if (newGoalUserGoalId && newGoalUserGoalId !== 'none') {
+      try {
+        const { data: newGoal, error } = await supabase
+          .from('meeting_goals')
+          .insert({
+            opportunity_id: editedOpportunity.id,
+            description: '', // Will be auto-filled from user_goal
+            achieved: false,
+            user_goal_id: newGoalUserGoalId
+          })
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
 
-      setEditedOpportunity({
-        ...editedOpportunity,
-        meeting_goals: [...(editedOpportunity.meeting_goals || []), newGoal as any]
-      });
-      setNewGoalText('');
-      setNewGoalUserGoalId('');
-    } catch (error) {
-      console.error('Error adding goal:', error);
+        setEditedOpportunity({
+          ...editedOpportunity,
+          meeting_goals: [...(editedOpportunity.meeting_goals || []), newGoal as any]
+        });
+        setNewGoalUserGoalId('');
+      } catch (error) {
+        console.error('Error adding goal:', error);
+      }
+      return;
+    }
+    
+    // If creating new goal
+    if (newGoalText.trim()) {
+      try {
+        const { data: newGoal, error } = await supabase
+          .from('meeting_goals')
+          .insert({
+            opportunity_id: editedOpportunity.id,
+            description: newGoalText,
+            achieved: false,
+            user_goal_id: null // Trigger will auto-create user_goal
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        setEditedOpportunity({
+          ...editedOpportunity,
+          meeting_goals: [...(editedOpportunity.meeting_goals || []), newGoal as any]
+        });
+        setNewGoalText('');
+      } catch (error) {
+        console.error('Error adding goal:', error);
+      }
     }
   };
 
@@ -254,31 +282,41 @@ export const OpportunityDetails = ({
 
             {/* Add New Goal */}
             <div className="space-y-2">
-              <Input
-                placeholder="Add a meeting goal..."
-                value={newGoalText}
-                onChange={(e) => setNewGoalText(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addGoal()}
-              />
-              <div className="flex space-x-2">
-                <Select value={newGoalUserGoalId || 'none'} onValueChange={setNewGoalUserGoalId}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Link to strategic goal (optional)..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">No strategic goal</SelectItem>
-                    {userGoals.filter(g => g.status === 'active').map(ug => (
-                      <SelectItem key={ug.id} value={ug.id}>
-                        🎯 {ug.title} ({ug.progress_percentage}%)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button onClick={addGoal} size="sm">
+              <Select value={newGoalUserGoalId || 'none'} onValueChange={setNewGoalUserGoalId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select existing goal or create new..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Create new goal</SelectItem>
+                  {userGoals.filter(g => g.status === 'active').map(ug => (
+                    <SelectItem key={ug.id} value={ug.id}>
+                      🎯 {ug.title} ({ug.progress_percentage}%)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {(!newGoalUserGoalId || newGoalUserGoalId === 'none') && (
+                <div className="flex space-x-2">
+                  <Input
+                    placeholder="Enter new goal..."
+                    value={newGoalText}
+                    onChange={(e) => setNewGoalText(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && addGoal()}
+                  />
+                  <Button onClick={addGoal} size="sm" disabled={!newGoalText.trim()}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add
+                  </Button>
+                </div>
+              )}
+              
+              {newGoalUserGoalId && newGoalUserGoalId !== 'none' && (
+                <Button onClick={addGoal} size="sm" className="w-full">
                   <Plus className="h-4 w-4 mr-1" />
-                  Add
+                  Link Goal to This Meeting
                 </Button>
-              </div>
+              )}
             </div>
 
             {/* Goals List */}
@@ -319,13 +357,13 @@ export const OpportunityDetails = ({
                           onValueChange={(value) => updateGoalUserGoal(goal.id, value === 'none' ? '' : value)}
                         >
                           <SelectTrigger className="h-8 text-xs">
-                            <SelectValue placeholder="Link to strategic goal..." />
+                            <SelectValue placeholder="Change linked goal..." />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">
-                              <span className="text-muted-foreground">No strategic goal</span>
+                              <span className="text-muted-foreground">Unlink goal</span>
                             </SelectItem>
-                            {userGoals.map(ug => (
+                            {userGoals.filter(ug => ug.id !== goal.user_goal_id).map(ug => (
                               <SelectItem key={ug.id} value={ug.id}>
                                 🎯 {ug.title} ({ug.progress_percentage}%)
                               </SelectItem>

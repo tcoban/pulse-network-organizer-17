@@ -374,13 +374,13 @@ function OpportunityFormEnhanced({
                             onValueChange={(value) => updateGoalUserGoal(goal.id, value === 'none' ? '' : value)}
                           >
                             <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="Link to strategic goal..." />
+                              <SelectValue placeholder="Change linked goal..." />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">
-                                <span className="text-muted-foreground">No strategic goal</span>
+                                <span className="text-muted-foreground">Unlink goal</span>
                               </SelectItem>
-                              {userGoals.map(ug => (
+                              {userGoals.filter(ug => ug.id !== goal.user_goal_id).map(ug => (
                                 <SelectItem key={ug.id} value={ug.id}>
                                   🎯 {ug.title} ({ug.progress_percentage}%)
                                 </SelectItem>
@@ -434,11 +434,11 @@ function OpportunityFormEnhanced({
                   />
                   <Select value={newGoalUserGoalId || 'none'} onValueChange={setNewGoalUserGoalId}>
                     <SelectTrigger className="w-64">
-                      <SelectValue placeholder="Link to goal..." />
+                      <SelectValue placeholder="Select existing goal..." />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">
-                        <span className="text-muted-foreground">No strategic goal</span>
+                        <span className="text-muted-foreground">Create new goal</span>
                       </SelectItem>
                       {userGoals.filter(g => g.status === 'active').map(ug => (
                         <SelectItem key={ug.id} value={ug.id}>
