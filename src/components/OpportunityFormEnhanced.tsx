@@ -123,7 +123,7 @@ function OpportunityFormEnhanced({
       description: newGoalDescription,
       achieved: false,
       related_project: newGoalProject || undefined,
-      user_goal_id: newGoalUserGoalId || undefined,
+      user_goal_id: (newGoalUserGoalId && newGoalUserGoalId !== 'none') ? newGoalUserGoalId : undefined,
     };
     
     setMeetingGoals([...meetingGoals, newGoal]);
@@ -134,7 +134,7 @@ function OpportunityFormEnhanced({
 
   const updateGoalUserGoal = (goalId: string, userGoalId: string) => {
     setMeetingGoals(meetingGoals.map(g => 
-      g.id === goalId ? { ...g, user_goal_id: userGoalId || undefined } : g
+      g.id === goalId ? { ...g, user_goal_id: (userGoalId && userGoalId !== 'none') ? userGoalId : undefined } : g
     ));
   };
 
@@ -432,12 +432,12 @@ function OpportunityFormEnhanced({
                     onChange={(e) => setNewGoalProject(e.target.value)}
                     className="flex-1"
                   />
-                  <Select value={newGoalUserGoalId} onValueChange={setNewGoalUserGoalId}>
+                  <Select value={newGoalUserGoalId || 'none'} onValueChange={setNewGoalUserGoalId}>
                     <SelectTrigger className="w-64">
                       <SelectValue placeholder="Link to goal..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">
+                      <SelectItem value="none">
                         <span className="text-muted-foreground">No strategic goal</span>
                       </SelectItem>
                       {userGoals.filter(g => g.status === 'active').map(ug => (

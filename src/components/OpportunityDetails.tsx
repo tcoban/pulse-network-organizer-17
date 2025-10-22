@@ -51,24 +51,56 @@ export const OpportunityDetails = ({
 
   if (!opportunity || !editedOpportunity) return null;
 
-  const addGoal = () => {
+  const addGoal = async () => {
     if (!newGoalText.trim() || !editedOpportunity) return;
     
-    const newGoal = {
-      id: `temp-${Date.now()}`,
-      opportunity_id: editedOpportunity.id,
-      description: newGoalText,
-      achieved: false,
-      related_project: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    try {
+      // Insert the new goal directly to database
+      const { data: newGoal, error } = await supabase
+        .from('meeting_goals')
+        .insert({
+          opportunity_id: editedOpportunity.id,
+          description: newGoalText,
+          achieved: false,
+          user_goal_id: (newGoalUserGoalId && newGoalUserGoalId !== 'none') ? newGoalUserGoalId : null
+        })
+        .select()
+        .single();
 
-    setEditedOpportunity({
-      ...editedOpportunity,
-      meeting_goals: [...(editedOpportunity.meeting_goals || []), newGoal]
-    });
-    setNewGoalText('');
+      if (error) throw error;
+
+      setEditedOpportunity({
+        ...editedOpportunity,
+        meeting_goals: [...(editedOpportunity.meeting_goals || []), newGoal as any]
+      });
+      setNewGoalText('');
+      setNewGoalUserGoalId('');
+    } catch (error) {
+      console.error('Error adding goal:', error);
+    }
+  };
+
+  const updateGoalUserGoal = async (goalId: string, userGoalId: string) => {
+    try {
+      const actualUserGoalId = (userGoalId && userGoalId !== 'none') ? userGoalId : null;
+      const { error } = await supabase
+        .from('meeting_goals')
+        .update({ user_goal_id: actualUserGoalId })
+        .eq('id', goalId);
+
+      if (error) throw error;
+
+      if (editedOpportunity) {
+        setEditedOpportunity({
+          ...editedOpportunity,
+          meeting_goals: editedOpportunity.meeting_goals?.map(g => 
+            g.id === goalId ? { ...g, user_goal_id: actualUserGoalId || undefined } as any : g
+          ) || []
+        });
+      }
+    } catch (error) {
+      console.error('Error updating goal link:', error);
+    }
   };
 
   const removeGoal = async (goalId: string) => {
@@ -113,28 +145,6 @@ export const OpportunityDetails = ({
       });
     } catch (error) {
       console.error('Error toggling goal:', error);
-    }
-  };
-
-  const updateGoalUserGoal = async (goalId: string, userGoalId: string) => {
-    try {
-      const { error } = await supabase
-        .from('meeting_goals')
-        .update({ user_goal_id: userGoalId || null })
-        .eq('id', goalId);
-
-      if (error) throw error;
-
-      if (editedOpportunity) {
-        setEditedOpportunity({
-          ...editedOpportunity,
-          meeting_goals: editedOpportunity.meeting_goals?.map(g => 
-            g.id === goalId ? { ...g, user_goal_id: userGoalId || undefined } as any : g
-          ) || []
-        });
-      }
-    } catch (error) {
-      console.error('Error updating goal link:', error);
     }
   };
 
@@ -251,12 +261,12 @@ export const OpportunityDetails = ({
                 onKeyPress={(e) => e.key === 'Enter' && addGoal()}
               />
               <div className="flex space-x-2">
-                <Select value={newGoalUserGoalId} onValueChange={setNewGoalUserGoalId}>
+                <Select value={newGoalUserGoalId || 'none'} onValueChange={setNewGoalUserGoalId}>
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Link to strategic goal (optional)..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No strategic goal</SelectItem>
+                    <SelectItem value="none">No strategic goal</SelectItem>
                     {userGoals.filter(g => g.status === 'active').map(ug => (
                       <SelectItem key={ug.id} value={ug.id}>
                         🎯 {ug.title} ({ug.progress_percentage}%)
