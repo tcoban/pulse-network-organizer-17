@@ -7,12 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Loader2, Plus, Briefcase, Users, Calendar, Target } from 'lucide-react';
 import ProjectForm from '@/components/ProjectForm';
+import ProjectDetails from '@/components/ProjectDetails';
 import { format } from 'date-fns';
 
 export default function Projects() {
   const { projects, loading } = useProjects();
   const { isAdmin } = useUserRole();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
   const getPriorityColor = (priority: string) => {
@@ -130,7 +132,7 @@ export default function Projects() {
                 className="w-full"
                 onClick={() => {
                   setSelectedProject(project);
-                  setIsFormOpen(true);
+                  setIsDetailsOpen(true);
                 }}
               >
                 <Target className="h-4 w-4 mr-2" />
@@ -158,15 +160,18 @@ export default function Projects() {
       )}
 
       <ProjectForm
-        project={selectedProject}
         isOpen={isFormOpen}
         onClose={() => {
           setIsFormOpen(false);
-          setSelectedProject(null);
         }}
-        onSave={(project) => {
-          console.log('Save project:', project);
-          // TODO: Implement save functionality
+      />
+
+      <ProjectDetails
+        project={selectedProject}
+        isOpen={isDetailsOpen}
+        onClose={() => {
+          setIsDetailsOpen(false);
+          setSelectedProject(null);
         }}
       />
     </div>
