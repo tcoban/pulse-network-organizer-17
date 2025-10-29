@@ -451,17 +451,8 @@ const Index = () => {
       />
 
       <ProjectForm
-        project={editingProject}
         isOpen={projectFormOpen}
-        onClose={() => {
-          setProjectFormOpen(false);
-          setEditingProject(null);
-        }}
-        onSave={(project) => {
-          console.log('Save project:', project);
-          setProjectFormOpen(false);
-          setEditingProject(null);
-        }}
+        onClose={() => setProjectFormOpen(false)}
       />
     </div>
   );
