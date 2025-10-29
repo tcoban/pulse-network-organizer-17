@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 
 export interface Goal {
   id: string;
-  user_id: string;
   title: string;
   description?: string;
   category: string;
@@ -17,6 +16,14 @@ export interface Goal {
   created_at: string;
   updated_at: string;
   assignments?: GoalAssignment[];
+  target?: {
+    id: string;
+    title: string;
+    project?: {
+      id: string;
+      title: string;
+    };
+  };
 }
 
 export interface GoalAssignment {
@@ -47,7 +54,7 @@ export const useGoals = (targetId?: string) => {
         return;
       }
 
-      // Fetch goals with assignments
+      // Fetch goals with assignments, targets, and projects
       let query = supabase
         .from('goals')
         .select(`
@@ -61,6 +68,14 @@ export const useGoals = (targetId?: string) => {
               first_name,
               last_name,
               email
+            )
+          ),
+          target:targets(
+            id,
+            title,
+            project:projects(
+              id,
+              title
             )
           )
         `)
@@ -83,7 +98,7 @@ export const useGoals = (targetId?: string) => {
     }
   };
 
-  const createGoal = async (goalData: Partial<Goal>): Promise<Goal | null> => {
+  const createGoal = async (goalData: Partial<Goal>, teamMemberIds?: string[]): Promise<Goal | null> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
@@ -91,7 +106,6 @@ export const useGoals = (targetId?: string) => {
       const { data, error: insertError } = await supabase
         .from('goals')
         .insert([{
-          user_id: user.id,
           title: goalData.title!,
           description: goalData.description,
           category: goalData.category!,
@@ -105,6 +119,16 @@ export const useGoals = (targetId?: string) => {
         .single();
 
       if (insertError) throw insertError;
+
+      // Assign team members if provided
+      if (teamMemberIds && teamMemberIds.length > 0) {
+        const assignments = teamMemberIds.map(teamMemberId => ({
+          goal_id: data.id,
+          team_member_id: teamMemberId
+        }));
+        
+        await supabase.from('goal_assignments').insert(assignments);
+      }
 
       toast.success('Goal created successfully');
       await fetchGoals();

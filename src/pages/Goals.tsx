@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Plus, Target, Filter, Calendar, Users, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, Plus, Target, Filter, Calendar, Users, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { AddGoalDialog } from '@/components/AddGoalDialog';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -35,19 +35,31 @@ interface Goal {
 }
 
 export default function Goals() {
-  const { goals, loading, fetchGoals, updateGoal } = useGoals();
+  const { goals, loading, fetchGoals, updateGoal, assignTeamMember, removeTeamMember } = useGoals();
   const { teamMembers } = useTeamMembers();
   const { isAdmin } = useUserRole();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('active');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [teamMemberFilter, setTeamMemberFilter] = useState<string>('all');
+  const [filterProject, setFilterProject] = useState('all');
+  const [filterTarget, setFilterTarget] = useState('all');
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set());
   const [goalsWithOpportunities, setGoalsWithOpportunities] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [targets, setTargets] = useState<any[]>([]);
 
   useEffect(() => {
     fetchGoalsWithOpportunities();
+    fetchProjectsAndTargets();
   }, [goals]);
+
+  const fetchProjectsAndTargets = async () => {
+    const { data: projectsData } = await supabase.from('projects').select('id, title');
+    const { data: targetsData } = await supabase.from('targets').select('id, title, project_id');
+    setProjects(projectsData || []);
+    setTargets(targetsData || []);
+  };
 
   const fetchGoalsWithOpportunities = async () => {
     // Fetch related opportunities for each goal
@@ -131,7 +143,9 @@ export default function Goals() {
     const matchesTeamMember = teamMemberFilter === 'all' || 
       goal.assigned_to === teamMemberFilter ||
       goal.assignments?.some((a: any) => a.team_member_id === teamMemberFilter);
-    return matchesStatus && matchesCategory && matchesTeamMember;
+    const matchesProject = filterProject === 'all' || goal.target?.project?.id === filterProject;
+    const matchesTarget = filterTarget === 'all' || goal.target_id === filterTarget;
+    return matchesStatus && matchesCategory && matchesTeamMember && matchesProject && matchesTarget;
   });
 
   const getTeamMemberName = (teamMemberId: string) => {
@@ -215,6 +229,28 @@ export default function Goals() {
             </SelectContent>
           </Select>
         )}
+        <Select value={filterProject} onValueChange={setFilterProject}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Project" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Projects</SelectItem>
+            {projects.map(project => (
+              <SelectItem key={project.id} value={project.id}>{project.title}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterTarget} onValueChange={setFilterTarget}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Target" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Targets</SelectItem>
+            {targets.map(target => (
+              <SelectItem key={target.id} value={target.id}>{target.title}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -225,6 +261,11 @@ export default function Goals() {
           return (
             <Card key={goal.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
+                {goal.target && (
+                  <div className="text-xs text-muted-foreground mb-2">
+                    {goal.target.project?.title} → {goal.target.title}
+                  </div>
+                )}
                 <div className="flex justify-between items-start mb-2">
                   <CardTitle className="text-lg">{goal.title}</CardTitle>
                   <Badge className={getStatusColor(goal.status)}>
@@ -233,18 +274,6 @@ export default function Goals() {
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   <Badge variant="outline">{goal.category}</Badge>
-                  {goal.assigned_to && (
-                    <Badge variant="secondary" className="text-xs">
-                      <Users className="h-3 w-3 mr-1" />
-                      {getTeamMemberName(goal.assigned_to)}
-                    </Badge>
-                  )}
-                  {goal.assignments && goal.assignments.length > 0 && (
-                    <Badge variant="secondary" className="text-xs">
-                      <Users className="h-3 w-3 mr-1" />
-                      {goal.assignments.length} team member{goal.assignments.length > 1 ? 's' : ''}
-                    </Badge>
-                  )}
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -266,6 +295,45 @@ export default function Goals() {
                     <span className="font-medium">
                       {format(new Date(goal.target_date), 'MMM dd, yyyy')}
                     </span>
+                  </div>
+                )}
+
+                {goal.assignments && goal.assignments.length > 0 && (
+                  <div className="mt-3">
+                    <div className="text-xs text-muted-foreground mb-2">Assigned to:</div>
+                    <div className="flex flex-wrap gap-1">
+                      {goal.assignments.map((assignment: any) => (
+                        <Badge key={assignment.id} variant="secondary" className="text-xs">
+                          <Users className="h-3 w-3 mr-1" />
+                          {assignment.team_member?.first_name} {assignment.team_member?.last_name}
+                          {isAdmin && (
+                            <X 
+                              className="h-3 w-3 ml-1 cursor-pointer hover:text-destructive" 
+                              onClick={() => removeTeamMember(assignment.id)}
+                            />
+                          )}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {isAdmin && (
+                  <div className="mt-2">
+                    <Select onValueChange={(memberId) => assignTeamMember(goal.id, memberId)}>
+                      <SelectTrigger className="w-full text-xs h-8">
+                        <SelectValue placeholder="+ Assign team member" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {teamMembers
+                          .filter(m => !goal.assignments?.some((a: any) => a.team_member_id === m.id))
+                          .map(m => (
+                            <SelectItem key={m.id} value={m.id}>
+                              {m.firstName} {m.lastName}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 )}
 
@@ -305,24 +373,11 @@ export default function Goals() {
                   </Collapsible>
                 )}
 
-                {goal.status === 'active' && (
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleUpdateProgress(goal.id, Math.min(goal.progress_percentage + 25, 100))}
-                    >
-                      +25%
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleUpdateProgress(goal.id, 100)}
-                    >
-                      Complete
-                    </Button>
-                  </div>
-                )}
+                <div className="mt-4 p-3 bg-muted/50 rounded-md">
+                  <p className="text-sm text-muted-foreground">
+                    Progress updates automatically when meeting goals are achieved
+                  </p>
+                </div>
               </CardContent>
             </Card>
           );

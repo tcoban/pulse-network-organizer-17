@@ -64,6 +64,23 @@ export function MeetingOutcomeDialog({
 
       if (updateError) throw updateError;
 
+      // Find and mark meeting goals as achieved
+      const { data: opportunityData } = await supabase
+        .from('opportunities')
+        .select('id, meeting_goals(id)')
+        .eq('calendar_event_id', event.id)
+        .single();
+
+      if (opportunityData && opportunityData.meeting_goals && opportunityData.meeting_goals.length > 0) {
+        const goalIds = opportunityData.meeting_goals.map((mg: any) => mg.id);
+        const { error: goalsError } = await supabase
+          .from('meeting_goals')
+          .update({ achieved: true })
+          .in('id', goalIds);
+
+        if (goalsError) console.error('Error updating meeting goals:', goalsError);
+      }
+
       // Create interactions for each contact
       if (event.contacts && event.contacts.length > 0) {
         const interactions = event.contacts.map((contact) => ({

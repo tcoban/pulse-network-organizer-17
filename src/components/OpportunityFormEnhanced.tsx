@@ -132,6 +132,19 @@ function OpportunityFormEnhanced({
     setNewGoalUserGoalId('');
   };
 
+  const linkExistingGoal = (goalId: string) => {
+    const goal = userGoals.find(g => g.id === goalId);
+    if (goal && !meetingGoals.some(mg => mg.user_goal_id === goalId)) {
+      const newGoal = {
+        id: `temp-${Date.now()}`,
+        description: goal.title,
+        achieved: false,
+        user_goal_id: goalId,
+      };
+      setMeetingGoals([...meetingGoals, newGoal]);
+    }
+  };
+
   const updateGoalUserGoal = (goalId: string, userGoalId: string) => {
     setMeetingGoals(meetingGoals.map(g => 
       g.id === goalId ? { ...g, user_goal_id: (userGoalId && userGoalId !== 'none') ? userGoalId : undefined } : g
@@ -412,8 +425,28 @@ function OpportunityFormEnhanced({
                 </div>
               )}
               
+              {/* Link existing goals */}
+              <div className="space-y-2">
+                <Label className="text-sm">Link Existing Goal</Label>
+                <Select onValueChange={linkExistingGoal}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a goal from your projects..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {userGoals.filter(g => g.status === 'active').map(ug => (
+                      <SelectItem key={ug.id} value={ug.id}>
+                        {ug.target?.project?.title && `${ug.target.project.title} → `}
+                        {ug.target?.title && `${ug.target.title} → `}
+                        {ug.title} ({ug.progress_percentage}%)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Add new goal */}
               <div className="space-y-2">
+                <Label className="text-sm">Or Create New Goal</Label>
                 <Input
                   placeholder="Add a goal for this meeting..."
                   value={newGoalDescription}
@@ -432,21 +465,6 @@ function OpportunityFormEnhanced({
                     onChange={(e) => setNewGoalProject(e.target.value)}
                     className="flex-1"
                   />
-                  <Select value={newGoalUserGoalId || 'none'} onValueChange={setNewGoalUserGoalId}>
-                    <SelectTrigger className="w-64">
-                      <SelectValue placeholder="Select existing goal..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">
-                        <span className="text-muted-foreground">Create new goal</span>
-                      </SelectItem>
-                      {userGoals.filter(g => g.status === 'active').map(ug => (
-                        <SelectItem key={ug.id} value={ug.id}>
-                          🎯 {ug.title} ({ug.progress_percentage}%)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <Button
                     type="button"
                     variant="outline"

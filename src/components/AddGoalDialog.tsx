@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useGoals } from "@/hooks/useGoals";
 import { useProjects } from "@/hooks/useProjects";
+import { useTeamMembers } from "@/hooks/useTeamMembers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,13 +10,15 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, X } from "lucide-react";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 export function AddGoalDialog({ open, onOpenChange, onGoalAdded }: any) {
   const { createGoal } = useGoals();
   const { projects } = useProjects();
+  const { teamMembers } = useTeamMembers();
   const [targets, setTargets] = useState<any[]>([]);
   const [project, setProject] = useState("");
   const [title, setTitle] = useState("");
@@ -23,6 +26,7 @@ export function AddGoalDialog({ open, onOpenChange, onGoalAdded }: any) {
   const [category, setCategory] = useState("meeting");
   const [targetDate, setTargetDate] = useState<Date>();
   const [target, setTarget] = useState("");
+  const [selectedTeamMembers, setSelectedTeamMembers] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -38,12 +42,25 @@ export function AddGoalDialog({ open, onOpenChange, onGoalAdded }: any) {
     if (!title.trim()) return;
     setLoading(true);
     try {
-      await createGoal({ title, description, category, target_date: targetDate?.toISOString().split('T')[0], status: "active", progress_percentage: 0, target_id: target || null });
-      setTitle(""); setDescription(""); setCategory("meeting"); setTargetDate(undefined); setProject(""); setTarget("");
+      await createGoal(
+        { title, description, category, target_date: targetDate?.toISOString().split('T')[0], status: "active", progress_percentage: 0, target_id: target || null },
+        selectedTeamMembers
+      );
+      setTitle(""); setDescription(""); setCategory("meeting"); setTargetDate(undefined); setProject(""); setTarget(""); setSelectedTeamMembers([]);
       onGoalAdded(); onOpenChange(false);
     } finally {
       setLoading(false);
     }
+  };
+
+  const addTeamMember = (memberId: string) => {
+    if (!selectedTeamMembers.includes(memberId)) {
+      setSelectedTeamMembers([...selectedTeamMembers, memberId]);
+    }
+  };
+
+  const removeMember = (memberId: string) => {
+    setSelectedTeamMembers(selectedTeamMembers.filter(id => id !== memberId));
   };
 
   return (
@@ -59,6 +76,32 @@ export function AddGoalDialog({ open, onOpenChange, onGoalAdded }: any) {
           </div>
           <div><Label>Link to Project (Optional)</Label><Select value={project} onValueChange={setProject}><SelectTrigger><SelectValue placeholder="Select project..." /></SelectTrigger><SelectContent>{projects.map(p => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}</SelectContent></Select></div>
           {project && targets.length > 0 && <div><Label>Link to Target (Optional)</Label><Select value={target} onValueChange={setTarget}><SelectTrigger><SelectValue placeholder="Select target..." /></SelectTrigger><SelectContent>{targets.map(t => <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>)}</SelectContent></Select></div>}
+          <div>
+            <Label>Assign Team Members (Optional)</Label>
+            <Select onValueChange={addTeamMember}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select team member..." />
+              </SelectTrigger>
+              <SelectContent>
+                {teamMembers.filter(m => !selectedTeamMembers.includes(m.id)).map(m => (
+                  <SelectItem key={m.id} value={m.id}>{m.firstName} {m.lastName}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedTeamMembers.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {selectedTeamMembers.map(memberId => {
+                  const member = teamMembers.find(m => m.id === memberId);
+                  return member ? (
+                    <Badge key={memberId} variant="secondary" className="gap-1">
+                      {member.firstName} {member.lastName}
+                      <X className="h-3 w-3 cursor-pointer" onClick={() => removeMember(memberId)} />
+                    </Badge>
+                  ) : null;
+                })}
+              </div>
+            )}
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>

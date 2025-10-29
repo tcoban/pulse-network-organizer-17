@@ -525,7 +525,6 @@ export type Database = {
           target_id: string | null
           title: string
           updated_at: string | null
-          user_id: string
         }
         Insert: {
           assigned_to?: string | null
@@ -540,7 +539,6 @@ export type Database = {
           target_id?: string | null
           title: string
           updated_at?: string | null
-          user_id: string
         }
         Update: {
           assigned_to?: string | null
@@ -555,7 +553,6 @@ export type Database = {
           target_id?: string | null
           title?: string
           updated_at?: string | null
-          user_id?: string
         }
         Relationships: [
           {
@@ -577,13 +574,6 @@ export type Database = {
             columns: ["linked_opportunity_id"]
             isOneToOne: false
             referencedRelation: "opportunities"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_goals_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
