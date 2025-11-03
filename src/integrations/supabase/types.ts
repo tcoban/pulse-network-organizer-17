@@ -68,6 +68,149 @@ export type Database = {
         }
         Relationships: []
       }
+      chapter_meetings: {
+        Row: {
+          attendance: Json | null
+          chapter_id: string
+          created_at: string | null
+          id: string
+          meeting_date: string
+          notes: string | null
+          referrals_given: number | null
+          spotlight_member: string | null
+          total_business_value: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          attendance?: Json | null
+          chapter_id: string
+          created_at?: string | null
+          id?: string
+          meeting_date: string
+          notes?: string | null
+          referrals_given?: number | null
+          spotlight_member?: string | null
+          total_business_value?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          attendance?: Json | null
+          chapter_id?: string
+          created_at?: string | null
+          id?: string
+          meeting_date?: string
+          notes?: string | null
+          referrals_given?: number | null
+          spotlight_member?: string | null
+          total_business_value?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_meetings_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_meetings_spotlight_member_fkey"
+            columns: ["spotlight_member"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chapter_members: {
+        Row: {
+          chapter_id: string
+          created_at: string | null
+          id: string
+          industry_category: string
+          is_active: boolean | null
+          joined_date: string
+          team_member_id: string
+        }
+        Insert: {
+          chapter_id: string
+          created_at?: string | null
+          id?: string
+          industry_category: string
+          is_active?: boolean | null
+          joined_date: string
+          team_member_id: string
+        }
+        Update: {
+          chapter_id?: string
+          created_at?: string | null
+          id?: string
+          industry_category?: string
+          is_active?: boolean | null
+          joined_date?: string
+          team_member_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapter_members_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chapter_members_team_member_id_fkey"
+            columns: ["team_member_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chapters: {
+        Row: {
+          active: boolean | null
+          chapter_director: string | null
+          chapter_name: string
+          created_at: string | null
+          id: string
+          meeting_day: string | null
+          meeting_location: string | null
+          meeting_time: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          chapter_director?: string | null
+          chapter_name: string
+          created_at?: string | null
+          id?: string
+          meeting_day?: string | null
+          meeting_location?: string | null
+          meeting_time?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          chapter_director?: string | null
+          chapter_name?: string
+          created_at?: string | null
+          id?: string
+          meeting_day?: string | null
+          meeting_location?: string | null
+          meeting_time?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapters_chapter_director_fkey"
+            columns: ["chapter_director"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       collaborations: {
         Row: {
           contact_id: string | null
@@ -121,6 +264,62 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contact_network_value: {
+        Row: {
+          calculated_at: string | null
+          contact_id: string
+          created_at: string | null
+          id: string
+          last_interaction_date: string | null
+          lifetime_value: number | null
+          reciprocity_score: number | null
+          relationship_strength: number | null
+          total_business_generated: number | null
+          total_business_received: number | null
+          total_referrals_given: number | null
+          total_referrals_received: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          calculated_at?: string | null
+          contact_id: string
+          created_at?: string | null
+          id?: string
+          last_interaction_date?: string | null
+          lifetime_value?: number | null
+          reciprocity_score?: number | null
+          relationship_strength?: number | null
+          total_business_generated?: number | null
+          total_business_received?: number | null
+          total_referrals_given?: number | null
+          total_referrals_received?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          calculated_at?: string | null
+          contact_id?: string
+          created_at?: string | null
+          id?: string
+          last_interaction_date?: string | null
+          lifetime_value?: number | null
+          reciprocity_score?: number | null
+          relationship_strength?: number | null
+          total_business_generated?: number | null
+          total_business_received?: number | null
+          total_referrals_given?: number | null
+          total_referrals_received?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_network_value_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: true
+            referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
         ]
@@ -465,6 +664,84 @@ export type Database = {
           },
         ]
       }
+      gains_meetings: {
+        Row: {
+          accomplishments: string | null
+          completed: boolean | null
+          conducted_by: string
+          contact_id: string
+          created_at: string | null
+          follow_up_actions: Json | null
+          goals: string | null
+          how_to_help: string | null
+          id: string
+          ideal_referral: string | null
+          interests: string | null
+          meeting_date: string
+          networks: string | null
+          opportunity_id: string | null
+          preparation_notes: string | null
+          skills: string | null
+          target_market: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          accomplishments?: string | null
+          completed?: boolean | null
+          conducted_by: string
+          contact_id: string
+          created_at?: string | null
+          follow_up_actions?: Json | null
+          goals?: string | null
+          how_to_help?: string | null
+          id?: string
+          ideal_referral?: string | null
+          interests?: string | null
+          meeting_date: string
+          networks?: string | null
+          opportunity_id?: string | null
+          preparation_notes?: string | null
+          skills?: string | null
+          target_market?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          accomplishments?: string | null
+          completed?: boolean | null
+          conducted_by?: string
+          contact_id?: string
+          created_at?: string | null
+          follow_up_actions?: Json | null
+          goals?: string | null
+          how_to_help?: string | null
+          id?: string
+          ideal_referral?: string | null
+          interests?: string | null
+          meeting_date?: string
+          networks?: string | null
+          opportunity_id?: string | null
+          preparation_notes?: string | null
+          skills?: string | null
+          target_market?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gains_meetings_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gains_meetings_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goal_assignments: {
         Row: {
           assigned_at: string | null
@@ -670,6 +947,66 @@ export type Database = {
             columns: ["contacted_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      introduction_outcomes: {
+        Row: {
+          business_value: number | null
+          contact_a_id: string
+          contact_b_id: string
+          created_at: string | null
+          feedback_a: string | null
+          feedback_b: string | null
+          id: string
+          introduced_by: string
+          introduction_reason: string
+          match_confidence: number | null
+          outcome: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          business_value?: number | null
+          contact_a_id: string
+          contact_b_id: string
+          created_at?: string | null
+          feedback_a?: string | null
+          feedback_b?: string | null
+          id?: string
+          introduced_by: string
+          introduction_reason: string
+          match_confidence?: number | null
+          outcome?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          business_value?: number | null
+          contact_a_id?: string
+          contact_b_id?: string
+          created_at?: string | null
+          feedback_a?: string | null
+          feedback_b?: string | null
+          id?: string
+          introduced_by?: string
+          introduction_reason?: string
+          match_confidence?: number | null
+          outcome?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "introduction_outcomes_contact_a_id_fkey"
+            columns: ["contact_a_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introduction_outcomes_contact_b_id_fkey"
+            columns: ["contact_b_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
             referencedColumns: ["id"]
           },
         ]
@@ -1073,6 +1410,166 @@ export type Database = {
           },
         ]
       }
+      referral_slips: {
+        Row: {
+          created_at: string | null
+          id: string
+          pdf_url: string | null
+          printed_at: string | null
+          qr_code_data: string | null
+          referral_id: string
+          slip_number: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          pdf_url?: string | null
+          printed_at?: string | null
+          qr_code_data?: string | null
+          referral_id: string
+          slip_number: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          pdf_url?: string | null
+          printed_at?: string | null
+          qr_code_data?: string | null
+          referral_id?: string
+          slip_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_slips_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals_given"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals_given: {
+        Row: {
+          closed_at: string | null
+          closed_value: number | null
+          contact_id: string
+          created_at: string | null
+          estimated_value: number | null
+          given_by: string
+          id: string
+          outcome_notes: string | null
+          referred_to_company: string | null
+          referred_to_contact_id: string | null
+          referred_to_name: string | null
+          service_description: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_value?: number | null
+          contact_id: string
+          created_at?: string | null
+          estimated_value?: number | null
+          given_by: string
+          id?: string
+          outcome_notes?: string | null
+          referred_to_company?: string | null
+          referred_to_contact_id?: string | null
+          referred_to_name?: string | null
+          service_description: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          closed_at?: string | null
+          closed_value?: number | null
+          contact_id?: string
+          created_at?: string | null
+          estimated_value?: number | null
+          given_by?: string
+          id?: string
+          outcome_notes?: string | null
+          referred_to_company?: string | null
+          referred_to_contact_id?: string | null
+          referred_to_name?: string | null
+          service_description?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_given_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_given_referred_to_contact_id_fkey"
+            columns: ["referred_to_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals_received: {
+        Row: {
+          client_company: string | null
+          client_name: string
+          closed_at: string | null
+          closed_value: number | null
+          created_at: string | null
+          estimated_value: number | null
+          from_contact_id: string
+          id: string
+          outcome_notes: string | null
+          received_by: string
+          service_description: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          client_company?: string | null
+          client_name: string
+          closed_at?: string | null
+          closed_value?: number | null
+          created_at?: string | null
+          estimated_value?: number | null
+          from_contact_id: string
+          id?: string
+          outcome_notes?: string | null
+          received_by: string
+          service_description: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          client_company?: string | null
+          client_name?: string
+          closed_at?: string | null
+          closed_value?: number | null
+          created_at?: string | null
+          estimated_value?: number | null
+          from_contact_id?: string
+          id?: string
+          outcome_notes?: string | null
+          received_by?: string
+          service_description?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_received_from_contact_id_fkey"
+            columns: ["from_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_settings: {
         Row: {
           category: string
@@ -1279,6 +1776,98 @@ export type Database = {
         }
         Relationships: []
       }
+      touch_point_strategies: {
+        Row: {
+          active: boolean | null
+          contact_id: string
+          created_at: string | null
+          frequency_days: number
+          id: string
+          last_touch_date: string | null
+          next_touch_date: string
+          preferred_channels: string[] | null
+          strategy_type: string
+          template_id: string | null
+          touch_count: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          contact_id: string
+          created_at?: string | null
+          frequency_days: number
+          id?: string
+          last_touch_date?: string | null
+          next_touch_date: string
+          preferred_channels?: string[] | null
+          strategy_type: string
+          template_id?: string | null
+          touch_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          contact_id?: string
+          created_at?: string | null
+          frequency_days?: number
+          id?: string
+          last_touch_date?: string | null
+          next_touch_date?: string
+          preferred_channels?: string[] | null
+          strategy_type?: string
+          template_id?: string | null
+          touch_count?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "touch_point_strategies_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      touch_point_templates: {
+        Row: {
+          body: string
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          subject: string | null
+          template_name: string
+          template_type: string
+          updated_at: string | null
+          variables: Json | null
+        }
+        Insert: {
+          body: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          subject?: string | null
+          template_name: string
+          template_type: string
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Update: {
+          body?: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          subject?: string | null
+          template_name?: string
+          template_type?: string
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           created_at: string | null
@@ -1321,6 +1910,60 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_commitments: {
+        Row: {
+          completed_follow_ups: number | null
+          completed_one_to_ones: number | null
+          completed_referrals_given: number | null
+          completed_visibility_days: number | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          streak_weeks: number | null
+          target_follow_ups: number | null
+          target_one_to_ones: number | null
+          target_referrals_given: number | null
+          target_visibility_days: number | null
+          updated_at: string | null
+          user_id: string
+          week_start_date: string
+        }
+        Insert: {
+          completed_follow_ups?: number | null
+          completed_one_to_ones?: number | null
+          completed_referrals_given?: number | null
+          completed_visibility_days?: number | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          streak_weeks?: number | null
+          target_follow_ups?: number | null
+          target_one_to_ones?: number | null
+          target_referrals_given?: number | null
+          target_visibility_days?: number | null
+          updated_at?: string | null
+          user_id: string
+          week_start_date: string
+        }
+        Update: {
+          completed_follow_ups?: number | null
+          completed_one_to_ones?: number | null
+          completed_referrals_given?: number | null
+          completed_visibility_days?: number | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          streak_weeks?: number | null
+          target_follow_ups?: number | null
+          target_one_to_ones?: number | null
+          target_referrals_given?: number | null
+          target_visibility_days?: number | null
+          updated_at?: string | null
+          user_id?: string
+          week_start_date?: string
         }
         Relationships: []
       }

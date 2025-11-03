@@ -6,7 +6,8 @@ import {
   Target, 
   UsersRound,
   Settings,
-  Shield
+  Shield,
+  Award
 } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 
@@ -39,6 +40,11 @@ export function Navigation() {
       title: 'Goals',
       href: '/goals',
       icon: Target
+    },
+    {
+      title: 'BNI System',
+      href: '/bni',
+      icon: Award
     },
     {
       title: 'Team',
