@@ -137,7 +137,7 @@ export const useReferrals = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase
+      const { data: newReferral, error } = await supabase
         .from('referrals_given')
         .insert({
           given_by: user.id,
@@ -148,13 +148,35 @@ export const useReferrals = () => {
           service_description: data.serviceDescription,
           estimated_value: data.estimatedValue || 0,
           status: 'pending'
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
+      // Create a goal under "Connect People" project for this referral
+      const { data: connectProject } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('type', 'networking')
+        .eq('title', 'Connect People')
+        .maybeSingle();
+
+      if (connectProject && data.referredToName) {
+        // Create goal linked to this referral
+        await supabase.from('goals').insert({
+          title: `Connect: ${data.referredToName}`,
+          description: `Referral: ${data.serviceDescription}\nEstimated Value: $${data.estimatedValue || 0}`,
+          category: 'referral',
+          status: 'active',
+          progress_percentage: 0,
+          target_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        });
+      }
+
       toast({
         title: 'Success',
-        description: 'Referral given successfully'
+        description: 'Referral given and goal created successfully'
       });
 
       await fetchReferralsGiven();

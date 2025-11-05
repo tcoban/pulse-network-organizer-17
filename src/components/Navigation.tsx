@@ -27,9 +27,9 @@ export function Navigation() {
       icon: Users
     },
     {
-      title: 'Team Opportunities',
-      href: '/?view=opportunities',
-      icon: UsersRound
+      title: 'BNI System',
+      href: '/bni',
+      icon: Award
     },
     {
       title: 'Projects',
@@ -40,21 +40,6 @@ export function Navigation() {
       title: 'Goals',
       href: '/goals',
       icon: Target
-    },
-    {
-      title: 'BNI System',
-      href: '/bni',
-      icon: Award
-    },
-    {
-      title: 'Team',
-      href: '/team',
-      icon: UsersRound
-    },
-    {
-      title: 'Settings',
-      href: '/settings',
-      icon: Settings
     }
   ];
 

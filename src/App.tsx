@@ -9,13 +9,12 @@ import { Navigation } from "@/components/Navigation";
 import Index from "./pages/Index";
 import Contacts from "./pages/Contacts";
 import Settings from "./pages/Settings";
-import Team from "./pages/Team";
 import Goals from "./pages/Goals";
 import Projects from "./pages/Projects";
 import BNI from "./pages/BNI";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import ResetPasswordForm from "@/components/ResetPasswordForm";
-import AdminPanel from "@/components/AdminPanel";
 
 const queryClient = new QueryClient();
 
@@ -36,12 +35,11 @@ const App = () => (
                     <Routes>
                       <Route path="/" element={<Index />} />
                       <Route path="/contacts" element={<Contacts />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/team" element={<Team />} />
                       <Route path="/projects" element={<Projects />} />
                       <Route path="/goals" element={<Goals />} />
                       <Route path="/bni" element={<BNI />} />
-                      <Route path="/admin" element={<AdminPanel />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/admin" element={<Admin />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </main>
