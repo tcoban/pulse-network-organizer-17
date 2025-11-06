@@ -5,6 +5,7 @@ import ContactCard from '@/components/ContactCard';
 import ContactForm from '@/components/ContactForm';
 import OpportunityFormEnhanced from '@/components/OpportunityFormEnhanced';
 import AdvancedSearch from '@/components/AdvancedSearch';
+import { IntroductionMatcher } from '@/components/IntroductionMatcher';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -15,7 +16,8 @@ import {
   List,
   Brain,
   Plus,
-  Search
+  Search,
+  Sparkles
 } from 'lucide-react';
 import {
   Select,
@@ -36,6 +38,7 @@ const Contacts = () => {
   const [opportunityFormOpen, setOpportunityFormOpen] = useState(false);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [showIntroductionMatcher, setShowIntroductionMatcher] = useState(false);
 
   // Filter and sort contacts
   const filteredContacts = useMemo(() => {
@@ -181,6 +184,13 @@ const Contacts = () => {
           </div>
         )}
 
+        {/* Introduction Matcher */}
+        {showIntroductionMatcher && (
+          <div className="mb-6">
+            <IntroductionMatcher contacts={contacts} />
+          </div>
+        )}
+
         {/* Advanced Search */}
         {showAdvancedSearch && (
           <AdvancedSearch 
@@ -222,6 +232,14 @@ const Contacts = () => {
           </div>
 
           <div className="flex items-center space-x-3">
+            <Button
+              onClick={() => setShowIntroductionMatcher(!showIntroductionMatcher)}
+              variant={showIntroductionMatcher ? "default" : "outline"}
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Find Introductions
+            </Button>
+            
             <Button
               onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
               variant="outline"

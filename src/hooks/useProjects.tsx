@@ -110,6 +110,13 @@ export const useProjects = () => {
 
   const deleteProject = async (id: string): Promise<boolean> => {
     try {
+      // Check if this is the "Connect People" project
+      const project = projects.find(p => p.id === id);
+      if (project && project.type === 'networking' && project.title === 'Connect People') {
+        toast.error('The "Connect People" project cannot be deleted as it\'s essential for BNI referral tracking');
+        return false;
+      }
+
       const { error } = await supabase
         .from('projects')
         .delete()

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,11 +9,24 @@ import { useReferrals } from '@/hooks/useReferrals';
 interface ReferralTrackerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contactId: string;
-  contactName: string;
+  contactId?: string;
+  contactName?: string;
+  prefilledContact?: any;
+  prefilledReferredTo?: string;
+  prefilledCompany?: string;
+  prefilledService?: string;
 }
 
-export const ReferralTrackerDialog = ({ open, onOpenChange, contactId, contactName }: ReferralTrackerDialogProps) => {
+export const ReferralTrackerDialog = ({ 
+  open, 
+  onOpenChange, 
+  contactId, 
+  contactName,
+  prefilledContact,
+  prefilledReferredTo,
+  prefilledCompany,
+  prefilledService
+}: ReferralTrackerDialogProps) => {
   const { giveReferral } = useReferrals();
   const [referredToName, setReferredToName] = useState('');
   const [referredToCompany, setReferredToCompany] = useState('');
@@ -21,12 +34,28 @@ export const ReferralTrackerDialog = ({ open, onOpenChange, contactId, contactNa
   const [estimatedValue, setEstimatedValue] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // Auto-fill form when opening with prefilled data
+  useEffect(() => {
+    if (open) {
+      setReferredToName(prefilledReferredTo || '');
+      setReferredToCompany(prefilledCompany || '');
+      setServiceDescription(prefilledService || '');
+      setEstimatedValue('');
+    }
+  }, [open, prefilledReferredTo, prefilledCompany, prefilledService]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
+    const actualContactId = prefilledContact?.id || contactId;
+    if (!actualContactId) {
+      setSaving(false);
+      return;
+    }
+
     const success = await giveReferral({
-      contactId,
+      contactId: actualContactId,
       referredToName,
       referredToCompany,
       serviceDescription,
@@ -44,11 +73,13 @@ export const ReferralTrackerDialog = ({ open, onOpenChange, contactId, contactNa
     setSaving(false);
   };
 
+  const displayContactName = prefilledContact?.name || contactName || 'Contact';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Give Referral from {contactName}</DialogTitle>
+          <DialogTitle>Give Referral from {displayContactName}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">

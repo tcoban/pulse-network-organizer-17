@@ -281,6 +281,28 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
         </div>
       </div>
 
+      {/* Contact Needs & Offers - BNI Integration */}
+      {(contact.lookingFor || contact.offering) && (
+        <div className="bg-accent/10 border border-accent/20 rounded-lg p-3 mb-4">
+          <div className="flex items-center text-sm font-medium mb-2 text-accent-foreground">
+            <Gift className="h-4 w-4 mr-2" />
+            Giver's Gain Opportunity
+          </div>
+          {contact.lookingFor && (
+            <div className="text-xs mb-2">
+              <span className="font-medium text-foreground">Looking for:</span>
+              <p className="text-muted-foreground mt-1">{contact.lookingFor}</p>
+            </div>
+          )}
+          {contact.offering && (
+            <div className="text-xs">
+              <span className="font-medium text-foreground">Offering:</span>
+              <p className="text-muted-foreground mt-1">{contact.offering}</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Contributing to Goals */}
       {linkedGoals.length > 0 && (
         <div className="bg-primary/10 rounded-lg p-3 mb-4">
