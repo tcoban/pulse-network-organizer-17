@@ -1364,6 +1364,7 @@ export type Database = {
           deadline: string | null
           description: string | null
           id: string
+          owner_email: string | null
           owner_id: string | null
           priority: string
           status: string
@@ -1378,6 +1379,7 @@ export type Database = {
           deadline?: string | null
           description?: string | null
           id?: string
+          owner_email?: string | null
           owner_id?: string | null
           priority?: string
           status?: string
@@ -1392,6 +1394,7 @@ export type Database = {
           deadline?: string | null
           description?: string | null
           id?: string
+          owner_email?: string | null
           owner_id?: string | null
           priority?: string
           status?: string
@@ -1911,7 +1914,15 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       weekly_commitments: {
         Row: {
@@ -1984,6 +1995,10 @@ export type Database = {
         Returns: boolean
       }
       make_first_user_admin: { Args: never; Returns: undefined }
+      user_has_target_access: {
+        Args: { _target_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "user"
