@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GiversGainDashboard } from '@/components/GiversGainDashboard';
 import { WeeklyCommitmentCard } from '@/components/WeeklyCommitmentCard';
@@ -6,10 +7,59 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useReferrals } from '@/hooks/useReferrals';
-import { Calendar, TrendingUp, Target, Award } from 'lucide-react';
+import { useContacts } from '@/hooks/useContacts';
+import { useWeeklyCommitments } from '@/hooks/useWeeklyCommitments';
+import { ReferralTrackerDialog } from '@/components/ReferralTrackerDialog';
+import { IntroductionMatcher } from '@/components/IntroductionMatcher';
+import OpportunityFormEnhanced from '@/components/OpportunityFormEnhanced';
+import { Calendar, TrendingUp, Target, Award, Users } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const BNI = () => {
   const { referralsGiven, referralsReceived } = useReferrals();
+  const { contacts } = useContacts();
+  const { incrementProgress } = useWeeklyCommitments();
+  const { toast } = useToast();
+  
+  const [showReferralDialog, setShowReferralDialog] = useState(false);
+  const [showMeetingDialog, setShowMeetingDialog] = useState(false);
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
+
+  // Initialize BNI integration on mount
+  useEffect(() => {
+    const initBNI = async () => {
+      try {
+        // BNI integration will initialize automatically when needed
+        console.log('BNI system ready');
+      } catch (error) {
+        console.error('Error initializing BNI:', error);
+      }
+    };
+    initBNI();
+  }, []);
+
+  const handleScheduleMeeting = () => {
+    // For now, show a dialog without pre-selecting a contact
+    // User can select contact from within the dialog
+    toast({
+      title: 'Coming Soon',
+      description: 'Meeting scheduling will open the opportunity form. For now, schedule from contacts page.',
+    });
+  };
+
+  const handleGiveReferral = () => {
+    setShowReferralDialog(true);
+  };
+
+  const handleLogVisibility = async () => {
+    const success = await incrementProgress('visibility');
+    if (success) {
+      toast({
+        title: 'Visibility Day Logged',
+        description: 'Your weekly commitment has been updated.',
+      });
+    }
+  };
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -33,15 +83,27 @@ const BNI = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button className="w-full justify-start" variant="outline">
+            <Button 
+              className="w-full justify-start" 
+              variant="outline"
+              onClick={handleScheduleMeeting}
+            >
               <Calendar className="h-4 w-4 mr-2" />
               Schedule 1-2-1 Meeting
             </Button>
-            <Button className="w-full justify-start" variant="outline">
+            <Button 
+              className="w-full justify-start" 
+              variant="outline"
+              onClick={handleGiveReferral}
+            >
               <TrendingUp className="h-4 w-4 mr-2" />
               Give a Referral
             </Button>
-            <Button className="w-full justify-start" variant="outline">
+            <Button 
+              className="w-full justify-start" 
+              variant="outline"
+              onClick={handleLogVisibility}
+            >
               <Target className="h-4 w-4 mr-2" />
               Log Visibility Day
             </Button>
@@ -50,9 +112,10 @@ const BNI = () => {
       </div>
 
       <Tabs defaultValue="referrals" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="referrals">Referrals</TabsTrigger>
           <TabsTrigger value="network-value">Network Value</TabsTrigger>
+          <TabsTrigger value="introductions">Introductions</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
@@ -130,6 +193,23 @@ const BNI = () => {
           <NetworkValueDashboard />
         </TabsContent>
 
+        <TabsContent value="introductions" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Strategic Introductions
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Find the best introduction opportunities based on your network's needs
+              </p>
+            </CardHeader>
+            <CardContent>
+              <IntroductionMatcher contacts={contacts} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="analytics" className="space-y-6">
           <Card>
             <CardHeader>
@@ -143,6 +223,12 @@ const BNI = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialogs */}
+      <ReferralTrackerDialog 
+        open={showReferralDialog}
+        onOpenChange={setShowReferralDialog}
+      />
     </div>
   );
 };
