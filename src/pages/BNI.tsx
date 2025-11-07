@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GiversGainDashboard } from '@/components/GiversGainDashboard';
 import { WeeklyCommitmentCard } from '@/components/WeeklyCommitmentCard';
 import { NetworkValueDashboard } from '@/components/NetworkValueDashboard';
+import { BNIDashboard } from '@/components/BNIDashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ import { useWeeklyCommitments } from '@/hooks/useWeeklyCommitments';
 import { ReferralTrackerDialog } from '@/components/ReferralTrackerDialog';
 import { IntroductionMatcher } from '@/components/IntroductionMatcher';
 import OpportunityFormEnhanced from '@/components/OpportunityFormEnhanced';
-import { Calendar, TrendingUp, Target, Award, Users } from 'lucide-react';
+import { Calendar, TrendingUp, Target, Award, Users, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const BNI = () => {
@@ -111,13 +112,21 @@ const BNI = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="referrals" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="dashboard" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="dashboard">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Dashboard
+          </TabsTrigger>
           <TabsTrigger value="referrals">Referrals</TabsTrigger>
           <TabsTrigger value="network-value">Network Value</TabsTrigger>
           <TabsTrigger value="introductions">Introductions</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="dashboard" className="space-y-6">
+          <BNIDashboard />
+        </TabsContent>
 
         <TabsContent value="referrals" className="space-y-6">
           <GiversGainDashboard />
