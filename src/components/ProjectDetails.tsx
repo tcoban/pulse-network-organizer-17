@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Plus, Target, ChevronUp, ChevronDown, Users, Calendar } from 'lucide-react';
+import { toast } from 'sonner';
 import { GoalForm } from './GoalForm';
 
 interface ProjectDetailsProps {
@@ -15,12 +16,13 @@ interface ProjectDetailsProps {
 }
 
 export default function ProjectDetails({ project, isOpen, onClose }: ProjectDetailsProps) {
-  const { goals, loading: goalsLoading, updateGoal } = useGoals(project?.id);
-  const { goals: allGoals } = useGoals(); // Fetch all goals for linking
+  const { goals, loading: goalsLoading, updateGoal, fetchGoals } = useGoals(project?.id);
+  const { goals: allGoals, fetchGoals: fetchAllGoals } = useGoals(); // Fetch all goals for linking
   const [isAddGoalOpen, setIsAddGoalOpen] = useState(false);
   const [isLinkGoalOpen, setIsLinkGoalOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<any>(null);
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set());
+  const [linking, setLinking] = useState(false);
 
   const toggleGoalExpanded = (goalId: string) => {
     setExpandedGoals(prev => {
@@ -35,8 +37,21 @@ export default function ProjectDetails({ project, isOpen, onClose }: ProjectDeta
   };
 
   const handleLinkGoal = async (goalId: string) => {
-    await updateGoal(goalId, { project_id: project.id });
-    setIsLinkGoalOpen(false);
+    setLinking(true);
+    try {
+      const success = await updateGoal(goalId, { project_id: project.id });
+      if (success) {
+        await fetchGoals(); // Refetch project goals
+        await fetchAllGoals(); // Refetch all goals to update available list
+        toast.success('Goal linked successfully');
+        setIsLinkGoalOpen(false);
+      }
+    } catch (error) {
+      console.error('Error linking goal:', error);
+      toast.error('Failed to link goal');
+    } finally {
+      setLinking(false);
+    }
   };
 
   // Filter out goals that are already linked to this project
@@ -167,10 +182,19 @@ export default function ProjectDetails({ project, isOpen, onClose }: ProjectDeta
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Select a goal to link to this project ({availableGoals.length} available)
+                Click on a goal to link it to this project ({availableGoals.length} available)
               </p>
+              {linking && (
+                <div className="p-4 bg-muted rounded text-center">
+                  <p className="text-sm">Linking goal...</p>
+                </div>
+              )}
               {availableGoals.map(goal => (
-                <Card key={goal.id} className="cursor-pointer hover:bg-accent transition-colors" onClick={() => handleLinkGoal(goal.id)}>
+                <Card 
+                  key={goal.id} 
+                  className="cursor-pointer hover:bg-accent transition-colors" 
+                  onClick={() => !linking && handleLinkGoal(goal.id)}
+                >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
