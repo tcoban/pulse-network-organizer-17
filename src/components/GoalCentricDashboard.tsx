@@ -25,6 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Contact } from '@/types/contact';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { ProgressTrendsChart } from './ProgressTrendsChart';
 
 interface GoalWithContacts extends Goal {
   linkedContacts?: Contact[];
@@ -372,6 +373,9 @@ export function GoalCentricDashboard({
           )}
         </CardContent>
       </Card>
+
+      {/* Progress Trends Chart */}
+      <ProgressTrendsChart goals={goalsWithData} />
 
       {/* Active Goals Overview */}
       <div className="space-y-4">
