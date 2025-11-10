@@ -13,7 +13,11 @@ import {
   ArrowRight,
   CheckCircle2,
   AlertCircle,
-  Lightbulb
+  Lightbulb,
+  ArrowUpRight,
+  Handshake,
+  Calendar,
+  Zap
 } from 'lucide-react';
 import { useGoals, Goal } from '@/hooks/useGoals';
 import { useContactGoals } from '@/hooks/useContactGoals';
@@ -216,73 +220,169 @@ export function GoalCentricDashboard({
     );
   }
 
+  const totalContacts = allContacts.length;
+  const totalLinkedContacts = goalsWithData.reduce((sum, g) => sum + (g.linkedContacts?.length || 0), 0);
+  const totalPotentialMatches = goalsWithData.reduce((sum, g) => sum + (g.matchingContactsCount || 0), 0);
+  const activeGoals = goalsWithData.filter(g => g.status === 'active').length;
+  const avgProgress = goalsWithData.length > 0 
+    ? Math.round(goalsWithData.reduce((sum, g) => sum + g.progress_percentage, 0) / goalsWithData.length)
+    : 0;
+
+  // Priority items
+  const goalsNeedingAttention = goalsWithData.filter(g => 
+    g.status === 'active' && (!g.linkedContacts || g.linkedContacts.length === 0)
+  );
+  const goalsWithSuggestions = goalsWithData.filter(g => 
+    g.suggestedContacts && g.suggestedContacts.length > 0
+  );
+
   return (
     <div className="space-y-6">
-      {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Active Goals
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {goalsWithData.filter(g => g.status === 'active').length}
+      {/* Hero Metrics */}
+      <Card className="border-2">
+        <CardHeader>
+          <CardTitle className="text-2xl">Your Network Dashboard</CardTitle>
+          <CardDescription>Track your goals, connections, and opportunities at a glance</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Target className="h-4 w-4" />
+                <span className="text-sm font-medium">Active Goals</span>
+              </div>
+              <div className="text-4xl font-bold text-primary">{activeGoals}</div>
+              <Progress value={avgProgress} className="h-2" />
+              <p className="text-xs text-muted-foreground">{avgProgress}% avg completion</p>
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Linked Contacts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {goalsWithData.reduce((sum, g) => sum + (g.linkedContacts?.length || 0), 0)}
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Potential Matches
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {goalsWithData.reduce((sum, g) => sum + (g.matchingContactsCount || 0), 0)}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Users className="h-4 w-4" />
+                <span className="text-sm font-medium">Total Contacts</span>
+              </div>
+              <div className="text-4xl font-bold">{totalContacts}</div>
+              <p className="text-xs text-muted-foreground">
+                {totalLinkedContacts} linked to goals
+              </p>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Avg Progress
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {Math.round(
-                goalsWithData.reduce((sum, g) => sum + g.progress_percentage, 0) / 
-                goalsWithData.length
-              )}%
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Lightbulb className="h-4 w-4" />
+                <span className="text-sm font-medium">Opportunities</span>
+              </div>
+              <div className="text-4xl font-bold text-yellow-600">{totalPotentialMatches}</div>
+              <p className="text-xs text-muted-foreground">Suggested matches</p>
             </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* Goal Cards */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <TrendingUp className="h-4 w-4" />
+                <span className="text-sm font-medium">Progress</span>
+              </div>
+              <div className="text-4xl font-bold text-green-600">{avgProgress}%</div>
+              <p className="text-xs text-muted-foreground">Average completion</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Priority Actions */}
+      <Card className="border-orange-200 bg-orange-50/50">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-orange-600" />
+              <CardTitle>Priority Actions</CardTitle>
+            </div>
+            <Badge variant="outline" className="bg-orange-100 text-orange-700 border-orange-300">
+              {goalsNeedingAttention.length + goalsWithSuggestions.length} items
+            </Badge>
+          </div>
+          <CardDescription>Take these actions to move your goals forward</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {goalsNeedingAttention.length > 0 && (
+            <div className="bg-background p-4 rounded-lg border border-orange-200">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h4 className="font-semibold mb-1">
+                    {goalsNeedingAttention.length} goal{goalsNeedingAttention.length !== 1 ? 's' : ''} need{goalsNeedingAttention.length === 1 ? 's' : ''} contacts
+                  </h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Link contacts to these goals to start tracking progress and finding opportunities
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {goalsNeedingAttention.slice(0, 3).map(goal => (
+                      <Button
+                        key={goal.id}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onLinkContactToGoal(goal.id)}
+                        className="text-xs"
+                      >
+                        <LinkIcon className="h-3 w-3 mr-1" />
+                        Link to "{goal.title}"
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {goalsWithSuggestions.length > 0 && (
+            <div className="bg-background p-4 rounded-lg border border-yellow-200">
+              <div className="flex items-start gap-3">
+                <Lightbulb className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h4 className="font-semibold mb-1">
+                    {totalPotentialMatches} potential contact match{totalPotentialMatches !== 1 ? 'es' : ''} found
+                  </h4>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Review these AI-suggested contacts that could help with your goals
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {goalsWithSuggestions.slice(0, 3).map(goal => (
+                      <Button
+                        key={goal.id}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onViewGoal(goal.id)}
+                        className="text-xs"
+                      >
+                        <ArrowRight className="h-3 w-3 mr-1" />
+                        View {goal.matchingContactsCount} for "{goal.title}"
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {goalsNeedingAttention.length === 0 && goalsWithSuggestions.length === 0 && (
+            <div className="text-center py-6 text-muted-foreground">
+              <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-green-600" />
+              <p className="font-medium">All caught up!</p>
+              <p className="text-sm">No urgent actions needed right now</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Active Goals Overview */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Your Goals</h2>
-          <Button onClick={onCreateGoal} size="sm">
+          <div>
+            <h2 className="text-xl font-semibold">Active Goals</h2>
+            <p className="text-sm text-muted-foreground">Monitor progress and link contacts to achieve your objectives</p>
+          </div>
+          <Button onClick={onCreateGoal}>
             <Target className="h-4 w-4 mr-2" />
-            New Goal
+            Create Goal
           </Button>
         </div>
 
@@ -408,43 +508,64 @@ export function GoalCentricDashboard({
                 </div>
               )}
 
-              {/* Next Action */}
-              <div className="flex items-center justify-between bg-primary/5 p-3 rounded-md">
-                <div className="flex items-center gap-2 text-sm">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                  <span className="font-medium">Next Action:</span>
-                  <span className="text-muted-foreground">{getNextAction(goal)}</span>
+              {/* Next Action - More prominent */}
+              <div className="flex items-center justify-between bg-primary/10 p-4 rounded-lg border border-primary/20">
+                <div className="flex items-center gap-3">
+                  <div className="bg-primary/20 p-2 rounded-full">
+                    <Zap className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">NEXT ACTION</p>
+                    <p className="font-semibold">{getNextAction(goal)}</p>
+                  </div>
                 </div>
+                {(!goal.linkedContacts || goal.linkedContacts.length === 0) && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => onLinkContactToGoal(goal.id)}
+                  >
+                    <ArrowUpRight className="h-4 w-4 mr-1" />
+                    Start Now
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Guidance Section */}
-      <Card className="bg-primary/5 border-primary/20">
+      {/* Quick Guide */}
+      <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-primary" />
-            How It Works
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Handshake className="h-5 w-5 text-primary" />
+            Workflow Guide
           </CardTitle>
+          <CardDescription>Follow this process to maximize your network value</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <div className="flex items-start gap-2">
-            <Badge variant="outline" className="mt-0.5">1</Badge>
-            <p><strong>Create Goals:</strong> Define what you're looking for (research partners, data sources, expertise, etc.)</p>
-          </div>
-          <div className="flex items-start gap-2">
-            <Badge variant="outline" className="mt-0.5">2</Badge>
-            <p><strong>Link Contacts:</strong> Connect contacts who can help achieve your goals</p>
-          </div>
-          <div className="flex items-start gap-2">
-            <Badge variant="outline" className="mt-0.5">3</Badge>
-            <p><strong>Track Progress:</strong> Monitor connections and update goal progress</p>
-          </div>
-          <div className="flex items-start gap-2">
-            <Badge variant="outline" className="mt-0.5">4</Badge>
-            <p><strong>Make Introductions:</strong> Help contacts connect with each other and with KOF services</p>
+        <CardContent>
+          <div className="grid md:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <div className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center font-bold">1</div>
+              <h4 className="font-semibold text-sm">Set Goals</h4>
+              <p className="text-xs text-muted-foreground">Define what you're looking to achieve or find</p>
+            </div>
+            <div className="space-y-2">
+              <div className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center font-bold">2</div>
+              <h4 className="font-semibold text-sm">Link Contacts</h4>
+              <p className="text-xs text-muted-foreground">Connect people who can help with your goals</p>
+            </div>
+            <div className="space-y-2">
+              <div className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center font-bold">3</div>
+              <h4 className="font-semibold text-sm">Review Matches</h4>
+              <p className="text-xs text-muted-foreground">Check AI-suggested contacts and connections</p>
+            </div>
+            <div className="space-y-2">
+              <div className="bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center font-bold">4</div>
+              <h4 className="font-semibold text-sm">Make Introductions</h4>
+              <p className="text-xs text-muted-foreground">Connect contacts and track outcomes</p>
+            </div>
           </div>
         </CardContent>
       </Card>
