@@ -95,18 +95,32 @@ export const useGoals = (projectId?: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Try to map current user to a team_member for RLS WITH CHECK
+      let currentTeamMemberId: string | undefined;
+      if (user.email) {
+        const { data: tm } = await supabase
+          .from('team_members')
+          .select('id, email')
+          .eq('email', user.email)
+          .maybeSingle();
+        currentTeamMemberId = tm?.id;
+      }
+
+      const payload = {
+        title: goalData.title!,
+        description: goalData.description,
+        category: goalData.category!,
+        target_date: goalData.target_date,
+        status: goalData.status || 'active',
+        progress_percentage: goalData.progress_percentage || 0,
+        project_id: goalData.project_id,
+        assigned_to: goalData.assigned_to || currentTeamMemberId,
+        linked_opportunity_id: goalData.linked_opportunity_id
+      };
+
       const { data, error: insertError } = await supabase
         .from('goals')
-        .insert([{
-          title: goalData.title!,
-          description: goalData.description,
-          category: goalData.category!,
-          target_date: goalData.target_date,
-          status: goalData.status || 'active',
-          progress_percentage: goalData.progress_percentage || 0,
-          project_id: goalData.project_id,
-          assigned_to: goalData.assigned_to
-        }])
+        .insert([payload])
         .select()
         .single();
 
@@ -118,16 +132,25 @@ export const useGoals = (projectId?: string) => {
           goal_id: data.id,
           team_member_id: teamMemberId
         }));
-        
         await supabase.from('goal_assignments').insert(assignments);
       }
 
       toast.success('Goal created successfully');
       await fetchGoals();
       return data;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error creating goal:', err);
-      toast.error('Failed to create goal');
+      const isRLSError = err?.code === '42501' ||
+                         err?.message?.includes('row-level security') ||
+                         err?.message?.includes('permission denied') ||
+                         err?.message?.includes('policy');
+      if (isRLSError) {
+        toast.error('Permission Denied', {
+          description: "You don't have permission to create this goal. Make sure you're assigned to the project or as a team member.",
+        });
+      } else {
+        toast.error('Failed to create goal');
+      }
       return null;
     }
   };
