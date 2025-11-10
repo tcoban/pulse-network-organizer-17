@@ -15,6 +15,7 @@ import { IntroductionMatcher } from '@/components/IntroductionMatcher';
 import OpportunityFormEnhanced from '@/components/OpportunityFormEnhanced';
 import { Calendar, TrendingUp, Target, Award, Users, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useBNIIntegration } from '@/hooks/useBNIIntegration';
 
 const BNI = () => {
   const { referralsGiven, referralsReceived } = useReferrals();
@@ -22,22 +23,12 @@ const BNI = () => {
   const { incrementProgress } = useWeeklyCommitments();
   const { toast } = useToast();
   
+  // Initialize BNI integration (creates "Connect People" project automatically)
+  useBNIIntegration();
+  
   const [showReferralDialog, setShowReferralDialog] = useState(false);
   const [showMeetingDialog, setShowMeetingDialog] = useState(false);
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
-
-  // Initialize BNI integration on mount
-  useEffect(() => {
-    const initBNI = async () => {
-      try {
-        // BNI integration will initialize automatically when needed
-        console.log('BNI system ready');
-      } catch (error) {
-        console.error('Error initializing BNI:', error);
-      }
-    };
-    initBNI();
-  }, []);
 
   const handleScheduleMeeting = () => {
     // For now, show a dialog without pre-selecting a contact
