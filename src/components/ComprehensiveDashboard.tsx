@@ -119,7 +119,7 @@ export const ComprehensiveDashboard = ({ onCreateGoal }: ComprehensiveDashboardP
             <Button 
               variant="link" 
               className="h-auto p-0 mt-2 text-primary"
-              onClick={() => navigate('/team')}
+              onClick={() => navigate('/bni')}
             >
               View referrals <ArrowRight className="ml-1 h-3 w-3" />
             </Button>
@@ -300,7 +300,7 @@ export const ComprehensiveDashboard = ({ onCreateGoal }: ComprehensiveDashboardP
               </CardTitle>
               <CardDescription>Track referrals given and received</CardDescription>
             </div>
-            <Button onClick={() => navigate('/team')}>
+            <Button onClick={() => navigate('/bni')}>
               View All <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </div>
