@@ -435,8 +435,7 @@ function OpportunityFormEnhanced({
                   <SelectContent>
                     {userGoals.filter(g => g.status === 'active').map(ug => (
                       <SelectItem key={ug.id} value={ug.id}>
-                        {ug.target?.project?.title && `${ug.target.project.title} → `}
-                        {ug.target?.title && `${ug.target.title} → `}
+                        {ug.project?.title && `${ug.project.title} → `}
                         {ug.title} ({ug.progress_percentage}%)
                       </SelectItem>
                     ))}

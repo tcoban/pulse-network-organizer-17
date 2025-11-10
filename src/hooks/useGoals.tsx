@@ -11,18 +11,14 @@ export interface Goal {
   progress_percentage: number;
   status: string;
   linked_opportunity_id?: string;
-  target_id?: string;
+  project_id?: string;
   assigned_to?: string;
   created_at: string;
   updated_at: string;
   assignments?: GoalAssignment[];
-  target?: {
+  project?: {
     id: string;
     title: string;
-    project?: {
-      id: string;
-      title: string;
-    };
   };
 }
 
@@ -108,7 +104,7 @@ export const useGoals = (projectId?: string) => {
           target_date: goalData.target_date,
           status: goalData.status || 'active',
           progress_percentage: goalData.progress_percentage || 0,
-          target_id: goalData.target_id,
+          project_id: goalData.project_id,
           assigned_to: goalData.assigned_to
         }])
         .select()
