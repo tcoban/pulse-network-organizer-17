@@ -45,10 +45,33 @@ export default function ProjectDetails({ project, isOpen, onClose }: ProjectDeta
         await fetchAllGoals(); // Refetch all goals to update available list
         toast.success('Goal linked successfully');
         setIsLinkGoalOpen(false);
+      } else {
+        // Check if it's an RLS permission issue
+        toast.error('Failed to link goal', {
+          description: 'You may not have permission to link this goal. Try assigning yourself to the goal or joining the project team first.',
+          duration: 6000,
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error linking goal:', error);
-      toast.error('Failed to link goal');
+      
+      // Check for specific RLS or permission errors
+      const isRLSError = error?.code === '42501' || 
+                        error?.message?.includes('row-level security') ||
+                        error?.message?.includes('permission denied') ||
+                        error?.message?.includes('policy');
+      
+      if (isRLSError) {
+        toast.error('Permission Denied', {
+          description: 'You cannot link this goal because you don\'t have access. Please ensure you are assigned to either the goal or the project team.',
+          duration: 8000,
+        });
+      } else {
+        toast.error('Failed to link goal', {
+          description: error?.message || 'An unexpected error occurred. Please try again.',
+          duration: 5000,
+        });
+      }
     } finally {
       setLinking(false);
     }

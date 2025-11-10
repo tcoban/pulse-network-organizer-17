@@ -165,14 +165,34 @@ export const useGoals = (projectId?: string) => {
         .update(finalUpdates)
         .eq('id', id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        // Propagate error for better handling upstream
+        throw updateError;
+      }
 
       toast.success('Goal updated');
       await fetchGoals();
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating goal:', err);
-      toast.error('Failed to update goal');
+      
+      // Check for RLS/permission errors and provide specific guidance
+      const isRLSError = err?.code === '42501' || 
+                        err?.message?.includes('row-level security') ||
+                        err?.message?.includes('permission denied') ||
+                        err?.message?.includes('policy');
+      
+      if (isRLSError) {
+        toast.error('Permission Denied', {
+          description: 'You don\'t have permission to update this goal. Please ensure you\'re assigned to the goal or its project.',
+          duration: 6000,
+        });
+      } else {
+        toast.error('Failed to update goal', {
+          description: err?.message || 'An unexpected error occurred.',
+          duration: 5000,
+        });
+      }
       return false;
     }
   };
