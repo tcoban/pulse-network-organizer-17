@@ -48,7 +48,7 @@ export const useReferrals = () => {
 
       const { data, error } = await supabase
         .from('referrals_given')
-        .select('*, contact:contacts(*)')
+        .select('*, contact:contacts!referrals_given_contact_id_fkey(*)')
         .eq('given_by', user.id)
         .order('created_at', { ascending: false });
 

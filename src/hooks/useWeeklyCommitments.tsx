@@ -34,63 +34,99 @@ export const useWeeklyCommitments = () => {
 
       const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
 
-      const { data, error } = await supabase
+      // First try to fetch existing record
+      const { data: existing, error: fetchError } = await supabase
         .from('weekly_commitments')
         .select('*')
         .eq('user_id', user.id)
         .eq('week_start_date', weekStart)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
 
-      if (data) {
+      if (existing) {
         setCurrentWeek({
-          id: data.id,
-          userId: data.user_id,
-          weekStartDate: new Date(data.week_start_date),
-          targetOneToOnes: data.target_one_to_ones,
-          completedOneToOnes: data.completed_one_to_ones,
-          targetReferralsGiven: data.target_referrals_given,
-          completedReferralsGiven: data.completed_referrals_given,
-          targetVisibilityDays: data.target_visibility_days,
-          completedVisibilityDays: data.completed_visibility_days,
-          targetFollowUps: data.target_follow_ups,
-          completedFollowUps: data.completed_follow_ups,
-          streakWeeks: data.streak_weeks,
-          notes: data.notes,
-          createdAt: new Date(data.created_at),
-          updatedAt: new Date(data.updated_at)
+          id: existing.id,
+          userId: existing.user_id,
+          weekStartDate: new Date(existing.week_start_date),
+          targetOneToOnes: existing.target_one_to_ones,
+          completedOneToOnes: existing.completed_one_to_ones,
+          targetReferralsGiven: existing.target_referrals_given,
+          completedReferralsGiven: existing.completed_referrals_given,
+          targetVisibilityDays: existing.target_visibility_days,
+          completedVisibilityDays: existing.completed_visibility_days,
+          targetFollowUps: existing.target_follow_ups,
+          completedFollowUps: existing.completed_follow_ups,
+          streakWeeks: existing.streak_weeks,
+          notes: existing.notes,
+          createdAt: new Date(existing.created_at),
+          updatedAt: new Date(existing.updated_at)
         });
       } else {
-        // Create new week commitment
+        // Create new week commitment - use upsert to handle race conditions
         const { data: newData, error: insertError } = await supabase
           .from('weekly_commitments')
-          .insert({
+          .upsert({
             user_id: user.id,
             week_start_date: weekStart
+          }, {
+            onConflict: 'user_id,week_start_date',
+            ignoreDuplicates: false
           })
           .select()
           .single();
 
-        if (insertError) throw insertError;
-
-        setCurrentWeek({
-          id: newData.id,
-          userId: newData.user_id,
-          weekStartDate: new Date(newData.week_start_date),
-          targetOneToOnes: newData.target_one_to_ones,
-          completedOneToOnes: newData.completed_one_to_ones,
-          targetReferralsGiven: newData.target_referrals_given,
-          completedReferralsGiven: newData.completed_referrals_given,
-          targetVisibilityDays: newData.target_visibility_days,
-          completedVisibilityDays: newData.completed_visibility_days,
-          targetFollowUps: newData.target_follow_ups,
-          completedFollowUps: newData.completed_follow_ups,
-          streakWeeks: newData.streak_weeks,
-          notes: newData.notes,
-          createdAt: new Date(newData.created_at),
-          updatedAt: new Date(newData.updated_at)
-        });
+        if (insertError) {
+          // If still duplicate, fetch the existing one
+          if (insertError.code === '23505') {
+            const { data: duplicate } = await supabase
+              .from('weekly_commitments')
+              .select('*')
+              .eq('user_id', user.id)
+              .eq('week_start_date', weekStart)
+              .single();
+            
+            if (duplicate) {
+              setCurrentWeek({
+                id: duplicate.id,
+                userId: duplicate.user_id,
+                weekStartDate: new Date(duplicate.week_start_date),
+                targetOneToOnes: duplicate.target_one_to_ones,
+                completedOneToOnes: duplicate.completed_one_to_ones,
+                targetReferralsGiven: duplicate.target_referrals_given,
+                completedReferralsGiven: duplicate.completed_referrals_given,
+                targetVisibilityDays: duplicate.target_visibility_days,
+                completedVisibilityDays: duplicate.completed_visibility_days,
+                targetFollowUps: duplicate.target_follow_ups,
+                completedFollowUps: duplicate.completed_follow_ups,
+                streakWeeks: duplicate.streak_weeks,
+                notes: duplicate.notes,
+                createdAt: new Date(duplicate.created_at),
+                updatedAt: new Date(duplicate.updated_at)
+              });
+            }
+          } else {
+            throw insertError;
+          }
+        } else if (newData) {
+          setCurrentWeek({
+            id: newData.id,
+            userId: newData.user_id,
+            weekStartDate: new Date(newData.week_start_date),
+            targetOneToOnes: newData.target_one_to_ones,
+            completedOneToOnes: newData.completed_one_to_ones,
+            targetReferralsGiven: newData.target_referrals_given,
+            completedReferralsGiven: newData.completed_referrals_given,
+            targetVisibilityDays: newData.target_visibility_days,
+            completedVisibilityDays: newData.completed_visibility_days,
+            targetFollowUps: newData.target_follow_ups,
+            completedFollowUps: newData.completed_follow_ups,
+            streakWeeks: newData.streak_weeks,
+            notes: newData.notes,
+            createdAt: new Date(newData.created_at),
+            updatedAt: new Date(newData.updated_at)
+          });
+        }
       }
     } catch (error) {
       console.error('Error fetching current week commitment:', error);
