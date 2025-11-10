@@ -6,6 +6,7 @@ import ContactForm from '@/components/ContactForm';
 import OpportunityFormEnhanced from '@/components/OpportunityFormEnhanced';
 import AdvancedSearch from '@/components/AdvancedSearch';
 import { IntroductionMatcher } from '@/components/IntroductionMatcher';
+import { LinkGoalsToContactDialog } from '@/components/LinkGoalsToContactDialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -39,6 +40,8 @@ const Contacts = () => {
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [showIntroductionMatcher, setShowIntroductionMatcher] = useState(false);
+  const [showLinkGoalsDialog, setShowLinkGoalsDialog] = useState(false);
+  const [selectedContactForGoals, setSelectedContactForGoals] = useState<Contact | null>(null);
 
   // Filter and sort contacts
   const filteredContacts = useMemo(() => {
@@ -145,6 +148,11 @@ const Contacts = () => {
   const handleCloseOpportunityForm = () => {
     setOpportunityFormOpen(false);
     setSelectedContactId(null);
+  };
+
+  const handleLinkGoals = (contact: Contact) => {
+    setSelectedContactForGoals(contact);
+    setShowLinkGoalsDialog(true);
   };
 
   return (
@@ -317,6 +325,7 @@ const Contacts = () => {
                 onViewDetails={handleViewDetails}
                 onUpdateContact={handleUpdateContact}
                 onAddOpportunity={() => handleAddOpportunity(contact)}
+                onLinkGoals={() => handleLinkGoals(contact)}
               />
             ))}
           </div>
@@ -354,6 +363,19 @@ const Contacts = () => {
         isOpen={opportunityFormOpen}
         onClose={handleCloseOpportunityForm}
       />
+
+      {/* Link Goals Dialog */}
+      {showLinkGoalsDialog && selectedContactForGoals && (
+        <LinkGoalsToContactDialog
+          contactId={selectedContactForGoals.id}
+          contactName={selectedContactForGoals.name}
+          isOpen={showLinkGoalsDialog}
+          onClose={() => {
+            setShowLinkGoalsDialog(false);
+            setSelectedContactForGoals(null);
+          }}
+        />
+      )}
     </div>
   );
 };

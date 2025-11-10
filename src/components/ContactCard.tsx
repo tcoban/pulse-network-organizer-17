@@ -9,6 +9,7 @@ import { OpportunityDetails } from './OpportunityDetails';
 import HistoryTabs from './HistoryTabs';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { useGoals } from '@/hooks/useGoals';
+import { useContactGoals } from '@/hooks/useContactGoals';
 import { supabase } from '@/integrations/supabase/client';
 import { useState as useStateHook, useEffect } from 'react';
 import {
@@ -56,9 +57,10 @@ interface ContactCardProps {
   onViewDetails: (contact: Contact) => void;
   onUpdateContact?: (contact: Contact) => void;
   onAddOpportunity?: () => void;
+  onLinkGoals?: () => void;
 }
 
-const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact, onAddOpportunity }: ContactCardProps) => {
+const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact, onAddOpportunity, onLinkGoals }: ContactCardProps) => {
   const [isFlipped, setIsFlipped] = useStateHook(false);
   const [selectedOpportunity, setSelectedOpportunity] = useStateHook<Opportunity | null>(null);
   const [showOpportunityDetails, setShowOpportunityDetails] = useStateHook(false);
@@ -66,6 +68,7 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
   const { teamMembers, getTeamMemberName } = useTeamMembers();
   const { opportunities, loading: opportunitiesLoading, syncOpportunityToCalendar } = useOpportunities(contact.id);
   const { goals: userGoals } = useGoals();
+  const { contactGoals } = useContactGoals(contact.id);
 
   // Fetch linked goals for this contact
   useEffect(() => {
@@ -235,6 +238,12 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
               <DropdownMenuItem onClick={() => onEdit(contact)}>
                 Edit Contact
               </DropdownMenuItem>
+              {onLinkGoals && (
+                <DropdownMenuItem onClick={onLinkGoals}>
+                  <Target className="h-4 w-4 mr-2" />
+                  Link Goals
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem 
                 onClick={() => onDelete(contact.id)}
                 className="text-destructive"
@@ -303,16 +312,34 @@ const ContactCard = ({ contact, onEdit, onDelete, onViewDetails, onUpdateContact
         </div>
       )}
 
-      {/* Contributing to Goals */}
-      {linkedGoals.length > 0 && (
+      {/* Contributing to Goals - Direct Links */}
+      {contactGoals.length > 0 && (
         <div className="bg-primary/10 rounded-lg p-3 mb-4">
           <div className="flex items-center text-sm font-medium mb-2">
             <Target className="h-4 w-4 mr-2" />
-            Contributing to Goals
+            Can Help With Goals
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {contactGoals.map(cg => (
+              <Badge key={cg.id} variant="outline" className="text-xs">
+                {cg.goal?.title}
+                {cg.relevance_note && ` • ${cg.relevance_note}`}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {/* Contributing to Goals - Via Meetings */}
+      {linkedGoals.length > 0 && (
+        <div className="bg-accent/10 rounded-lg p-3 mb-4">
+          <div className="flex items-center text-sm font-medium mb-2">
+            <Target className="h-4 w-4 mr-2" />
+            Goals Discussed in Meetings
           </div>
           <div className="flex flex-wrap gap-1">
             {linkedGoals.map(goal => (
-              <Badge key={goal.id} variant="outline" className="text-xs">
+              <Badge key={goal.id} variant="secondary" className="text-xs">
                 {goal.title} • {goal.meetingCount} meeting{goal.meetingCount !== 1 ? 's' : ''}
               </Badge>
             ))}

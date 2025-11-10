@@ -268,6 +268,51 @@ export type Database = {
           },
         ]
       }
+      contact_goals: {
+        Row: {
+          contact_id: string
+          created_at: string
+          goal_id: string
+          id: string
+          linked_at: string
+          linked_by: string | null
+          relevance_note: string | null
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          goal_id: string
+          id?: string
+          linked_at?: string
+          linked_by?: string | null
+          relevance_note?: string | null
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          goal_id?: string
+          id?: string
+          linked_at?: string
+          linked_by?: string | null
+          relevance_note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_goals_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_goals_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_network_value: {
         Row: {
           calculated_at: string | null
