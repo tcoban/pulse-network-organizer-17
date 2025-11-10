@@ -41,21 +41,7 @@ export const useProjects = () => {
       
       const { data, error } = await supabase
         .from('projects')
-        .select(`
-          *,
-          assignments:project_assignments(
-            id,
-            team_member_id,
-            role,
-            assigned_at,
-            team_member:team_members!project_assignments_team_member_id_fkey(
-              id,
-              first_name,
-              last_name,
-              email
-            )
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;

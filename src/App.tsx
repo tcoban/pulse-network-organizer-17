@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import AuthGate from "@/components/AuthGate";
 import { Navigation } from "@/components/Navigation";
+import { GhostModeToggle } from "@/components/GhostModeToggle";
 import Index from "./pages/Index";
 import Contacts from "./pages/Contacts";
 import Settings from "./pages/Settings";
@@ -31,6 +32,7 @@ const App = () => (
               <AuthGate>
                 <div className="flex min-h-screen w-full">
                   <Navigation />
+                  <GhostModeToggle />
                   <main className="flex-1">
                     <Routes>
                       <Route path="/" element={<Index />} />

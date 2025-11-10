@@ -37,20 +37,7 @@ export const useTargets = (projectId?: string) => {
       
       let query = supabase
         .from('targets')
-        .select(`
-          *,
-          assignments:target_assignments(
-            id,
-            team_member_id,
-            assigned_at,
-            team_member:team_members!target_assignments_team_member_id_fkey(
-              id,
-              first_name,
-              last_name,
-              email
-            )
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (projectId) {
