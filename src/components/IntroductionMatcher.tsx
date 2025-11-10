@@ -62,7 +62,7 @@ export function IntroductionMatcher({ contacts }: IntroductionMatcherProps) {
     const contactsWithOfferings = contacts.filter(c => c.offering?.trim());
 
     // PRIORITY 1: Match contacts' needs with KOF's offering
-    if (kofOffering) {
+    if (kofOffering && typeof kofOffering === 'string' && kofOffering.trim()) {
       const kofOfferingKeywords = kofOffering.toLowerCase().split(/\s+/);
       
       contactsWithNeeds.forEach(contact => {
@@ -221,7 +221,7 @@ export function IntroductionMatcher({ contacts }: IntroductionMatcherProps) {
                       </div>
                       <div className="text-xs text-muted-foreground">Our Organization</div>
                       <div className="text-xs text-foreground mt-1">
-                        <span className="font-medium">Offers:</span> {kofOffering.substring(0, 100)}...
+                        <span className="font-medium">Offers:</span> {typeof kofOffering === 'string' && kofOffering.length > 100 ? kofOffering.substring(0, 100) + '...' : kofOffering}
                       </div>
                     </>
                   ) : (
