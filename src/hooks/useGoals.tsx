@@ -118,16 +118,36 @@ export const useGoals = (projectId?: string) => {
         linked_opportunity_id: goalData.linked_opportunity_id
       };
 
-      const { data, error: insertError } = await supabase
+      let { data, error: insertError } = await supabase
         .from('goals')
         .insert([payload])
         .select()
         .single();
 
+      // If insert fails due to RLS and we have a project, try self-assigning to project first
+      if (insertError && goalData.project_id && currentTeamMemberId) {
+        // Try to self-assign to the project
+        await supabase.from('project_assignments').insert({
+          project_id: goalData.project_id,
+          team_member_id: currentTeamMemberId,
+          role: 'contributor'
+        });
+
+        // Retry the goal insert
+        const retry = await supabase
+          .from('goals')
+          .insert([payload])
+          .select()
+          .single();
+        
+        data = retry.data;
+        insertError = retry.error;
+      }
+
       if (insertError) throw insertError;
 
       // Assign team members if provided
-      if (teamMemberIds && teamMemberIds.length > 0) {
+      if (data && teamMemberIds && teamMemberIds.length > 0) {
         const assignments = teamMemberIds.map(teamMemberId => ({
           goal_id: data.id,
           team_member_id: teamMemberId

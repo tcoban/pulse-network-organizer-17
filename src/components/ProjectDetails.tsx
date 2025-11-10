@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Plus, Target, ChevronUp, ChevronDown, Users, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { GoalForm } from './GoalForm';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProjectDetailsProps {
   project: any;
@@ -39,39 +40,50 @@ export default function ProjectDetails({ project, isOpen, onClose }: ProjectDeta
   const handleLinkGoal = async (goalId: string) => {
     setLinking(true);
     try {
-      const success = await updateGoal(goalId, { project_id: project.id });
+      // First attempt to link the goal
+      let success = await updateGoal(goalId, { project_id: project.id });
+      
+      if (!success) {
+        // Auto-assign yourself to the project and retry
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email) {
+          const { data: tm } = await supabase
+            .from('team_members')
+            .select('id')
+            .eq('email', user.email)
+            .maybeSingle();
+          
+          if (tm?.id) {
+            // Try to self-assign to project
+            await supabase.from('project_assignments').insert({
+              project_id: project.id,
+              team_member_id: tm.id,
+              role: 'contributor'
+            });
+            
+            // Retry linking after self-assignment
+            success = await updateGoal(goalId, { project_id: project.id });
+          }
+        }
+      }
+      
       if (success) {
-        await fetchGoals(); // Refetch project goals
-        await fetchAllGoals(); // Refetch all goals to update available list
+        await fetchGoals();
+        await fetchAllGoals();
         toast.success('Goal linked successfully');
         setIsLinkGoalOpen(false);
       } else {
-        // Check if it's an RLS permission issue
         toast.error('Failed to link goal', {
-          description: 'You may not have permission to link this goal. Try assigning yourself to the goal or joining the project team first.',
+          description: 'Could not link the goal. Please contact an administrator.',
           duration: 6000,
         });
       }
     } catch (error: any) {
       console.error('Error linking goal:', error);
-      
-      // Check for specific RLS or permission errors
-      const isRLSError = error?.code === '42501' || 
-                        error?.message?.includes('row-level security') ||
-                        error?.message?.includes('permission denied') ||
-                        error?.message?.includes('policy');
-      
-      if (isRLSError) {
-        toast.error('Permission Denied', {
-          description: 'You cannot link this goal because you don\'t have access. Please ensure you are assigned to either the goal or the project team.',
-          duration: 8000,
-        });
-      } else {
-        toast.error('Failed to link goal', {
-          description: error?.message || 'An unexpected error occurred. Please try again.',
-          duration: 5000,
-        });
-      }
+      toast.error('Failed to link goal', {
+        description: error?.message || 'An unexpected error occurred.',
+        duration: 5000,
+      });
     } finally {
       setLinking(false);
     }
