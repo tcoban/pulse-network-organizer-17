@@ -43,11 +43,9 @@ export default function Goals() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [teamMemberFilter, setTeamMemberFilter] = useState<string>('all');
   const [filterProject, setFilterProject] = useState('all');
-  const [filterTarget, setFilterTarget] = useState('all');
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set());
   const [goalsWithOpportunities, setGoalsWithOpportunities] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
-  const [targets, setTargets] = useState<any[]>([]);
 
   useEffect(() => {
     fetchGoalsWithOpportunities();
@@ -56,9 +54,7 @@ export default function Goals() {
 
   const fetchProjectsAndTargets = async () => {
     const { data: projectsData } = await supabase.from('projects').select('id, title');
-    const { data: targetsData } = await supabase.from('targets').select('id, title, project_id');
     setProjects(projectsData || []);
-    setTargets(targetsData || []);
   };
 
   const fetchGoalsWithOpportunities = async () => {
@@ -143,8 +139,8 @@ export default function Goals() {
     const matchesTeamMember = teamMemberFilter === 'all' || 
       goal.assigned_to === teamMemberFilter ||
       goal.assignments?.some((a: any) => a.team_member_id === teamMemberFilter);
-    const matchesProject = filterProject === 'all' || goal.target?.project?.id === filterProject;
-    const matchesTarget = filterTarget === 'all' || goal.target_id === filterTarget;
+    const matchesProject = filterProject === 'all' || goal.project_id === filterProject;
+    const matchesTarget = true; // Removed target filter
     return matchesStatus && matchesCategory && matchesTeamMember && matchesProject && matchesTarget;
   });
 
@@ -237,17 +233,6 @@ export default function Goals() {
             <SelectItem value="all">All Projects</SelectItem>
             {projects.map(project => (
               <SelectItem key={project.id} value={project.id}>{project.title}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={filterTarget} onValueChange={setFilterTarget}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Target" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Targets</SelectItem>
-            {targets.map(target => (
-              <SelectItem key={target.id} value={target.id}>{target.title}</SelectItem>
             ))}
           </SelectContent>
         </Select>

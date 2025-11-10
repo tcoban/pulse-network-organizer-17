@@ -797,9 +797,9 @@ export type Database = {
           id: string
           linked_opportunity_id: string | null
           progress_percentage: number | null
+          project_id: string | null
           status: string | null
           target_date: string | null
-          target_id: string | null
           title: string
           updated_at: string | null
         }
@@ -811,9 +811,9 @@ export type Database = {
           id?: string
           linked_opportunity_id?: string | null
           progress_percentage?: number | null
+          project_id?: string | null
           status?: string | null
           target_date?: string | null
-          target_id?: string | null
           title: string
           updated_at?: string | null
         }
@@ -825,9 +825,9 @@ export type Database = {
           id?: string
           linked_opportunity_id?: string | null
           progress_percentage?: number | null
+          project_id?: string | null
           status?: string | null
           target_date?: string | null
-          target_id?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -840,10 +840,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "goals_target_id_fkey"
-            columns: ["target_id"]
+            foreignKeyName: "goals_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
-            referencedRelation: "targets"
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
@@ -1643,96 +1643,6 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "tag_definitions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      target_assignments: {
-        Row: {
-          assigned_at: string | null
-          assigned_by: string | null
-          id: string
-          target_id: string | null
-          team_member_id: string | null
-        }
-        Insert: {
-          assigned_at?: string | null
-          assigned_by?: string | null
-          id?: string
-          target_id?: string | null
-          team_member_id?: string | null
-        }
-        Update: {
-          assigned_at?: string | null
-          assigned_by?: string | null
-          id?: string
-          target_id?: string | null
-          team_member_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "target_assignments_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "team_members"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "target_assignments_target_id_fkey"
-            columns: ["target_id"]
-            isOneToOne: false
-            referencedRelation: "targets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "target_assignments_team_member_id_fkey"
-            columns: ["team_member_id"]
-            isOneToOne: false
-            referencedRelation: "team_members"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      targets: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: string
-          progress_percentage: number | null
-          project_id: string | null
-          status: string | null
-          target_date: string | null
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          progress_percentage?: number | null
-          project_id?: string | null
-          status?: string | null
-          target_date?: string | null
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          progress_percentage?: number | null
-          project_id?: string | null
-          status?: string | null
-          target_date?: string | null
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "targets_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]

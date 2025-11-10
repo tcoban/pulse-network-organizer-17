@@ -1,69 +1,81 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
 import { CalendarIcon, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
 import { useGoals } from '@/hooks/useGoals';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
-import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 
-export function AddGoalDialog({ open, onOpenChange, onGoalAdded }: any) {
-  const { createGoal } = useGoals();
+interface GoalFormProps {
+  projectId: string;
+  goal?: any;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function GoalForm({ projectId, goal, isOpen, onClose }: GoalFormProps) {
+  const { createGoal, updateGoal } = useGoals();
   const { teamMembers } = useTeamMembers();
+  const [loading, setLoading] = useState(false);
   
-  const [goalDetails, setGoalDetails] = useState({
+  const [formData, setFormData] = useState({
     title: '',
     description: '',
     category: 'strategic',
-    targetDate: '',
+    status: 'active',
+    target_date: undefined as Date | undefined,
   });
   
-  const [selectedProject, setSelectedProject] = useState<string>('');
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [date, setDate] = useState<Date>();
 
-  useState(() => {
-    const fetchProjects = async () => {
-      const { data } = await supabase.from('projects').select('*');
-      if (data) setProjects(data);
-    };
-    fetchProjects();
-  });
+  useEffect(() => {
+    if (goal) {
+      setFormData({
+        title: goal.title || '',
+        description: goal.description || '',
+        category: goal.category || 'strategic',
+        status: goal.status || 'active',
+        target_date: goal.target_date ? new Date(goal.target_date) : undefined,
+      });
+      setSelectedMembers(goal.assignments?.map((a: any) => a.team_member_id) || []);
+    } else if (isOpen) {
+      setFormData({
+        title: '',
+        description: '',
+        category: 'strategic',
+        status: 'active',
+        target_date: undefined,
+      });
+      setSelectedMembers([]);
+    }
+  }, [goal, isOpen]);
 
   const handleSubmit = async () => {
-    if (!goalDetails.title) return;
+    if (!formData.title.trim()) return;
 
     setLoading(true);
     try {
       const goalData = {
-        title: goalDetails.title,
-        description: goalDetails.description,
-        category: goalDetails.category,
-        target_date: goalDetails.targetDate,
-        project_id: selectedProject || null,
-        status: 'active',
-        progress_percentage: 0,
+        ...formData,
+        project_id: projectId,
+        target_date: formData.target_date?.toISOString().split('T')[0],
       };
 
-      await createGoal(goalData, selectedMembers);
-      
-      setGoalDetails({ title: '', description: '', category: 'strategic', targetDate: '' });
-      setSelectedProject('');
-      setSelectedMembers([]);
-      setDate(undefined);
-      
-      if (onGoalAdded) onGoalAdded();
-      onOpenChange(false);
+      if (goal) {
+        await updateGoal(goal.id, goalData);
+      } else {
+        await createGoal(goalData, selectedMembers);
+      }
+
+      onClose();
     } finally {
       setLoading(false);
     }
@@ -80,10 +92,10 @@ export function AddGoalDialog({ open, onOpenChange, onGoalAdded }: any) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Goal</DialogTitle>
+          <DialogTitle>{goal ? 'Edit Goal' : 'Add New Goal'}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -91,8 +103,8 @@ export function AddGoalDialog({ open, onOpenChange, onGoalAdded }: any) {
             <Label htmlFor="title">Title *</Label>
             <Input
               id="title"
-              value={goalDetails.title}
-              onChange={(e) => setGoalDetails({ ...goalDetails, title: e.target.value })}
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="Enter goal title"
             />
           </div>
@@ -101,8 +113,8 @@ export function AddGoalDialog({ open, onOpenChange, onGoalAdded }: any) {
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              value={goalDetails.description}
-              onChange={(e) => setGoalDetails({ ...goalDetails, description: e.target.value })}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Enter goal description"
               rows={3}
             />
@@ -110,11 +122,8 @@ export function AddGoalDialog({ open, onOpenChange, onGoalAdded }: any) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Category</Label>
-              <Select 
-                value={goalDetails.category} 
-                onValueChange={(value) => setGoalDetails({ ...goalDetails, category: value })}
-              >
+              <Label htmlFor="category">Category</Label>
+              <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -128,52 +137,44 @@ export function AddGoalDialog({ open, onOpenChange, onGoalAdded }: any) {
             </div>
 
             <div>
-              <Label>Target Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : "Pick a date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(selectedDate) => {
-                      setDate(selectedDate);
-                      setGoalDetails({
-                        ...goalDetails,
-                        targetDate: selectedDate ? selectedDate.toISOString().split('T')[0] : ''
-                      });
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <Label htmlFor="status">Status</Label>
+              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="on-hold">On Hold</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           <div>
-            <Label>Link to Project (Optional)</Label>
-            <Select value={selectedProject} onValueChange={setSelectedProject}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a project" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Target Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !formData.target_date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.target_date ? format(formData.target_date, "PPP") : "Pick a date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={formData.target_date}
+                  onSelect={(date) => setFormData({ ...formData, target_date: date })}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div>
@@ -187,7 +188,7 @@ export function AddGoalDialog({ open, onOpenChange, onGoalAdded }: any) {
                   .filter(member => !selectedMembers.includes(member.id))
                   .map(member => (
                     <SelectItem key={member.id} value={member.id}>
-                      {member.firstName} {member.lastName}
+                    {member.firstName} {member.lastName}
                     </SelectItem>
                   ))}
               </SelectContent>
@@ -213,12 +214,12 @@ export function AddGoalDialog({ open, onOpenChange, onGoalAdded }: any) {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={loading || !goalDetails.title}
+            disabled={loading || !formData.title.trim()}
           >
-            {loading ? 'Creating...' : 'Create Goal'}
+            {loading ? 'Saving...' : goal ? 'Update' : 'Create'}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -38,7 +38,7 @@ export interface GoalAssignment {
   };
 }
 
-export const useGoals = (targetId?: string) => {
+export const useGoals = (projectId?: string) => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +54,7 @@ export const useGoals = (targetId?: string) => {
         return;
       }
 
-      // Fetch goals with assignments, targets, and projects
+      // Fetch goals with assignments and projects
       let query = supabase
         .from('goals')
         .select(`
@@ -70,19 +70,15 @@ export const useGoals = (targetId?: string) => {
               email
             )
           ),
-          target:targets(
+          project:projects(
             id,
-            title,
-            project:projects(
-              id,
-              title
-            )
+            title
           )
         `)
         .order('created_at', { ascending: false });
 
-      if (targetId) {
-        query = query.eq('target_id', targetId);
+      if (projectId) {
+        query = query.eq('project_id', projectId);
       }
 
       const { data, error: fetchError } = await query;
@@ -223,7 +219,7 @@ export const useGoals = (targetId?: string) => {
 
   useEffect(() => {
     fetchGoals();
-  }, [targetId]);
+  }, [projectId]);
 
   return {
     goals,
