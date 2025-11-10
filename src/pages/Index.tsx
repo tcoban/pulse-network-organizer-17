@@ -5,7 +5,7 @@ import { Contact } from '@/types/contact';
 import { useContacts } from '@/hooks/useContacts';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/Header';
-import { GoalCentricDashboard } from '@/components/GoalCentricDashboard';
+import { ComprehensiveDashboard } from '@/components/ComprehensiveDashboard';
 import { DrillDownView, DrillDownType } from '@/components/DrillDownView';
 import OperationsMode from '@/components/OperationsMode';
 import ContactForm from '@/components/ContactForm';
@@ -158,11 +158,8 @@ const Index = () => {
           </div>
         )}
 
-        {/* Goal-Centric Dashboard */}
-        <GoalCentricDashboard
-          allContacts={contacts}
-          onLinkContactToGoal={handleLinkContactToGoal}
-          onViewGoal={handleViewGoal}
+        {/* Comprehensive Dashboard */}
+        <ComprehensiveDashboard
           onCreateGoal={() => setGoalFormOpen(true)}
         />
       </main>
