@@ -134,9 +134,35 @@ export const useGoals = (projectId?: string) => {
 
   const updateGoal = async (id: string, updates: Partial<Goal>): Promise<boolean> => {
     try {
+      // Ensure update passes RLS WITH CHECK by assigning to current user's team member when missing
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      let finalUpdates = { ...updates } as Partial<Goal>;
+
+      if (!finalUpdates.assigned_to) {
+        // Check current goal assigned_to
+        const { data: existing } = await supabase
+          .from('goals')
+          .select('assigned_to')
+          .eq('id', id)
+          .maybeSingle();
+
+        if (!existing?.assigned_to && user.email) {
+          const { data: tm } = await supabase
+            .from('team_members')
+            .select('id, email')
+            .eq('email', user.email)
+            .maybeSingle();
+          if (tm?.id) {
+            finalUpdates.assigned_to = tm.id;
+          }
+        }
+      }
+
       const { error: updateError } = await supabase
         .from('goals')
-        .update(updates)
+        .update(finalUpdates)
         .eq('id', id);
 
       if (updateError) throw updateError;
