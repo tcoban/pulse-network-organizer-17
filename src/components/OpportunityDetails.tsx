@@ -356,14 +356,14 @@ export const OpportunityDetails = ({
                           value={goal.user_goal_id || 'none'}
                           onValueChange={(value) => updateGoalUserGoal(goal.id, value === 'none' ? '' : value)}
                         >
-                          <SelectTrigger className="h-8 text-xs">
+                          <SelectTrigger className="h-8 text-xs text-foreground">
                             <SelectValue placeholder="Change linked goal..." />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">
                               <span className="text-muted-foreground">Unlink goal</span>
                             </SelectItem>
-                            {userGoals.filter(ug => ug.id !== goal.user_goal_id).map(ug => (
+                            {userGoals.filter(ug => ug.status === 'active').map(ug => (
                               <SelectItem key={ug.id} value={ug.id}>
                                 🎯 {ug.title} ({ug.progress_percentage}%)
                               </SelectItem>
