@@ -885,17 +885,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "goals_linked_opportunity_id_fkey"
+            columns: ["linked_opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "goals_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_goals_linked_opportunity_id_fkey"
-            columns: ["linked_opportunity_id"]
-            isOneToOne: false
-            referencedRelation: "opportunities"
             referencedColumns: ["id"]
           },
         ]
