@@ -7,7 +7,8 @@ import {
   UsersRound,
   Settings,
   Shield,
-  Award
+  Award,
+  Briefcase
 } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 
@@ -20,6 +21,11 @@ export function Navigation() {
       title: 'Dashboard',
       href: '/',
       icon: LayoutDashboard
+    },
+    {
+      title: 'My Workbench',
+      href: '/workbench',
+      icon: Briefcase
     },
     {
       title: 'Contacts',

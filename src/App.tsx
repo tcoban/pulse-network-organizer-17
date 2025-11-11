@@ -13,6 +13,7 @@ import Settings from "./pages/Settings";
 import Goals from "./pages/Goals";
 import Projects from "./pages/Projects";
 import BNI from "./pages/BNI";
+import Workbench from "./pages/Workbench";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import ResetPasswordForm from "@/components/ResetPasswordForm";
@@ -37,6 +38,7 @@ const App = () => (
                     <Routes>
                       <Route path="/" element={<Index />} />
                       <Route path="/contacts" element={<Contacts />} />
+                      <Route path="/workbench" element={<Workbench />} />
                       <Route path="/projects" element={<Projects />} />
                       <Route path="/goals" element={<Goals />} />
                       <Route path="/bni" element={<BNI />} />
