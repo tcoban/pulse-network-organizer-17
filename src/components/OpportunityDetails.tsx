@@ -61,9 +61,9 @@ export const OpportunityDetails = ({
           .from('meeting_goals')
           .insert({
             opportunity_id: editedOpportunity.id,
-            description: '', // Will be auto-filled from user_goal
+            description: '', // Empty description when linking to existing goal
             achieved: false,
-            user_goal_id: newGoalUserGoalId
+            user_goal_id: newGoalUserGoalId // Link to goal from goals table
           })
           .select()
           .single();
@@ -90,7 +90,7 @@ export const OpportunityDetails = ({
             opportunity_id: editedOpportunity.id,
             description: newGoalText,
             achieved: false,
-            user_goal_id: null // Trigger will auto-create user_goal
+            user_goal_id: null // Not linked to any goal yet
           })
           .select()
           .single();
