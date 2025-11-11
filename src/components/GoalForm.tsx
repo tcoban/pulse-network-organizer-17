@@ -8,10 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, X } from 'lucide-react';
+import { CalendarIcon, X, Calendar as CalendarMeetingIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { useGoals } from '@/hooks/useGoals';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
+import { useOpportunities } from '@/hooks/useOpportunities';
 import { cn } from '@/lib/utils';
 
 interface GoalFormProps {
@@ -24,6 +25,7 @@ interface GoalFormProps {
 export function GoalForm({ projectId, goal, isOpen, onClose }: GoalFormProps) {
   const { createGoal, updateGoal } = useGoals();
   const { teamMembers } = useTeamMembers();
+  const { opportunities } = useOpportunities();
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -32,6 +34,7 @@ export function GoalForm({ projectId, goal, isOpen, onClose }: GoalFormProps) {
     category: 'strategic',
     status: 'active',
     target_date: undefined as Date | undefined,
+    linked_opportunity_id: undefined as string | undefined,
   });
   
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
@@ -44,6 +47,7 @@ export function GoalForm({ projectId, goal, isOpen, onClose }: GoalFormProps) {
         category: goal.category || 'strategic',
         status: goal.status || 'active',
         target_date: goal.target_date ? new Date(goal.target_date) : undefined,
+        linked_opportunity_id: goal.linked_opportunity_id || undefined,
       });
       setSelectedMembers(goal.assignments?.map((a: any) => a.team_member_id) || []);
     } else if (isOpen) {
@@ -53,6 +57,7 @@ export function GoalForm({ projectId, goal, isOpen, onClose }: GoalFormProps) {
         category: 'strategic',
         status: 'active',
         target_date: undefined,
+        linked_opportunity_id: undefined,
       });
       setSelectedMembers([]);
     }
@@ -175,6 +180,47 @@ export function GoalForm({ projectId, goal, isOpen, onClose }: GoalFormProps) {
                 />
               </PopoverContent>
             </Popover>
+          </div>
+
+          <div>
+            <Label htmlFor="linked_opportunity">Link to Meeting/Opportunity (Optional)</Label>
+            <Select 
+              value={formData.linked_opportunity_id} 
+              onValueChange={(value) => setFormData({ ...formData, linked_opportunity_id: value === 'none' ? undefined : value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a meeting or opportunity">
+                  {formData.linked_opportunity_id ? (
+                    <div className="flex items-center gap-2">
+                      <CalendarMeetingIcon className="h-4 w-4" />
+                      {opportunities.find(o => o.id === formData.linked_opportunity_id)?.title}
+                    </div>
+                  ) : (
+                    "Select a meeting or opportunity"
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {opportunities
+                  .filter(o => new Date(o.date) >= new Date())
+                  .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                  .map(opp => (
+                    <SelectItem key={opp.id} value={opp.id}>
+                      <div className="flex items-center gap-2">
+                        <CalendarMeetingIcon className="h-4 w-4" />
+                        <span>{opp.title}</span>
+                        <span className="text-xs text-muted-foreground">
+                          ({format(new Date(opp.date), 'MMM d, yyyy')})
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              Link this goal to a specific meeting where you plan to work on it
+            </p>
           </div>
 
           <div>

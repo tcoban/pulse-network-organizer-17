@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGoals } from '@/hooks/useGoals';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -285,6 +285,24 @@ interface GoalCardProps {
 }
 
 function GoalCard({ goal, projectId, isExpanded, onToggleExpand, onEdit }: GoalCardProps) {
+  const [linkedOpportunity, setLinkedOpportunity] = useState<any>(null);
+  
+  useEffect(() => {
+    const fetchLinkedOpportunity = async () => {
+      if (goal.linked_opportunity_id) {
+        const { data } = await supabase
+          .from('opportunities')
+          .select('*, contacts(name)')
+          .eq('id', goal.linked_opportunity_id)
+          .single();
+        
+        if (data) setLinkedOpportunity(data);
+      }
+    };
+    
+    fetchLinkedOpportunity();
+  }, [goal.linked_opportunity_id]);
+  
   return (
     <Card>
       <CardContent className="p-4">
@@ -306,7 +324,7 @@ function GoalCard({ goal, projectId, isExpanded, onToggleExpand, onEdit }: GoalC
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-4 text-sm flex-wrap">
             <Badge variant="secondary">{goal.category}</Badge>
             <Badge variant={
               goal.status === 'completed' ? 'default' :
@@ -328,6 +346,19 @@ function GoalCard({ goal, projectId, isExpanded, onToggleExpand, onEdit }: GoalC
               </div>
             )}
           </div>
+          
+          {linkedOpportunity && (
+            <div className="flex items-center gap-2 p-2 bg-primary/5 rounded-md">
+              <Calendar className="h-4 w-4 text-primary" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">Linked to Meeting: {linkedOpportunity.title}</p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(linkedOpportunity.date).toLocaleDateString()} 
+                  {linkedOpportunity.contacts && ` with ${linkedOpportunity.contacts.name}`}
+                </p>
+              </div>
+            </div>
+          )}
 
           <div>
             <div className="flex items-center justify-between mb-2">
