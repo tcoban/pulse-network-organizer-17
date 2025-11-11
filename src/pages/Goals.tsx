@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, Plus, Target, Filter, Calendar, Users, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Loader2, Plus, Target, Filter, Calendar, Users, ChevronDown, ChevronUp, X, Building2, UserCircle, Briefcase } from 'lucide-react';
 import { AddGoalDialog } from '@/components/AddGoalDialog';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -58,9 +58,10 @@ export default function Goals() {
   };
 
   const fetchGoalsWithOpportunities = async () => {
-    // Fetch related opportunities for each goal
+    // Fetch related opportunities and contacts for each goal
     const enrichedGoals = await Promise.all(
       goals.map(async (goal) => {
+        // Fetch related opportunities/meetings
         const { data: meetingGoals } = await supabase
           .from('meeting_goals')
           .select(`
@@ -100,11 +101,45 @@ export default function Goals() {
           }
         });
 
+        // Fetch linked contacts
+        const { data: linkedContacts } = await supabase
+          .from('contact_goals')
+          .select(`
+            id,
+            contact_id,
+            relevance_note,
+            contacts (
+              id,
+              name,
+              company
+            )
+          `)
+          .eq('goal_id', goal.id);
+
+        // Fetch project information
+        let projectInfo = null;
+        if (goal.project_id) {
+          const { data: project } = await supabase
+            .from('projects')
+            .select('id, title, status')
+            .eq('id', goal.project_id)
+            .single();
+          projectInfo = project;
+        }
+
         return {
           ...goal,
           relatedOpportunities: Array.from(opportunitiesMap.values()).sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
           ),
+          linkedContacts: linkedContacts?.map(lc => ({
+            id: lc.id,
+            contact_id: lc.contact_id,
+            name: lc.contacts?.name || 'Unknown',
+            company: lc.contacts?.company,
+            relevance_note: lc.relevance_note,
+          })) || [],
+          project: projectInfo,
         };
       })
     );
@@ -283,9 +318,34 @@ export default function Goals() {
                   </div>
                 )}
 
+                {goal.project && (
+                  <div className="mt-3">
+                    <div className="text-xs text-muted-foreground mb-2">Project:</div>
+                    <Badge variant="outline" className="text-xs">
+                      <Briefcase className="h-3 w-3 mr-1" />
+                      {goal.project.title}
+                    </Badge>
+                  </div>
+                )}
+
+                {goal.linkedContacts && goal.linkedContacts.length > 0 && (
+                  <div className="mt-3">
+                    <div className="text-xs text-muted-foreground mb-2">Linked Contacts:</div>
+                    <div className="flex flex-wrap gap-1">
+                      {goal.linkedContacts.map((linkedContact: any) => (
+                        <Badge key={linkedContact.id} variant="secondary" className="text-xs">
+                          <UserCircle className="h-3 w-3 mr-1" />
+                          {linkedContact.name}
+                          {linkedContact.company && ` (${linkedContact.company})`}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {goal.assignments && goal.assignments.length > 0 && (
                   <div className="mt-3">
-                    <div className="text-xs text-muted-foreground mb-2">Assigned to:</div>
+                    <div className="text-xs text-muted-foreground mb-2">Assigned Team Members:</div>
                     <div className="flex flex-wrap gap-1">
                       {goal.assignments.map((assignment: any) => (
                         <Badge key={assignment.id} variant="secondary" className="text-xs">

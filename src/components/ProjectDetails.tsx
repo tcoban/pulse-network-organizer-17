@@ -286,22 +286,52 @@ interface GoalCardProps {
 
 function GoalCard({ goal, projectId, isExpanded, onToggleExpand, onEdit }: GoalCardProps) {
   const [linkedOpportunity, setLinkedOpportunity] = useState<any>(null);
+  const [linkedContacts, setLinkedContacts] = useState<any[]>([]);
   
   useEffect(() => {
-    const fetchLinkedOpportunity = async () => {
+    const fetchLinkedData = async () => {
+      // Fetch linked opportunity
       if (goal.linked_opportunity_id) {
-        const { data } = await supabase
+        const { data: opportunity } = await supabase
           .from('opportunities')
-          .select('*, contacts(name)')
+          .select(`
+            *,
+            contacts (
+              name,
+              company
+            )
+          `)
           .eq('id', goal.linked_opportunity_id)
           .single();
-        
-        if (data) setLinkedOpportunity(data);
+        setLinkedOpportunity(opportunity);
       }
+
+      // Fetch linked contacts
+      const { data: contactGoals } = await supabase
+        .from('contact_goals')
+        .select(`
+          id,
+          contact_id,
+          relevance_note,
+          contacts (
+            id,
+            name,
+            company
+          )
+        `)
+        .eq('goal_id', goal.id);
+      
+      setLinkedContacts(contactGoals?.map(cg => ({
+        id: cg.id,
+        contact_id: cg.contact_id,
+        name: cg.contacts?.name || 'Unknown',
+        company: cg.contacts?.company,
+        relevance_note: cg.relevance_note,
+      })) || []);
     };
     
-    fetchLinkedOpportunity();
-  }, [goal.linked_opportunity_id]);
+    fetchLinkedData();
+  }, [goal.id, goal.linked_opportunity_id]);
   
   return (
     <Card>
@@ -356,6 +386,20 @@ function GoalCard({ goal, projectId, isExpanded, onToggleExpand, onEdit }: GoalC
                   {new Date(linkedOpportunity.date).toLocaleDateString()} 
                   {linkedOpportunity.contacts && ` with ${linkedOpportunity.contacts.name}`}
                 </p>
+              </div>
+            </div>
+          )}
+
+          {linkedContacts && linkedContacts.length > 0 && (
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Linked Contacts:</p>
+              <div className="flex flex-wrap gap-1">
+                {linkedContacts.map((contact: any) => (
+                  <Badge key={contact.id} variant="outline" className="text-xs">
+                    {contact.name}
+                    {contact.company && ` (${contact.company})`}
+                  </Badge>
+                ))}
               </div>
             </div>
           )}
