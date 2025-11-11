@@ -13,6 +13,7 @@ import OpportunityFormEnhanced from '@/components/OpportunityFormEnhanced';
 import BulkActionMode from '@/components/BulkActionMode';
 import { LinkGoalsToContactDialog } from '@/components/LinkGoalsToContactDialog';
 import { GoalForm } from '@/components/GoalForm';
+import { TeamLeaderboard } from '@/components/TeamLeaderboard';
 
 import { Button } from '@/components/ui/button';
 
@@ -162,6 +163,11 @@ const Index = () => {
         <ComprehensiveDashboard
           onCreateGoal={() => setGoalFormOpen(true)}
         />
+
+        {/* Team Leaderboard */}
+        <div className="mt-8">
+          <TeamLeaderboard />
+        </div>
       </main>
 
       {/* Contact Form */}

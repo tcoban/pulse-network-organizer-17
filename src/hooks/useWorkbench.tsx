@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { useGhostMode } from './useGhostMode';
 import { toast } from 'sonner';
 import { differenceInDays } from 'date-fns';
 
@@ -50,6 +51,7 @@ interface Achievement {
 
 export function useWorkbench() {
   const { user } = useAuth();
+  const { getActiveUserId } = useGhostMode();
   const [dailyTasks, setDailyTasks] = useState<DailyTask[]>([]);
   const [smartSuggestions, setSmartSuggestions] = useState<SmartSuggestion[]>([]);
   const [relationshipHealth, setRelationshipHealth] = useState<RelationshipHealth[]>([]);
@@ -86,29 +88,63 @@ export function useWorkbench() {
   }
 
   async function loadDailyTasks() {
+    const activeUserId = getActiveUserId();
+    if (!activeUserId) return;
+
     // Fetch contacts that need attention
     const { data: contacts } = await supabase
       .from('contacts')
       .select('id, name, company, last_contact, assigned_to')
-      .or(`assigned_to.eq.${user?.id},created_by.eq.${user?.id}`)
+      .or(`assigned_to.eq.${activeUserId},created_by.eq.${activeUserId}`)
       .order('last_contact', { ascending: true });
 
     const tasks: DailyTask[] = [];
     const today = new Date();
 
-    // Generate tasks based on contact activity
+    // Generate tasks based on contact activity - prioritize 90+ days
     contacts?.forEach(contact => {
       const daysSinceContact = contact.last_contact 
         ? differenceInDays(today, new Date(contact.last_contact))
         : 999;
 
-      if (daysSinceContact > 30) {
+      // High urgency for contacts not reached in 90+ days
+      if (daysSinceContact >= 90) {
+        tasks.push({
+          id: `urgent-reconnect-${contact.id}`,
+          title: `🚨 URGENT: Reconnect with ${contact.name}`,
+          description: `Critical! No contact in ${daysSinceContact} days. This relationship needs immediate attention!`,
+          priority: 'high',
+          actionType: 'call',
+          completed: false,
+          xpReward: 30,
+          contact: {
+            id: contact.id,
+            name: contact.name,
+            company: contact.company
+          }
+        });
+      } else if (daysSinceContact > 60) {
         tasks.push({
           id: `reconnect-${contact.id}`,
           title: `Reconnect with ${contact.name}`,
           description: `No contact in ${daysSinceContact} days. Time to reach out!`,
-          priority: daysSinceContact > 60 ? 'high' : 'medium',
+          priority: 'high',
           actionType: 'call',
+          completed: false,
+          xpReward: 20,
+          contact: {
+            id: contact.id,
+            name: contact.name,
+            company: contact.company
+          }
+        });
+      } else if (daysSinceContact > 30) {
+        tasks.push({
+          id: `touch-base-${contact.id}`,
+          title: `Touch base with ${contact.name}`,
+          description: `It's been ${daysSinceContact} days. Keep the relationship warm!`,
+          priority: 'medium',
+          actionType: 'email',
           completed: false,
           xpReward: 15,
           contact: {
@@ -150,7 +186,7 @@ export function useWorkbench() {
     const { data: referrals } = await supabase
       .from('referrals_given')
       .select('id, service_description, status, contacts(name, company)')
-      .eq('given_by', user?.id)
+      .eq('given_by', activeUserId)
       .eq('status', 'pending')
       .limit(5);
 
@@ -175,13 +211,16 @@ export function useWorkbench() {
   }
 
   async function loadSmartSuggestions() {
+    const activeUserId = getActiveUserId();
+    if (!activeUserId) return;
+
     const suggestions: SmartSuggestion[] = [];
 
     // Suggest introductions based on complementary needs
     const { data: contacts } = await supabase
       .from('contacts')
       .select('id, name, offering, looking_for')
-      .or(`assigned_to.eq.${user?.id},created_by.eq.${user?.id}`)
+      .or(`assigned_to.eq.${activeUserId},created_by.eq.${activeUserId}`)
       .not('offering', 'is', null)
       .not('looking_for', 'is', null);
 
@@ -216,7 +255,7 @@ export function useWorkbench() {
     const { data: staleContacts } = await supabase
       .from('contacts')
       .select('id, name, company, last_contact')
-      .or(`assigned_to.eq.${user?.id},created_by.eq.${user?.id}`)
+      .or(`assigned_to.eq.${activeUserId},created_by.eq.${activeUserId}`)
       .not('last_contact', 'is', null)
       .order('last_contact', { ascending: true })
       .limit(3);
@@ -239,6 +278,9 @@ export function useWorkbench() {
   }
 
   async function loadRelationshipHealth() {
+    const activeUserId = getActiveUserId();
+    if (!activeUserId) return;
+
     const { data: contacts } = await supabase
       .from('contacts')
       .select(`
@@ -248,7 +290,7 @@ export function useWorkbench() {
         last_contact,
         interactions(count)
       `)
-      .or(`assigned_to.eq.${user?.id},created_by.eq.${user?.id}`)
+      .or(`assigned_to.eq.${activeUserId},created_by.eq.${activeUserId}`)
       .order('last_contact', { ascending: true })
       .limit(10);
 
@@ -290,16 +332,19 @@ export function useWorkbench() {
   }
 
   async function loadAchievements() {
+    const activeUserId = getActiveUserId();
+    if (!activeUserId) return;
+
     // Fetch user activity stats
     const { data: referralsCount } = await supabase
       .from('referrals_given')
       .select('id', { count: 'exact' })
-      .eq('given_by', user?.id);
+      .eq('given_by', activeUserId);
 
     const { data: meetingsCount } = await supabase
       .from('gains_meetings')
       .select('id', { count: 'exact' })
-      .eq('conducted_by', user?.id);
+      .eq('conducted_by', activeUserId);
 
     const referrals = referralsCount?.length || 0;
     const meetings = meetingsCount?.length || 0;
@@ -355,10 +400,13 @@ export function useWorkbench() {
   }
 
   async function loadWeeklyGoals() {
+    const activeUserId = getActiveUserId();
+    if (!activeUserId) return;
+
     const { data: goals } = await supabase
       .from('goals')
       .select('id, status, progress_percentage')
-      .eq('assigned_to', user?.id)
+      .eq('assigned_to', activeUserId)
       .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
 
     const total = goals?.length || 0;
