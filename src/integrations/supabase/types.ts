@@ -1950,10 +1950,6 @@ export type Database = {
         Returns: boolean
       }
       make_first_user_admin: { Args: never; Returns: undefined }
-      user_has_target_access: {
-        Args: { _target_id: string; _user_id: string }
-        Returns: boolean
-      }
     }
     Enums: {
       app_role: "admin" | "user"
