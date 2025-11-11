@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useWorkbench } from '@/hooks/useWorkbench';
+import { NotificationCenter } from '@/components/NotificationCenter';
+import { AchievementShowcase } from '@/components/AchievementShowcase';
 import { 
   Flame, Trophy, Target, TrendingUp, Users, Calendar,
   CheckCircle2, AlertCircle, Star, Zap, Award,
@@ -66,7 +68,10 @@ export default function Workbench() {
           <p className="text-muted-foreground mt-1">Your command center for relationship excellence</p>
         </div>
         
-        <div className="flex gap-4">
+        <div className="flex items-center gap-4">
+          <NotificationCenter />
+          
+          <div className="flex gap-4">
           <Card className="bg-gradient-to-br from-warning/10 to-warning/5 border-warning/20">
             <CardContent className="p-4 flex items-center gap-3">
               <Flame className="h-8 w-8 text-warning" />
@@ -86,6 +91,7 @@ export default function Workbench() {
               </div>
             </CardContent>
           </Card>
+          </div>
         </div>
       </div>
 
@@ -366,43 +372,10 @@ export default function Workbench() {
 
         {/* Achievements */}
         <TabsContent value="achievements" className="space-y-4">
-          <div className="grid md:grid-cols-2 gap-4">
-            {achievements.recent.map(achievement => (
-              <Card key={achievement.id} className={achievement.unlocked ? 'border-primary/30 bg-primary/5' : 'opacity-60'}>
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-lg ${achievement.unlocked ? 'bg-primary/10' : 'bg-muted'}`}>
-                      <Award className={`h-8 w-8 ${achievement.unlocked ? 'text-primary' : 'text-muted-foreground'}`} />
-                    </div>
-                    
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-foreground mb-1">{achievement.title}</h4>
-                      <p className="text-sm text-muted-foreground mb-3">{achievement.description}</p>
-                      
-                      {achievement.unlocked ? (
-                        <Badge className="bg-success text-success-foreground">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Unlocked
-                        </Badge>
-                      ) : (
-                        <div>
-                          <Progress value={achievement.progress} className="h-2 mb-2" />
-                          <p className="text-xs text-muted-foreground">
-                            {achievement.progress}% Complete
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-2 mt-3">
-                        <Star className="h-4 w-4 text-warning" />
-                        <span className="text-sm font-medium text-foreground">+{achievement.points} XP</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <AchievementShowcase 
+            achievements={achievements.recent}
+            totalPoints={achievements.totalPoints}
+          />
         </TabsContent>
       </Tabs>
     </div>

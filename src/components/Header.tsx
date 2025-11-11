@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Search, Plus, User, Users, LogOut, Crown, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { NotificationCenter } from '@/components/NotificationCenter';
 
 interface HeaderProps {
   searchTerm: string;
@@ -39,6 +40,8 @@ const Header = ({ searchTerm, setSearchTerm, setShowForm, setShowAdvancedSearch,
         </div>
 
         <div className="flex items-center gap-3">
+          <NotificationCenter />
+          
           <Button 
             onClick={() => setShowForm(true)} 
             className="bg-primary hover:bg-primary-hover"

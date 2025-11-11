@@ -47,6 +47,7 @@ interface Achievement {
   unlocked: boolean;
   progress: number;
   points: number;
+  tier?: 'bronze' | 'silver' | 'gold' | 'platinum';
 }
 
 export function useWorkbench() {
@@ -349,6 +350,14 @@ export function useWorkbench() {
     const referrals = referralsCount?.length || 0;
     const meetings = meetingsCount?.length || 0;
 
+    // Get contacts count
+    const { data: contactsCount } = await supabase
+      .from('contacts')
+      .select('id', { count: 'exact' })
+      .or(`assigned_to.eq.${activeUserId},created_by.eq.${activeUserId}`);
+
+    const contacts = contactsCount?.length || 0;
+
     const achievementsList: Achievement[] = [
       {
         id: 'first-referral',
@@ -356,7 +365,8 @@ export function useWorkbench() {
         description: 'Give your first referral',
         unlocked: referrals >= 1,
         progress: Math.min(100, referrals * 100),
-        points: 50
+        points: 50,
+        tier: 'bronze'
       },
       {
         id: 'referral-champion',
@@ -364,7 +374,17 @@ export function useWorkbench() {
         description: 'Give 10 referrals',
         unlocked: referrals >= 10,
         progress: Math.min(100, (referrals / 10) * 100),
-        points: 200
+        points: 200,
+        tier: 'gold'
+      },
+      {
+        id: 'referral-master',
+        title: 'Referral Master',
+        description: 'Give 25 quality referrals',
+        unlocked: referrals >= 25,
+        progress: Math.min(100, (referrals / 25) * 100),
+        points: 500,
+        tier: 'platinum'
       },
       {
         id: 'gains-guru',
@@ -372,15 +392,35 @@ export function useWorkbench() {
         description: 'Conduct 5 GAINS meetings',
         unlocked: meetings >= 5,
         progress: Math.min(100, (meetings / 5) * 100),
-        points: 150
+        points: 150,
+        tier: 'silver'
+      },
+      {
+        id: 'gains-master',
+        title: 'GAINS Master',
+        description: 'Conduct 20 GAINS meetings',
+        unlocked: meetings >= 20,
+        progress: Math.min(100, (meetings / 20) * 100),
+        points: 400,
+        tier: 'gold'
       },
       {
         id: 'network-builder',
         title: 'Network Builder',
         description: 'Add 50 quality contacts',
-        unlocked: false,
-        progress: 45,
-        points: 100
+        unlocked: contacts >= 50,
+        progress: Math.min(100, (contacts / 50) * 100),
+        points: 100,
+        tier: 'bronze'
+      },
+      {
+        id: 'network-architect',
+        title: 'Network Architect',
+        description: 'Build a network of 100+ contacts',
+        unlocked: contacts >= 100,
+        progress: Math.min(100, (contacts / 100) * 100),
+        points: 300,
+        tier: 'platinum'
       }
     ];
 
