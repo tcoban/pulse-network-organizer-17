@@ -181,13 +181,13 @@ export const useBNIIntegration = () => {
     title: string;
   }) => {
     try {
-      // For 1-2-1 meetings, suggest creating connection goals
-      if (opportunityData.type === 'one_to_one') {
+      // For meetings, suggest creating connection goals
+      if (opportunityData.type === 'meeting') {
         // This could trigger goal suggestions in the UI
         return {
           suggestGoalCreation: true,
           goalType: 'networking',
-          message: 'Consider creating a goal to follow up on this 1-2-1 meeting'
+          message: 'Consider creating a goal to follow up on this meeting'
         };
       }
 
