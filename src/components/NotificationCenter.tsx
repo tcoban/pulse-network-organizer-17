@@ -111,7 +111,7 @@ export function NotificationCenter() {
         type: 'reminder',
         title: '🤝 Pending Referrals',
         message: `${pendingReferrals.length} referral(s) awaiting follow-up`,
-        actionUrl: '/contacts',
+        actionUrl: '/bni?tab=referrals',
         createdAt: new Date(),
         read: false
       });

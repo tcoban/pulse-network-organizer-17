@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GiversGainDashboard } from '@/components/GiversGainDashboard';
 import { WeeklyCommitmentCard } from '@/components/WeeklyCommitmentCard';
@@ -28,7 +29,9 @@ const BNI = () => {
   const { contacts } = useContacts();
   const { incrementProgress } = useWeeklyCommitments();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [showTutorial, setShowTutorial] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard');
   
   // Initialize BNI integration (creates "Connect People" project automatically)
   useBNIIntegration();
@@ -39,6 +42,16 @@ const BNI = () => {
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [contactSearchQuery, setContactSearchQuery] = useState('');
+
+  // Handle URL tab parameter
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+      // Clear the URL parameter after setting the tab
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
 
   // Check if user has seen tutorial
   useEffect(() => {
@@ -164,7 +177,7 @@ const BNI = () => {
           </Card>
         </div>
 
-        <Tabs defaultValue="dashboard" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="dashboard">
               <BarChart3 className="h-4 w-4 mr-2" />
