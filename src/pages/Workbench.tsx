@@ -25,12 +25,18 @@ export default function Workbench() {
     smartSuggestions,
     weeklyGoals,
     loading,
+    userLevel,
     completeTask,
     dismissSuggestion
   } = useWorkbench();
 
   const [selectedPriority, setSelectedPriority] = useState<'all' | 'high' | 'medium' | 'low'>('all');
-  const [selectedContact, setSelectedContact] = useState<{ id: string; name: string } | null>(null);
+  const [selectedContact, setSelectedContact] = useState<{ 
+    id: string; 
+    name: string;
+    taskId?: string;
+    taskType?: string;
+  } | null>(null);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -89,8 +95,8 @@ export default function Workbench() {
             <CardContent className="p-4 flex items-center gap-3">
               <Trophy className="h-8 w-8 text-success" />
               <div>
-                <p className="text-sm text-muted-foreground">XP Points</p>
-                <p className="text-2xl font-bold text-foreground">{achievements.totalPoints}</p>
+                <p className="text-sm text-muted-foreground">Level {userLevel}</p>
+                <p className="text-2xl font-bold text-foreground">{achievements.totalPoints} XP</p>
               </div>
             </CardContent>
           </Card>
@@ -212,8 +218,21 @@ export default function Workbench() {
                             </div>
 
                             {!task.completed && (
-                              <Button size="sm" onClick={() => completeTask(task.id)}>
-                                Complete
+                              <Button 
+                                size="sm" 
+                                onClick={() => {
+                                  if (task.contact) {
+                                    setSelectedContact({
+                                      id: task.contact.id,
+                                      name: task.contact.name,
+                                      taskId: task.id,
+                                      taskType: task.actionType
+                                    });
+                                  }
+                                }}
+                                disabled={!task.contact}
+                              >
+                                Take Action
                                 <CheckCircle2 className="ml-2 h-4 w-4" />
                               </Button>
                             )}
@@ -399,6 +418,13 @@ export default function Workbench() {
           onClose={() => setSelectedContact(null)}
           contactId={selectedContact.id}
           contactName={selectedContact.name}
+          taskId={selectedContact.taskId}
+          taskType={selectedContact.taskType}
+          onActionCompleted={(actionTaken) => {
+            if (selectedContact.taskId) {
+              completeTask(selectedContact.taskId, actionTaken);
+            }
+          }}
         />
       )}
     </div>

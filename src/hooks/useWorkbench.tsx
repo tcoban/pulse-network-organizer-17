@@ -63,6 +63,7 @@ export function useWorkbench() {
   const [streak, setStreak] = useState({ current: 0, longest: 0 });
   const [weeklyGoals, setWeeklyGoals] = useState({ completed: 0, total: 0 });
   const [loading, setLoading] = useState(true);
+  const [userLevel, setUserLevel] = useState(1);
 
   useEffect(() => {
     if (user) {
@@ -92,6 +93,17 @@ export function useWorkbench() {
     const activeUserId = getActiveUserId();
     if (!activeUserId) return;
 
+    // Fetch completed tasks from last 7 days to filter them out
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const { data: completedTasks } = await supabase
+      .from('task_completions')
+      .select('task_id, contact_id, completed_at')
+      .eq('user_id', activeUserId)
+      .gte('completed_at', sevenDaysAgo.toISOString());
+
+    const completedTaskIds = new Set(completedTasks?.map(t => t.task_id) || []);
+    const recentlyAddressedContacts = new Set(completedTasks?.map(t => t.contact_id).filter(Boolean) || []);
+
     // Fetch contacts that need attention
     const { data: contacts } = await supabase
       .from('contacts')
@@ -104,14 +116,18 @@ export function useWorkbench() {
 
     // Generate tasks based on contact activity - prioritize 90+ days
     contacts?.forEach(contact => {
+      // Skip contacts that were recently addressed
+      if (recentlyAddressedContacts.has(contact.id)) return;
+
       const daysSinceContact = contact.last_contact 
         ? differenceInDays(today, new Date(contact.last_contact))
         : 999;
 
       // High urgency for contacts not reached in 90+ days
-      if (daysSinceContact >= 90) {
+      const taskId = `urgent-reconnect-${contact.id}`;
+      if (daysSinceContact >= 90 && !completedTaskIds.has(taskId)) {
         tasks.push({
-          id: `urgent-reconnect-${contact.id}`,
+          id: taskId,
           title: `🚨 URGENT: Reconnect with ${contact.name}`,
           description: `Critical! No contact in ${daysSinceContact} days. This relationship needs immediate attention!`,
           priority: 'high',
@@ -125,8 +141,10 @@ export function useWorkbench() {
           }
         });
       } else if (daysSinceContact > 60) {
-        tasks.push({
-          id: `reconnect-${contact.id}`,
+        const taskId = `reconnect-${contact.id}`;
+        if (!completedTaskIds.has(taskId)) {
+          tasks.push({
+            id: taskId,
           title: `Reconnect with ${contact.name}`,
           description: `No contact in ${daysSinceContact} days. Time to reach out!`,
           priority: 'high',
@@ -139,9 +157,12 @@ export function useWorkbench() {
             company: contact.company
           }
         });
+        }
       } else if (daysSinceContact > 30) {
-        tasks.push({
-          id: `touch-base-${contact.id}`,
+        const taskId = `touch-base-${contact.id}`;
+        if (!completedTaskIds.has(taskId)) {
+          tasks.push({
+            id: taskId,
           title: `Touch base with ${contact.name}`,
           description: `It's been ${daysSinceContact} days. Keep the relationship warm!`,
           priority: 'medium',
@@ -154,6 +175,7 @@ export function useWorkbench() {
             company: contact.company
           }
         });
+        }
       }
     });
 
@@ -166,8 +188,10 @@ export function useWorkbench() {
       .order('date', { ascending: true });
 
     opportunities?.forEach(opp => {
-      tasks.push({
-        id: `prep-${opp.id}`,
+      const taskId = `prep-${opp.id}`;
+      if (!completedTaskIds.has(taskId)) {
+        tasks.push({
+          id: taskId,
         title: `Prepare for: ${opp.title}`,
         description: 'Review GAINS notes and set meeting objectives',
         priority: 'high',
@@ -181,6 +205,7 @@ export function useWorkbench() {
           company: (opp.contacts as any).company
         } : undefined
       });
+      }
     });
 
     // Fetch pending referrals
@@ -192,8 +217,10 @@ export function useWorkbench() {
       .limit(5);
 
     referrals?.forEach(ref => {
-      tasks.push({
-        id: `follow-referral-${ref.id}`,
+      const taskId = `follow-referral-${ref.id}`;
+      if (!completedTaskIds.has(taskId)) {
+        tasks.push({
+          id: taskId,
         title: 'Follow up on referral',
         description: `Check status: ${ref.service_description}`,
         priority: 'medium',
@@ -206,6 +233,7 @@ export function useWorkbench() {
           company: (ref.contacts as any).company
         } : undefined
       });
+      }
     });
 
     setDailyTasks(tasks.slice(0, 10)); // Limit to top 10 tasks
@@ -435,8 +463,36 @@ export function useWorkbench() {
   }
 
   async function loadStreak() {
-    // Simplified streak calculation - in production, track daily logins
-    setStreak({ current: 7, longest: 14 });
+    const activeUserId = getActiveUserId();
+    if (!activeUserId) return;
+
+    // Load user points and streak from database
+    const { data: userPoints } = await supabase
+      .from('user_points')
+      .select('*')
+      .eq('user_id', activeUserId)
+      .maybeSingle();
+
+    if (userPoints) {
+      setStreak({ 
+        current: userPoints.current_streak, 
+        longest: userPoints.longest_streak 
+      });
+      setUserLevel(userPoints.level);
+      setAchievements(prev => ({
+        ...prev,
+        totalPoints: userPoints.total_xp
+      }));
+    } else {
+      // Initialize user points if not exists
+      await supabase.from('user_points').insert({
+        user_id: activeUserId,
+        total_xp: 0,
+        level: 1,
+        current_streak: 0,
+        longest_streak: 0
+      });
+    }
   }
 
   async function loadWeeklyGoals() {
@@ -455,20 +511,93 @@ export function useWorkbench() {
     setWeeklyGoals({ completed, total: Math.max(total, 5) });
   }
 
-  async function completeTask(taskId: string) {
-    setDailyTasks(tasks => 
-      tasks.map(t => t.id === taskId ? { ...t, completed: true } : t)
-    );
-    
+  async function completeTask(taskId: string, actionTaken: string) {
+    const activeUserId = getActiveUserId();
+    if (!activeUserId) return;
+
     const task = dailyTasks.find(t => t.id === taskId);
-    if (task) {
+    if (!task) return;
+
+    try {
+      // Save task completion to database
+      await supabase.from('task_completions').insert({
+        user_id: activeUserId,
+        task_id: taskId,
+        task_type: task.actionType,
+        contact_id: task.contact?.id,
+        xp_earned: task.xpReward,
+        action_taken: actionTaken
+      });
+
+      // Get or create user points record
+      const { data: userPoints } = await supabase
+        .from('user_points')
+        .select('*')
+        .eq('user_id', activeUserId)
+        .maybeSingle();
+
+      const newXP = (userPoints?.total_xp || 0) + task.xpReward;
+      const newLevel = Math.floor(newXP / 100) + 1; // Level up every 100 XP
+      
+      // Update streak logic
+      const today = new Date().toISOString().split('T')[0];
+      const lastActivity = userPoints?.last_activity_date;
+      let newStreak = userPoints?.current_streak || 0;
+      
+      if (lastActivity) {
+        const daysSinceLastActivity = differenceInDays(new Date(), new Date(lastActivity));
+        if (daysSinceLastActivity === 1) {
+          // Consecutive day
+          newStreak += 1;
+        } else if (daysSinceLastActivity > 1) {
+          // Streak broken
+          newStreak = 1;
+        }
+        // Same day = keep same streak
+      } else {
+        newStreak = 1;
+      }
+
+      const longestStreak = Math.max(newStreak, userPoints?.longest_streak || 0);
+
+      // Update user points
+      if (userPoints) {
+        await supabase
+          .from('user_points')
+          .update({
+            total_xp: newXP,
+            level: newLevel,
+            current_streak: newStreak,
+            longest_streak: longestStreak,
+            last_activity_date: today
+          })
+          .eq('user_id', activeUserId);
+      } else {
+        await supabase.from('user_points').insert({
+          user_id: activeUserId,
+          total_xp: newXP,
+          level: newLevel,
+          current_streak: newStreak,
+          longest_streak: longestStreak,
+          last_activity_date: today
+        });
+      }
+
+      // Update local state
+      setDailyTasks(tasks => tasks.filter(t => t.id !== taskId));
       setAchievements(prev => ({
         ...prev,
-        totalPoints: prev.totalPoints + task.xpReward
+        totalPoints: newXP
       }));
+      setStreak({ current: newStreak, longest: longestStreak });
+      setUserLevel(newLevel);
+
       toast.success(`+${task.xpReward} XP earned!`, {
-        description: 'Great work on completing this task!'
+        description: `Great work! You're now level ${newLevel} with a ${newStreak} day streak! 🔥`
       });
+    } catch (error) {
+      console.error('Error completing task:', error);
+      toast.error('Failed to complete task');
     }
   }
 
@@ -486,6 +615,7 @@ export function useWorkbench() {
     streak,
     weeklyGoals,
     loading,
+    userLevel,
     completeTask,
     dismissSuggestion,
     refresh: loadWorkbenchData

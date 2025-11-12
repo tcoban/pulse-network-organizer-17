@@ -20,9 +20,20 @@ interface QuickActionDialogProps {
   onClose: () => void;
   contactId: string;
   contactName: string;
+  taskId?: string;
+  taskType?: string;
+  onActionCompleted?: (actionTaken: string) => void;
 }
 
-export function QuickActionDialog({ isOpen, onClose, contactId, contactName }: QuickActionDialogProps) {
+export function QuickActionDialog({ 
+  isOpen, 
+  onClose, 
+  contactId, 
+  contactName,
+  taskId,
+  taskType,
+  onActionCompleted 
+}: QuickActionDialogProps) {
   const [showInteractionForm, setShowInteractionForm] = useState(false);
   const [interactionNotes, setInteractionNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,6 +74,11 @@ export function QuickActionDialog({ isOpen, onClose, contactId, contactName }: Q
         description: `Follow-up with ${contactName} has been recorded.`,
       });
 
+      // Notify parent that action was completed
+      if (onActionCompleted) {
+        onActionCompleted('Logged interaction with notes');
+      }
+
       setInteractionNotes('');
       setShowInteractionForm(false);
       onClose();
@@ -79,16 +95,25 @@ export function QuickActionDialog({ isOpen, onClose, contactId, contactName }: Q
   };
 
   const handleViewContact = () => {
+    if (onActionCompleted) {
+      onActionCompleted('Viewed contact details');
+    }
     navigate(`/contacts?id=${contactId}`);
     onClose();
   };
 
   const handleScheduleMeeting = () => {
+    if (onActionCompleted) {
+      onActionCompleted('Scheduled meeting');
+    }
     navigate(`/contacts?id=${contactId}&action=schedule`);
     onClose();
   };
 
   const handleCreateOpportunity = () => {
+    if (onActionCompleted) {
+      onActionCompleted('Created opportunity');
+    }
     navigate(`/workbench?contactId=${contactId}&action=opportunity`);
     onClose();
   };

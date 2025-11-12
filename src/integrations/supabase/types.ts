@@ -1692,6 +1692,42 @@ export type Database = {
           },
         ]
       }
+      task_completions: {
+        Row: {
+          action_taken: string | null
+          completed_at: string
+          contact_id: string | null
+          created_at: string
+          id: string
+          task_id: string
+          task_type: string
+          user_id: string
+          xp_earned: number
+        }
+        Insert: {
+          action_taken?: string | null
+          completed_at?: string
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          task_id: string
+          task_type: string
+          user_id: string
+          xp_earned?: number
+        }
+        Update: {
+          action_taken?: string | null
+          completed_at?: string
+          contact_id?: string | null
+          created_at?: string
+          id?: string
+          task_id?: string
+          task_type?: string
+          user_id?: string
+          xp_earned?: number
+        }
+        Relationships: []
+      }
       team_members: {
         Row: {
           bio: string | null
@@ -1823,6 +1859,42 @@ export type Database = {
           template_type?: string
           updated_at?: string | null
           variables?: Json | null
+        }
+        Relationships: []
+      }
+      user_points: {
+        Row: {
+          created_at: string
+          current_streak: number
+          id: string
+          last_activity_date: string | null
+          level: number
+          longest_streak: number
+          total_xp: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_activity_date?: string | null
+          level?: number
+          longest_streak?: number
+          total_xp?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_activity_date?: string | null
+          level?: number
+          longest_streak?: number
+          total_xp?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
