@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Contact } from '@/types/contact';
 import { useContacts } from '@/hooks/useContacts';
 import ContactCard from '@/components/ContactCard';
@@ -30,6 +31,7 @@ import {
 
 const Contacts = () => {
   const { contacts, loading: contactsLoading, error: contactsError, createContact, updateContact, deleteContact } = useContacts();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('name');
@@ -42,6 +44,33 @@ const Contacts = () => {
   const [showIntroductionMatcher, setShowIntroductionMatcher] = useState(false);
   const [showLinkGoalsDialog, setShowLinkGoalsDialog] = useState(false);
   const [selectedContactForGoals, setSelectedContactForGoals] = useState<Contact | null>(null);
+
+  // Handle URL parameters for direct actions
+  useEffect(() => {
+    const contactId = searchParams.get('id');
+    const action = searchParams.get('action');
+    
+    if (contactId && contacts.length > 0) {
+      const contact = contacts.find(c => c.id === contactId);
+      
+      if (contact) {
+        if (action === 'schedule') {
+          setSelectedContactId(contactId);
+          setOpportunityFormOpen(true);
+          // Clear URL params after opening dialog
+          setSearchParams({});
+        } else if (action === 'edit') {
+          setEditingContact(contact);
+          setContactFormOpen(true);
+          setSearchParams({});
+        } else {
+          // Just scroll to contact if no specific action
+          const element = document.getElementById(`contact-${contactId}`);
+          element?.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }
+  }, [searchParams, contacts, setSearchParams]);
 
   // Filter and sort contacts
   const filteredContacts = useMemo(() => {

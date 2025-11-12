@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +10,7 @@ import { NotificationCenter } from '@/components/NotificationCenter';
 import { AchievementShowcase } from '@/components/AchievementShowcase';
 import { RelationshipDecayAlerts } from '@/components/RelationshipDecayAlerts';
 import { QuickActionDialog } from '@/components/QuickActionDialog';
+import OpportunityFormEnhanced from '@/components/OpportunityFormEnhanced';
 import { 
   Flame, Trophy, Target, TrendingUp, Users, Calendar,
   CheckCircle2, AlertCircle, Star, Zap, Award,
@@ -30,6 +32,7 @@ export default function Workbench() {
     dismissSuggestion
   } = useWorkbench();
 
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedPriority, setSelectedPriority] = useState<'all' | 'high' | 'medium' | 'low'>('all');
   const [selectedContact, setSelectedContact] = useState<{ 
     id: string; 
@@ -37,6 +40,21 @@ export default function Workbench() {
     taskId?: string;
     taskType?: string;
   } | null>(null);
+  const [opportunityFormOpen, setOpportunityFormOpen] = useState(false);
+  const [opportunityContactId, setOpportunityContactId] = useState<string | null>(null);
+
+  // Handle URL parameters for direct actions
+  useEffect(() => {
+    const contactId = searchParams.get('contactId');
+    const action = searchParams.get('action');
+    
+    if (contactId && action === 'opportunity') {
+      setOpportunityContactId(contactId);
+      setOpportunityFormOpen(true);
+      // Clear URL params after opening dialog
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -427,6 +445,15 @@ export default function Workbench() {
           }}
         />
       )}
+
+      <OpportunityFormEnhanced
+        contactId={opportunityContactId || ''}
+        isOpen={opportunityFormOpen}
+        onClose={() => {
+          setOpportunityFormOpen(false);
+          setOpportunityContactId(null);
+        }}
+      />
     </div>
   );
 }
