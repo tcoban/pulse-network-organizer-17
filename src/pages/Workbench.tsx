@@ -8,6 +8,7 @@ import { useWorkbench } from '@/hooks/useWorkbench';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { AchievementShowcase } from '@/components/AchievementShowcase';
 import { RelationshipDecayAlerts } from '@/components/RelationshipDecayAlerts';
+import { QuickActionDialog } from '@/components/QuickActionDialog';
 import { 
   Flame, Trophy, Target, TrendingUp, Users, Calendar,
   CheckCircle2, AlertCircle, Star, Zap, Award,
@@ -29,6 +30,7 @@ export default function Workbench() {
   } = useWorkbench();
 
   const [selectedPriority, setSelectedPriority] = useState<'all' | 'high' | 'medium' | 'low'>('all');
+  const [selectedContact, setSelectedContact] = useState<{ id: string; name: string } | null>(null);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -275,7 +277,18 @@ export default function Workbench() {
                       )}
 
                       <div className="flex items-center gap-3 mt-4">
-                        <Button size="sm" variant="default">
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          onClick={() => {
+                            if (suggestion.relatedContacts && suggestion.relatedContacts.length > 0) {
+                              setSelectedContact({
+                                id: suggestion.relatedContacts[0].id,
+                                name: suggestion.relatedContacts[0].name
+                              });
+                            }
+                          }}
+                        >
                           Take Action
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
@@ -379,6 +392,15 @@ export default function Workbench() {
           />
         </TabsContent>
       </Tabs>
+
+      {selectedContact && (
+        <QuickActionDialog
+          isOpen={!!selectedContact}
+          onClose={() => setSelectedContact(null)}
+          contactId={selectedContact.id}
+          contactName={selectedContact.name}
+        />
+      )}
     </div>
   );
 }
