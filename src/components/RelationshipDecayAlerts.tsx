@@ -1,16 +1,17 @@
+import { useState } from 'react';
 import { useRelationshipDecay } from '@/hooks/useRelationshipDecay';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertTriangle, Clock, TrendingDown, RefreshCw, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
+import { QuickActionDialog } from '@/components/QuickActionDialog';
+import { AlertTriangle, Clock, TrendingDown, RefreshCw, ArrowRight } from 'lucide-react';
 
 export const RelationshipDecayAlerts = () => {
-  const navigate = useNavigate();
   const { decayingContacts, criticalCount, warningCount, loading, refresh } = useRelationshipDecay();
+  const [selectedContact, setSelectedContact] = useState<{ id: string; name: string } | null>(null);
 
   if (loading) {
     return <Skeleton className="h-64 w-full" />;
@@ -132,17 +133,26 @@ export const RelationshipDecayAlerts = () => {
               )}
 
               <Button
-                onClick={() => navigate('/contacts')}
+                onClick={() => setSelectedContact({ id: contact.contactId, name: contact.contactName })}
                 variant={contact.decayLevel === 'critical' ? 'destructive' : 'outline'}
                 size="sm"
                 className="w-full"
               >
-                Reconnect Now <ArrowRight className="h-4 w-4 ml-2" />
+                Take Action Now <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {selectedContact && (
+        <QuickActionDialog
+          isOpen={!!selectedContact}
+          onClose={() => setSelectedContact(null)}
+          contactId={selectedContact.id}
+          contactName={selectedContact.name}
+        />
+      )}
     </div>
   );
 };

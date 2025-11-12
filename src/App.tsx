@@ -42,10 +42,9 @@ const App = () => (
                       <Route path="/workbench" element={<Workbench />} />
                       <Route path="/projects" element={<Projects />} />
                       <Route path="/goals" element={<Goals />} />
-                  <Route path="/bni" element={<BNI />} />
-                  <Route path="/analytics" element={<Analytics />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/admin" element={<Admin />} />
+                   <Route path="/bni" element={<BNI />} />
+                   <Route path="/settings" element={<Settings />} />
+                   <Route path="/admin" element={<Admin />} />
                   <Route path="*" element={<NotFound />} />
                     </Routes>
                   </main>

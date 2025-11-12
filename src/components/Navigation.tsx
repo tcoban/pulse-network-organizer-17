@@ -8,8 +8,7 @@ import {
   Settings,
   Shield,
   Award,
-  Briefcase,
-  LineChart
+  Briefcase
 } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 
@@ -47,11 +46,6 @@ export function Navigation() {
       title: 'Goals',
       href: '/goals',
       icon: Target
-    },
-    {
-      title: 'Analytics',
-      href: '/analytics',
-      icon: LineChart
     }
   ];
 

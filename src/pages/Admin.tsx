@@ -1,12 +1,14 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Users, Database, Settings, Tag } from 'lucide-react';
+import { Shield, Users, Database, Settings, Tag, LineChart } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { TeamManagementTab } from '@/components/admin/TeamManagementTab';
 import { UserRolesTab } from '@/components/admin/UserRolesTab';
 import { DataManagementTab } from '@/components/admin/DataManagementTab';
 import { TagManagementTab } from '@/components/admin/TagManagementTab';
 import { SystemSettingsTab } from '@/components/admin/SystemSettingsTab';
+import { RelationshipAnalyticsDashboard } from '@/components/RelationshipAnalyticsDashboard';
+import { RelationshipDecayAlerts } from '@/components/RelationshipDecayAlerts';
 
 export default function Admin() {
   const { isAdmin } = useUserRole();
@@ -40,7 +42,7 @@ export default function Admin() {
       </div>
 
       <Tabs defaultValue="team" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="team">
             <Users className="h-4 w-4 mr-2" />
             Team Members
@@ -48,6 +50,10 @@ export default function Admin() {
           <TabsTrigger value="users">
             <Shield className="h-4 w-4 mr-2" />
             User Roles
+          </TabsTrigger>
+          <TabsTrigger value="analytics">
+            <LineChart className="h-4 w-4 mr-2" />
+            Analytics
           </TabsTrigger>
           <TabsTrigger value="data">
             <Database className="h-4 w-4 mr-2" />
@@ -69,6 +75,23 @@ export default function Admin() {
 
         <TabsContent value="users" className="space-y-6">
           <UserRolesTab />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="decay">Decay Alerts</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview">
+              <RelationshipAnalyticsDashboard />
+            </TabsContent>
+
+            <TabsContent value="decay">
+              <RelationshipDecayAlerts />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         <TabsContent value="data" className="space-y-6">
