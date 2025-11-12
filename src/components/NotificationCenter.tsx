@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useGhostMode } from '@/hooks/useGhostMode';
 import { toast } from 'sonner';
 import { differenceInDays } from 'date-fns';
+import { QuickActionDialog } from './QuickActionDialog';
 
 interface Notification {
   id: string;
@@ -16,6 +17,8 @@ interface Notification {
   title: string;
   message: string;
   actionUrl?: string;
+  contactId?: string;
+  contactName?: string;
   createdAt: Date;
   read: boolean;
 }
@@ -26,6 +29,11 @@ export function NotificationCenter() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
+  const [quickActionDialog, setQuickActionDialog] = useState<{
+    isOpen: boolean;
+    contactId: string;
+    contactName: string;
+  } | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -59,6 +67,8 @@ export function NotificationCenter() {
           title: '🚨 Critical: Contact Needs Attention',
           message: `${contact.name} - No contact in ${daysSince} days!`,
           actionUrl: `/contacts`,
+          contactId: contact.id,
+          contactName: contact.name,
           createdAt: new Date(),
           read: false
         });
@@ -199,8 +209,16 @@ export function NotificationCenter() {
                           className="h-auto p-0 mt-2"
                           onClick={() => {
                             markAsRead(notif.id);
-                            setOpen(false);
-                            window.location.href = notif.actionUrl;
+                            if (notif.type === 'urgent' && notif.contactId && notif.contactName) {
+                              setQuickActionDialog({
+                                isOpen: true,
+                                contactId: notif.contactId,
+                                contactName: notif.contactName
+                              });
+                            } else {
+                              setOpen(false);
+                              window.location.href = notif.actionUrl;
+                            }
                           }}
                         >
                           Take action →
@@ -214,6 +232,22 @@ export function NotificationCenter() {
           )}
         </ScrollArea>
       </SheetContent>
+      
+      {quickActionDialog && (
+        <QuickActionDialog
+          isOpen={quickActionDialog.isOpen}
+          onClose={() => {
+            setQuickActionDialog(null);
+            setOpen(false);
+          }}
+          contactId={quickActionDialog.contactId}
+          contactName={quickActionDialog.contactName}
+          onActionCompleted={(actionTaken) => {
+            toast.success(`Action completed: ${actionTaken}`);
+            loadNotifications(); // Refresh notifications after action
+          }}
+        />
+      )}
     </Sheet>
   );
 }
