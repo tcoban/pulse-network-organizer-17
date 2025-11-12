@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useWorkbench } from '@/hooks/useWorkbench';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { AchievementShowcase } from '@/components/AchievementShowcase';
+import { RelationshipDecayAlerts } from '@/components/RelationshipDecayAlerts';
 import { 
   Flame, Trophy, Target, TrendingUp, Users, Calendar,
   CheckCircle2, AlertCircle, Star, Zap, Award,
