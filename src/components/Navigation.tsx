@@ -8,7 +8,8 @@ import {
   Settings,
   Shield,
   Award,
-  Briefcase
+  Briefcase,
+  Network
 } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 
@@ -46,6 +47,11 @@ export function Navigation() {
       title: 'Goals',
       href: '/goals',
       icon: Target
+    },
+    {
+      title: 'Network Map',
+      href: '/network-map',
+      icon: Network
     }
   ];
 
