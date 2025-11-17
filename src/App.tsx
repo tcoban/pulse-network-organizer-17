@@ -16,6 +16,7 @@ import BNI from "./pages/BNI";
 import Workbench from "./pages/Workbench";
 import Admin from "./pages/Admin";
 import Analytics from "./pages/Analytics";
+import NetworkMap from "./pages/NetworkMap";
 import NotFound from "./pages/NotFound";
 import ResetPasswordForm from "@/components/ResetPasswordForm";
 
@@ -43,6 +44,7 @@ const App = () => (
                       <Route path="/projects" element={<Projects />} />
                       <Route path="/goals" element={<Goals />} />
                    <Route path="/bni" element={<BNI />} />
+                   <Route path="/network-map" element={<NetworkMap />} />
                    <Route path="/settings" element={<Settings />} />
                    <Route path="/admin" element={<Admin />} />
                   <Route path="*" element={<NotFound />} />
