@@ -72,11 +72,11 @@ export const WarmIntroductionFinder = ({
     onPathSelect?.(pathIds);
   };
 
-  const handleRequestIntroduction = (path: IntroductionPath) => {
+  const handleRequestIntroduction = async (path: IntroductionPath) => {
     if (!targetContact) return;
     
     if (onRequestIntroduction) {
-      onRequestIntroduction(path, targetContact);
+      await onRequestIntroduction(path, targetContact);
     } else {
       toast.success('Introduction request created', {
         description: `Path via ${path.intermediaries.map((i) => i.name).join(' → ')}`,

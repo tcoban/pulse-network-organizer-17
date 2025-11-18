@@ -24,11 +24,38 @@ export default function NetworkMap() {
     });
   };
 
-  const handleRequestIntroduction = (path: IntroductionPath, targetContact: NetworkNode) => {
-    toast.success('Introduction Request Created', {
-      description: `Requesting introduction to ${targetContact.name} via ${path.intermediaries.length} intermediar${path.intermediaries.length !== 1 ? 'ies' : 'y'}`,
-    });
-    // TODO: Integrate with ReferralTrackerDialog or create introduction request
+  const handleRequestIntroduction = async (path: IntroductionPath, targetContact: NetworkNode) => {
+    try {
+      const intermediaryNames = path.intermediaries.map(i => i.name).join(' → ');
+      const reason = `Warm introduction via ${intermediaryNames || 'direct connection'}. Path strength: ${path.warmthScore}%`;
+      
+      // Create introduction record in database
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error('Please sign in to request introductions');
+        return;
+      }
+
+      const sourceContact = path.contacts[0];
+      
+      await supabase.from('introduction_outcomes').insert({
+        contact_a_id: sourceContact.id,
+        contact_b_id: targetContact.id,
+        introduced_by: user.id,
+        introduction_reason: reason,
+        outcome: 'pending',
+        match_confidence: path.warmthScore,
+      });
+
+      toast.success('Introduction Request Created', {
+        description: `Request to ${targetContact.name} via ${path.intermediaries.length} hop${path.intermediaries.length !== 1 ? 's' : ''}`,
+      });
+    } catch (error) {
+      console.error('Error creating introduction:', error);
+      toast.error('Failed to create introduction request');
+    }
   };
 
   if (loading) {

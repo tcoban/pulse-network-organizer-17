@@ -240,15 +240,19 @@ export const NetworkGraph = ({
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
 
-  // Update nodes/edges when layout or filters change
+  // Update nodes/edges when layout or filters change with debounce for large graphs
   useEffect(() => {
-    const { nodes: newNodes, edges: newEdges } = getLayoutedElements(
-      initialNodes,
-      initialEdges,
-      layoutType
-    );
-    setNodes(newNodes);
-    setEdges(newEdges);
+    const timer = setTimeout(() => {
+      const { nodes: newNodes, edges: newEdges } = getLayoutedElements(
+        initialNodes,
+        initialEdges,
+        layoutType
+      );
+      setNodes(newNodes);
+      setEdges(newEdges);
+    }, initialNodes.length > 100 ? 300 : 0);
+
+    return () => clearTimeout(timer);
   }, [initialNodes, initialEdges, layoutType, setNodes, setEdges]);
 
   const onNodeClickHandler = useCallback(
