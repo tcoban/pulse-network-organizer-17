@@ -566,6 +566,14 @@ export const useNetworkGraph = (contacts: Contact[]) => {
     return getKeyConnectors(graph, minDegree, limit);
   };
 
+  const getClusteringCoefficients = (): Record<string, number> => {
+    const result: Record<string, number> = {};
+    graph.nodes.forEach((node, id) => {
+      result[id] = node.clusteringCoefficient;
+    });
+    return result;
+  };
+
   return {
     graph,
     metrics,
@@ -574,5 +582,6 @@ export const useNetworkGraph = (contacts: Contact[]) => {
     findAllPaths,
     getMutualConnections,
     getConnectors,
+    getClusteringCoefficients,
   };
 };
