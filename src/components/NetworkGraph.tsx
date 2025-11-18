@@ -169,6 +169,7 @@ interface NetworkGraphProps {
   onNodeClick?: (node: NetworkNode) => void;
   selectedPath?: string[];
   keyConnectorIds?: string[];
+  communities?: Array<{ id: number; members: string[]; size: number; density: number }>;
 }
 
 export const NetworkGraph = ({
@@ -176,6 +177,7 @@ export const NetworkGraph = ({
   onNodeClick,
   selectedPath = [],
   keyConnectorIds = [],
+  communities = [],
 }: NetworkGraphProps) => {
   const [layoutType, setLayoutType] = useState<LayoutType>('hierarchical');
   const [searchTerm, setSearchTerm] = useState('');
@@ -193,6 +195,14 @@ export const NetworkGraph = ({
           node.company?.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
+    // Find community for each node
+    const nodeCommunityMap = new Map<string, number>();
+    communities.forEach((community, index) => {
+      community.members.forEach(memberId => {
+        nodeCommunityMap.set(memberId, index);
+      });
+    });
+
     const nodes: Node[] = filteredNodes.map((node) => ({
       id: node.id,
       type: 'contact',
@@ -204,6 +214,7 @@ export const NetworkGraph = ({
         degree: node.degree,
         highlighted: selectedPath.includes(node.id),
         isKeyConnector: keyConnectorIds.includes(node.id),
+        communityId: nodeCommunityMap.get(node.id),
       },
     }));
 
@@ -230,7 +241,7 @@ export const NetworkGraph = ({
       }));
 
     return { initialNodes: nodes, initialEdges: edges };
-  }, [graph, minConnections, searchTerm, selectedPath, keyConnectorIds]);
+  }, [graph, minConnections, searchTerm, selectedPath, keyConnectorIds, communities]);
 
   // Apply layout
   const { nodes: layoutedNodes, edges: layoutedEdges } = useMemo(() => {

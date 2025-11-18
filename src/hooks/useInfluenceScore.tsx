@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { NetworkGraph, NetworkNode } from './useNetworkGraph';
 
-interface InfluenceScore {
+export interface InfluenceScore {
   nodeId: string;
   score: number;
   rank: number;
@@ -18,11 +18,14 @@ interface InfluenceScore {
  * Combines multiple centrality measures for comprehensive influence ranking
  */
 export const useInfluenceScore = (graph: NetworkGraph) => {
-  const influenceScores = useMemo(() => {
-    return calculateInfluenceScores(graph);
+  const scores = useMemo(() => {
+    const scoresList = calculateInfluenceScores(graph);
+    const scoresMap = new Map<string, number>();
+    scoresList.forEach(s => scoresMap.set(s.nodeId, s.score * 100)); // Scale to 0-100
+    return scoresMap;
   }, [graph]);
 
-  return influenceScores;
+  return { scores };
 };
 
 function calculateInfluenceScores(graph: NetworkGraph): InfluenceScore[] {
