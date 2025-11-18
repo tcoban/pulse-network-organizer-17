@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { NetworkGraph, NetworkNode } from './useNetworkGraph';
 
-interface Community {
-  id: string;
-  members: NetworkNode[];
+export interface Community {
+  id: number;
+  members: string[];
+  size: number;
   density: number;
-  avgDegree: number;
 }
 
 /**
@@ -13,11 +13,16 @@ interface Community {
  * Identifies clusters of closely connected contacts
  */
 export const useNetworkCommunities = (graph: NetworkGraph) => {
+  const [loading, setLoading] = useState(false);
+  
   const communities = useMemo(() => {
-    return detectCommunities(graph);
+    setLoading(true);
+    const result = detectCommunities(graph);
+    setLoading(false);
+    return result;
   }, [graph]);
 
-  return communities;
+  return { communities, loading };
 };
 
 function detectCommunities(graph: NetworkGraph): Community[] {
@@ -80,20 +85,16 @@ function detectCommunities(graph: NetworkGraph): Community[] {
 
   // Convert to Community objects
   const result: Community[] = [];
-  communities.forEach((memberIds, commId) => {
+  let commIndex = 0;
+  
+  communities.forEach((memberIds) => {
     if (memberIds.size === 0) return;
-
-    const members = Array.from(memberIds)
-      .map(id => graph.nodes.get(id))
-      .filter((n): n is NetworkNode => n !== undefined);
 
     // Calculate community metrics
     let internalEdges = 0;
-    let totalDegree = 0;
 
     memberIds.forEach(id => {
       const neighbors = graph.adjacencyList.get(id) || new Set();
-      totalDegree += neighbors.size;
       neighbors.forEach(neighbor => {
         if (memberIds.has(neighbor)) {
           internalEdges++;
@@ -104,16 +105,15 @@ function detectCommunities(graph: NetworkGraph): Community[] {
     internalEdges = internalEdges / 2; // Each edge counted twice
     const maxPossibleEdges = (memberIds.size * (memberIds.size - 1)) / 2;
     const density = maxPossibleEdges > 0 ? internalEdges / maxPossibleEdges : 0;
-    const avgDegree = memberIds.size > 0 ? totalDegree / memberIds.size : 0;
 
     result.push({
-      id: commId,
-      members,
+      id: commIndex++,
+      members: Array.from(memberIds),
+      size: memberIds.size,
       density,
-      avgDegree,
     });
   });
 
   // Sort by size (largest first)
-  return result.sort((a, b) => b.members.length - a.members.length);
+  return result.sort((a, b) => b.size - a.size);
 }

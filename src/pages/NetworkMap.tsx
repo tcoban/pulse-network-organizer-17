@@ -1,22 +1,33 @@
 import { useState } from 'react';
 import { useContacts } from '@/hooks/useContacts';
 import { useNetworkGraph, NetworkNode, IntroductionPath } from '@/hooks/useNetworkGraph';
+import { useNetworkCommunities } from '@/hooks/useNetworkCommunities';
+import { useInfluenceScore } from '@/hooks/useInfluenceScore';
+import { useIntroductionRequests } from '@/hooks/useIntroductionRequests';
 import { NetworkGraph } from '@/components/NetworkGraph';
 import { WarmIntroductionFinder } from '@/components/WarmIntroductionFinder';
+import { IntroductionRequestsTracker } from '@/components/IntroductionRequestsTracker';
+import { NetworkAnalyticsDashboard } from '@/components/NetworkAnalyticsDashboard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Network, Users, TrendingUp, Link2, Award, Activity } from 'lucide-react';
+import { Network, Users, TrendingUp, Link2, Award, Activity, BarChart3, GitBranch } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function NetworkMap() {
   const { contacts, loading: contactsLoading } = useContacts();
   const { graph, metrics, loading: graphLoading, getConnectors } = useNetworkGraph(contacts);
+  const { communities, loading: communitiesLoading } = useNetworkCommunities(graph);
+  const { scores: influenceScores } = useInfluenceScore(graph);
+  const { createIntroduction, isCreating } = useIntroductionRequests();
   const [selectedPath, setSelectedPath] = useState<string[]>([]);
 
   const loading = contactsLoading || graphLoading;
-  const keyConnectors = getConnectors(3, 10);
+  const keyConnectors = getConnectors(3, 10).map(connector => ({
+    ...connector,
+    influenceScore: influenceScores.get(connector.id) || 0,
+  }));
 
   const handleNodeClick = (node: NetworkNode) => {
     toast.info('Contact Details', {
@@ -25,37 +36,17 @@ export default function NetworkMap() {
   };
 
   const handleRequestIntroduction = async (path: IntroductionPath, targetContact: NetworkNode) => {
-    try {
-      const intermediaryNames = path.intermediaries.map(i => i.name).join(' → ');
-      const reason = `Warm introduction via ${intermediaryNames || 'direct connection'}. Path strength: ${path.warmthScore}%`;
-      
-      // Create introduction record in database
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error('Please sign in to request introductions');
-        return;
-      }
-
-      const sourceContact = path.contacts[0];
-      
-      await supabase.from('introduction_outcomes').insert({
-        contact_a_id: sourceContact.id,
-        contact_b_id: targetContact.id,
-        introduced_by: user.id,
-        introduction_reason: reason,
-        outcome: 'pending',
-        match_confidence: path.warmthScore,
-      });
-
-      toast.success('Introduction Request Created', {
-        description: `Request to ${targetContact.name} via ${path.intermediaries.length} hop${path.intermediaries.length !== 1 ? 's' : ''}`,
-      });
-    } catch (error) {
-      console.error('Error creating introduction:', error);
-      toast.error('Failed to create introduction request');
-    }
+    const intermediaryNames = path.intermediaries.map(i => i.name).join(' → ');
+    const reason = `Warm introduction via ${intermediaryNames || 'direct connection'}. Path strength: ${path.warmthScore}%`;
+    const sourceContact = path.contacts[0];
+    
+    createIntroduction({
+      contact_a_id: sourceContact.id,
+      contact_b_id: targetContact.id,
+      introduced_by: '', // Will be set in the hook
+      introduction_reason: reason,
+      intermediary_ids: path.intermediaries.map(i => i.id),
+    });
   };
 
   if (loading) {
@@ -153,18 +144,36 @@ export default function NetworkMap() {
 
       {/* Main Content */}
       <Tabs defaultValue="graph" className="space-y-4">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="graph">
             <Network className="h-4 w-4 mr-2" />
-            Network Graph
+            <span className="hidden sm:inline">Network Graph</span>
+            <span className="sm:hidden">Graph</span>
           </TabsTrigger>
           <TabsTrigger value="intros">
             <Link2 className="h-4 w-4 mr-2" />
-            Warm Introductions
+            <span className="hidden sm:inline">Warm Intros</span>
+            <span className="sm:hidden">Intros</span>
+          </TabsTrigger>
+          <TabsTrigger value="requests">
+            <GitBranch className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Requests</span>
+            <span className="sm:hidden">Req</span>
           </TabsTrigger>
           <TabsTrigger value="stats">
             <Award className="h-4 w-4 mr-2" />
-            Key Connectors
+            <span className="hidden sm:inline">Key Connectors</span>
+            <span className="sm:hidden">Top</span>
+          </TabsTrigger>
+          <TabsTrigger value="communities">
+            <Users className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Communities</span>
+            <span className="sm:hidden">Comm</span>
+          </TabsTrigger>
+          <TabsTrigger value="analytics">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Analytics</span>
+            <span className="sm:hidden">Data</span>
           </TabsTrigger>
         </TabsList>
 
@@ -174,6 +183,7 @@ export default function NetworkMap() {
             onNodeClick={handleNodeClick}
             selectedPath={selectedPath}
             keyConnectorIds={keyConnectors.map((c) => c.id)}
+            communities={communities}
           />
         </TabsContent>
 
@@ -184,6 +194,10 @@ export default function NetworkMap() {
             onRequestIntroduction={handleRequestIntroduction}
             onPathSelect={setSelectedPath}
           />
+        </TabsContent>
+
+        <TabsContent value="requests" className="space-y-4">
+          <IntroductionRequestsTracker />
         </TabsContent>
 
         <TabsContent value="stats" className="space-y-4">
@@ -202,7 +216,7 @@ export default function NetworkMap() {
                 {keyConnectors.map((connector, index) => (
                   <div
                     key={connector.id}
-                    className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors gap-3"
                   >
                     <div className="flex items-center gap-4">
                       <Badge variant="outline" className="text-lg font-bold">
@@ -218,12 +232,15 @@ export default function NetworkMap() {
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <div className="text-right">
+                      <div className="text-right flex-1">
                         <div className="text-sm font-medium">
                           {connector.degree} connections
                         </div>
                         <div className="text-xs text-muted-foreground">
                           Centrality: {(connector.betweennessCentrality * 100).toFixed(1)}%
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Influence: {connector.influenceScore.toFixed(1)}
                         </div>
                       </div>
                       <Badge variant="default">
@@ -235,6 +252,74 @@ export default function NetworkMap() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="communities" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Network Communities
+              </CardTitle>
+              <CardDescription>
+                Detected clusters and groups within your network
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {communitiesLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-24" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {communities.map((community, index) => (
+                    <div
+                      key={index}
+                      className="p-4 rounded-lg border bg-card"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h3 className="font-semibold">Community {index + 1}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {community.size} members
+                          </p>
+                        </div>
+                        <Badge variant="outline">
+                          Density: {(community.density * 100).toFixed(0)}%
+                        </Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {community.members.slice(0, 10).map((memberId) => {
+                          const member = graph.nodes.get(memberId);
+                          return member ? (
+                            <Badge key={memberId} variant="secondary">
+                              {member.name}
+                            </Badge>
+                          ) : null;
+                        })}
+                        {community.size > 10 && (
+                          <Badge variant="outline">
+                            +{community.size - 10} more
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4">
+          <NetworkAnalyticsDashboard
+            graph={graph}
+            metrics={metrics}
+            communities={communities}
+            influenceScores={influenceScores}
+          />
         </TabsContent>
       </Tabs>
     </div>
