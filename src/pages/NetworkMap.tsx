@@ -268,7 +268,7 @@ export default function NetworkMap() {
                 Network Communities
               </CardTitle>
               <CardDescription>
-                Detected clusters and groups within your network
+                Detected groups based on connection patterns (each contact belongs to one primary community)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -287,15 +287,42 @@ export default function NetworkMap() {
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div>
-                          <h3 className="font-semibold">Community {index + 1}</h3>
+                          <h3 className="font-semibold">{community.label}</h3>
                           <p className="text-sm text-muted-foreground">
-                            {community.size} members
+                            {community.size} {community.size === 1 ? 'member' : 'members'}
                           </p>
                         </div>
                         <Badge variant="outline">
                           Density: {(community.density * 100).toFixed(0)}%
                         </Badge>
                       </div>
+                      
+                      {/* Show common characteristics */}
+                      {(community.commonCharacteristics.companies?.length || 
+                        community.commonCharacteristics.affiliations?.length || 
+                        community.commonCharacteristics.industries?.length) && (
+                        <div className="mb-3 space-y-2 text-sm">
+                          {community.commonCharacteristics.companies && community.commonCharacteristics.companies.length > 0 && (
+                            <div>
+                              <span className="text-muted-foreground font-medium">Common Companies: </span>
+                              <span>{community.commonCharacteristics.companies.join(', ')}</span>
+                            </div>
+                          )}
+                          {community.commonCharacteristics.affiliations && community.commonCharacteristics.affiliations.length > 0 && (
+                            <div>
+                              <span className="text-muted-foreground font-medium">Common Affiliations: </span>
+                              <span>{community.commonCharacteristics.affiliations.join(', ')}</span>
+                            </div>
+                          )}
+                          {community.commonCharacteristics.industries && community.commonCharacteristics.industries.length > 0 && (
+                            <div>
+                              <span className="text-muted-foreground font-medium">Common Industries: </span>
+                              <span>{community.commonCharacteristics.industries.join(', ')}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
                       <div className="flex flex-wrap gap-2">
                         {community.members.slice(0, 10).map((memberId) => {
                           const member = graph.nodes.get(memberId);

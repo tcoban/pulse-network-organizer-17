@@ -11,6 +11,7 @@ export interface NetworkNode {
   email: string;
   company?: string;
   position?: string;
+  affiliation?: string;
   avatar?: string;
   degree: number; // Number of connections
   betweennessCentrality: number;
@@ -154,6 +155,7 @@ function buildNetworkGraph(contacts: Contact[]): { graph: NetworkGraph; diagnost
       email: contact.email,
       company: contact.company,
       position: contact.position,
+      affiliation: contact.affiliation,
       avatar: contact.avatar,
       degree: 0,
       betweennessCentrality: 0,
