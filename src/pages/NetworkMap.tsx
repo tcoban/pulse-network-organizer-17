@@ -8,16 +8,17 @@ import { NetworkGraph } from '@/components/NetworkGraph';
 import { WarmIntroductionFinder } from '@/components/WarmIntroductionFinder';
 import { IntroductionRequestsTracker } from '@/components/IntroductionRequestsTracker';
 import { NetworkAnalyticsDashboard } from '@/components/NetworkAnalyticsDashboard';
+import { NetworkDiagnosticsPanel } from '@/components/NetworkDiagnosticsPanel';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Network, Users, TrendingUp, Link2, Award, Activity, BarChart3, GitBranch } from 'lucide-react';
+import { Network, Users, TrendingUp, Link2, Award, Activity, BarChart3, GitBranch, Stethoscope } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function NetworkMap() {
   const { contacts, loading: contactsLoading } = useContacts();
-  const { graph, metrics, loading: graphLoading, getConnectors } = useNetworkGraph(contacts);
+  const { graph, metrics, diagnostics, loading: graphLoading, getConnectors } = useNetworkGraph(contacts);
   const { communities, loading: communitiesLoading } = useNetworkCommunities(graph);
   const { scores: influenceScores } = useInfluenceScore(graph);
   const { createIntroduction, isCreating } = useIntroductionRequests();
@@ -144,7 +145,7 @@ export default function NetworkMap() {
 
       {/* Main Content */}
       <Tabs defaultValue="graph" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="graph">
             <Network className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Network Graph</span>
@@ -174,6 +175,11 @@ export default function NetworkMap() {
             <BarChart3 className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Analytics</span>
             <span className="sm:hidden">Data</span>
+          </TabsTrigger>
+          <TabsTrigger value="diagnostics">
+            <Stethoscope className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Diagnostics</span>
+            <span className="sm:hidden">Diag</span>
           </TabsTrigger>
         </TabsList>
 
@@ -320,6 +326,10 @@ export default function NetworkMap() {
             communities={communities}
             influenceScores={influenceScores}
           />
+        </TabsContent>
+
+        <TabsContent value="diagnostics" className="space-y-4">
+          <NetworkDiagnosticsPanel diagnostics={diagnostics} />
         </TabsContent>
       </Tabs>
     </div>
