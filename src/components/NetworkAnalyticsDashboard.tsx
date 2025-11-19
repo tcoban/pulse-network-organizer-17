@@ -39,8 +39,8 @@ export const NetworkAnalyticsDashboard = ({
 
   // Community size distribution
   const communityData = useMemo(() => {
-    return communities.map((community, index) => ({
-      name: `Community ${index + 1}`,
+    return communities.map((community) => ({
+      name: community.label,
       size: community.size,
       density: Math.round(community.density * 100),
     }));
@@ -157,7 +157,7 @@ export const NetworkAnalyticsDashboard = ({
               Community Distribution
             </CardTitle>
             <CardDescription>
-              Size distribution of detected communities
+              Distinct groups within your network (each contact belongs to their primary community based on strongest connections)
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -185,6 +185,63 @@ export const NetworkAnalyticsDashboard = ({
                 />
               </PieChart>
             </ResponsiveContainer>
+            
+            {/* Detailed Community Breakdown */}
+            <div className="mt-6 space-y-3">
+              <h4 className="font-semibold text-sm">Community Details</h4>
+              {communities.slice(0, 10).map((community, index) => (
+                <div key={community.id} className="p-3 rounded-lg border bg-card">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                      />
+                      <span className="font-semibold">{community.label}</span>
+                    </div>
+                    <Badge variant="secondary">
+                      {community.size} {community.size === 1 ? 'member' : 'members'}
+                    </Badge>
+                  </div>
+                  
+                  {/* Show common characteristics */}
+                  {(community.commonCharacteristics.companies?.length || 
+                    community.commonCharacteristics.affiliations?.length || 
+                    community.commonCharacteristics.industries?.length) && (
+                    <div className="text-sm text-muted-foreground mt-2 space-y-1">
+                      {community.commonCharacteristics.companies && community.commonCharacteristics.companies.length > 0 && (
+                        <div className="flex gap-1 flex-wrap">
+                          <span className="font-medium">Companies:</span>
+                          {community.commonCharacteristics.companies.map(c => (
+                            <Badge key={c} variant="outline" className="text-xs">{c}</Badge>
+                          ))}
+                        </div>
+                      )}
+                      {community.commonCharacteristics.affiliations && community.commonCharacteristics.affiliations.length > 0 && (
+                        <div className="flex gap-1 flex-wrap">
+                          <span className="font-medium">Affiliations:</span>
+                          {community.commonCharacteristics.affiliations.map(a => (
+                            <Badge key={a} variant="outline" className="text-xs">{a}</Badge>
+                          ))}
+                        </div>
+                      )}
+                      {community.commonCharacteristics.industries && community.commonCharacteristics.industries.length > 0 && (
+                        <div className="flex gap-1 flex-wrap">
+                          <span className="font-medium">Industries:</span>
+                          {community.commonCharacteristics.industries.map(i => (
+                            <Badge key={i} variant="outline" className="text-xs">{i}</Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                    <span>Density: {Math.round(community.density * 100)}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
