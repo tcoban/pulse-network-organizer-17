@@ -48,6 +48,14 @@ export interface NetworkMetrics {
   keyConnectors: NetworkNode[]; // Top 5 by betweenness
 }
 
+export interface ConnectionDiagnostics {
+  totalConnectionReferences: number;
+  matchedConnections: number;
+  unmatchedConnections: string[];
+  isolatedContacts: NetworkNode[];
+  matchRate: number; // 0-100
+}
+
 export interface MutualConnection {
   contact: NetworkNode;
   mutualWith: string[]; // Contact IDs they're both connected to
@@ -55,13 +63,88 @@ export interface MutualConnection {
 }
 
 // ============================================================================
-// Graph Building
+// Graph Building & Name Matching
 // ============================================================================
 
-function buildNetworkGraph(contacts: Contact[]): NetworkGraph {
+// Normalize name for matching
+function normalizeName(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/^(dr\.|prof\.|mr\.|ms\.|mrs\.)\s+/i, '') // Remove titles
+    .replace(/[^\w\s]/g, '') // Remove punctuation
+    .replace(/\s+/g, ' '); // Normalize spaces
+}
+
+// Fuzzy match names (simple Levenshtein-like approach)
+function calculateNameSimilarity(name1: string, name2: string): number {
+  const n1 = normalizeName(name1);
+  const n2 = normalizeName(name2);
+  
+  if (n1 === n2) return 1.0;
+  
+  // Check if one name contains the other (handles "John Smith" vs "John")
+  if (n1.includes(n2) || n2.includes(n1)) {
+    return 0.8;
+  }
+  
+  // Split into words and check for partial matches
+  const words1 = n1.split(' ');
+  const words2 = n2.split(' ');
+  const matchingWords = words1.filter(w => words2.includes(w)).length;
+  const totalWords = Math.max(words1.length, words2.length);
+  
+  return matchingWords / totalWords;
+}
+
+// Build name-to-ID lookup with fuzzy matching
+function buildNameToIdMap(contacts: Contact[]): Map<string, string> {
+  const map = new Map<string, string>();
+  
+  contacts.forEach(contact => {
+    const normalized = normalizeName(contact.name);
+    map.set(normalized, contact.id);
+  });
+  
+  return map;
+}
+
+// Find best matching contact ID for a connection name
+function findMatchingContactId(
+  connectionName: string, 
+  nameToIdMap: Map<string, string>,
+  allContacts: Contact[]
+): string | null {
+  const normalized = normalizeName(connectionName);
+  
+  // Direct match
+  if (nameToIdMap.has(normalized)) {
+    return nameToIdMap.get(normalized)!;
+  }
+  
+  // Fuzzy match - find best match above threshold
+  let bestMatch: { id: string; score: number } | null = null;
+  const threshold = 0.7;
+  
+  allContacts.forEach(contact => {
+    const similarity = calculateNameSimilarity(connectionName, contact.name);
+    if (similarity >= threshold && (!bestMatch || similarity > bestMatch.score)) {
+      bestMatch = { id: contact.id, score: similarity };
+    }
+  });
+  
+  return bestMatch?.id || null;
+}
+
+function buildNetworkGraph(contacts: Contact[]): { graph: NetworkGraph; diagnostics: ConnectionDiagnostics } {
   const nodes = new Map<string, NetworkNode>();
   const adjacencyList = new Map<string, Set<string>>();
   const edges: NetworkEdge[] = [];
+  
+  // Diagnostics tracking
+  let totalConnectionReferences = 0;
+  let matchedConnections = 0;
+  const unmatchedConnections = new Set<string>();
 
   // Initialize nodes and adjacency list
   contacts.forEach(contact => {
@@ -80,12 +163,20 @@ function buildNetworkGraph(contacts: Contact[]): NetworkGraph {
     adjacencyList.set(contact.id, new Set());
   });
 
-  // Build edges from linkedin_connections
+  // Build name-to-ID lookup map
+  const nameToIdMap = buildNameToIdMap(contacts);
+
+  // Build edges from linkedin_connections (which are names, not IDs)
   contacts.forEach(contact => {
     if (contact.linkedinConnections && contact.linkedinConnections.length > 0) {
-      contact.linkedinConnections.forEach(connectionId => {
-        // Only add edge if both nodes exist in our contact list
-        if (nodes.has(connectionId)) {
+      contact.linkedinConnections.forEach(connectionName => {
+        totalConnectionReferences++;
+        
+        // Find matching contact ID
+        const connectionId = findMatchingContactId(connectionName, nameToIdMap, contacts);
+        
+        if (connectionId && nodes.has(connectionId)) {
+          matchedConnections++;
           adjacencyList.get(contact.id)?.add(connectionId);
           adjacencyList.get(connectionId)?.add(contact.id); // Bidirectional
 
@@ -105,6 +196,8 @@ function buildNetworkGraph(contacts: Contact[]): NetworkGraph {
               lastInteraction: contact.lastContact || undefined,
             });
           }
+        } else {
+          unmatchedConnections.add(connectionName);
         }
       });
     }
@@ -118,7 +211,25 @@ function buildNetworkGraph(contacts: Contact[]): NetworkGraph {
     }
   });
 
-  return { nodes, adjacencyList, edges };
+  // Find isolated contacts (no connections)
+  const isolatedContacts: NetworkNode[] = [];
+  nodes.forEach(node => {
+    if (node.degree === 0) {
+      isolatedContacts.push(node);
+    }
+  });
+
+  const diagnostics: ConnectionDiagnostics = {
+    totalConnectionReferences,
+    matchedConnections,
+    unmatchedConnections: Array.from(unmatchedConnections),
+    isolatedContacts,
+    matchRate: totalConnectionReferences > 0 
+      ? Math.round((matchedConnections / totalConnectionReferences) * 100)
+      : 0,
+  };
+
+  return { graph: { nodes, adjacencyList, edges }, diagnostics };
 }
 
 function calculateEdgeWeight(contact: Contact, connectionId: string): number {
@@ -517,13 +628,22 @@ export function getKeyConnectors(
 export const useNetworkGraph = (contacts: Contact[]) => {
   const [loading, setLoading] = useState(true);
 
-  // Build graph (memoized to avoid rebuilding on every render)
-  const graph = useMemo(() => {
+  // Build graph with diagnostics (memoized to avoid rebuilding on every render)
+  const { graph, diagnostics } = useMemo(() => {
     if (!contacts || contacts.length === 0) {
       return {
-        nodes: new Map(),
-        adjacencyList: new Map(),
-        edges: [],
+        graph: {
+          nodes: new Map(),
+          adjacencyList: new Map(),
+          edges: [],
+        },
+        diagnostics: {
+          totalConnectionReferences: 0,
+          matchedConnections: 0,
+          unmatchedConnections: [],
+          isolatedContacts: [],
+          matchRate: 0,
+        },
       };
     }
     return buildNetworkGraph(contacts);
@@ -577,6 +697,7 @@ export const useNetworkGraph = (contacts: Contact[]) => {
   return {
     graph,
     metrics,
+    diagnostics,
     loading,
     findPath,
     findAllPaths,
