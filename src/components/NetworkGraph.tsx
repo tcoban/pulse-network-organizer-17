@@ -169,7 +169,7 @@ interface NetworkGraphProps {
   onNodeClick?: (node: NetworkNode) => void;
   selectedPath?: string[];
   keyConnectorIds?: string[];
-  communities?: Array<{ id: number; members: string[]; size: number; density: number }>;
+  communities?: Array<{ id: string; members: string[]; size: number; density: number; type?: string }>;
 }
 
 export const NetworkGraph = ({

@@ -19,7 +19,7 @@ import { toast } from 'sonner';
 export default function NetworkMap() {
   const { contacts, loading: contactsLoading } = useContacts();
   const { graph, metrics, diagnostics, loading: graphLoading, getConnectors } = useNetworkGraph(contacts);
-  const { communities, loading: communitiesLoading } = useNetworkCommunities(graph);
+  const { communities, memberships, loading: communitiesLoading } = useNetworkCommunities(graph, contacts);
   const { scores: influenceScores } = useInfluenceScore(graph);
   const { createIntroduction, isCreating } = useIntroductionRequests();
   const [selectedPath, setSelectedPath] = useState<string[]>([]);
@@ -268,7 +268,7 @@ export default function NetworkMap() {
                 Network Communities
               </CardTitle>
               <CardDescription>
-                Detected groups based on connection patterns (each contact belongs to one primary community)
+                Multi-dimensional communities based on company, affiliation, tags, and network clusters
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -279,67 +279,101 @@ export default function NetworkMap() {
                   ))}
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {communities.map((community, index) => (
-                    <div
-                      key={index}
-                      className="p-4 rounded-lg border bg-card"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <h3 className="font-semibold">{community.label}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {community.size} {community.size === 1 ? 'member' : 'members'}
-                          </p>
-                        </div>
-                        <Badge variant="outline">
-                          Density: {(community.density * 100).toFixed(0)}%
-                        </Badge>
-                      </div>
-                      
-                      {/* Show common characteristics */}
-                      {(community.commonCharacteristics.companies?.length || 
-                        community.commonCharacteristics.affiliations?.length || 
-                        community.commonCharacteristics.industries?.length) && (
-                        <div className="mb-3 space-y-2 text-sm">
-                          {community.commonCharacteristics.companies && community.commonCharacteristics.companies.length > 0 && (
-                            <div>
-                              <span className="text-muted-foreground font-medium">Common Companies: </span>
-                              <span>{community.commonCharacteristics.companies.join(', ')}</span>
-                            </div>
-                          )}
-                          {community.commonCharacteristics.affiliations && community.commonCharacteristics.affiliations.length > 0 && (
-                            <div>
-                              <span className="text-muted-foreground font-medium">Common Affiliations: </span>
-                              <span>{community.commonCharacteristics.affiliations.join(', ')}</span>
-                            </div>
-                          )}
-                          {community.commonCharacteristics.industries && community.commonCharacteristics.industries.length > 0 && (
-                            <div>
-                              <span className="text-muted-foreground font-medium">Common Industries: </span>
-                              <span>{community.commonCharacteristics.industries.join(', ')}</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      <div className="flex flex-wrap gap-2">
-                        {community.members.slice(0, 10).map((memberId) => {
-                          const member = graph.nodes.get(memberId);
-                          return member ? (
-                            <Badge key={memberId} variant="secondary">
-                              {member.name}
+                <div className="space-y-6">
+                  {/* Communities List */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Communities ({communities.length})</h3>
+                    {communities.map((community) => (
+                      <div
+                        key={community.id}
+                        className="p-4 rounded-lg border bg-card"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold">{community.label}</h4>
+                            <Badge variant="secondary" className="text-xs">
+                              {community.type}
                             </Badge>
-                          ) : null;
-                        })}
-                        {community.size > 10 && (
-                          <Badge variant="outline">
-                            +{community.size - 10} more
-                          </Badge>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">
+                              {community.size} {community.size === 1 ? 'member' : 'members'}
+                            </Badge>
+                            <Badge variant="outline">
+                              {(community.density * 100).toFixed(0)}% density
+                            </Badge>
+                          </div>
+                        </div>
+                        
+                        {/* Show common characteristics */}
+                        {(community.commonCharacteristics.companies?.length || 
+                          community.commonCharacteristics.affiliations?.length || 
+                          community.commonCharacteristics.tags?.length ||
+                          community.commonCharacteristics.industries?.length) && (
+                          <div className="space-y-1 text-sm">
+                            {community.commonCharacteristics.companies && community.commonCharacteristics.companies.length > 0 && (
+                              <div>
+                                <span className="text-muted-foreground font-medium">Companies: </span>
+                                <span>{community.commonCharacteristics.companies.join(', ')}</span>
+                              </div>
+                            )}
+                            {community.commonCharacteristics.affiliations && community.commonCharacteristics.affiliations.length > 0 && (
+                              <div>
+                                <span className="text-muted-foreground font-medium">Affiliations: </span>
+                                <span>{community.commonCharacteristics.affiliations.join(', ')}</span>
+                              </div>
+                            )}
+                            {community.commonCharacteristics.tags && community.commonCharacteristics.tags.length > 0 && (
+                              <div>
+                                <span className="text-muted-foreground font-medium">Tags: </span>
+                                <span>{community.commonCharacteristics.tags.join(', ')}</span>
+                              </div>
+                            )}
+                            {community.commonCharacteristics.industries && community.commonCharacteristics.industries.length > 0 && (
+                              <div>
+                                <span className="text-muted-foreground font-medium">Industries: </span>
+                                <span>{community.commonCharacteristics.industries.join(', ')}</span>
+                              </div>
+                            )}
+                          </div>
                         )}
                       </div>
+                    ))}
+                  </div>
+
+                  {/* Multi-Membership Overview */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg">Contact Memberships</h3>
+                    <div className="text-sm text-muted-foreground mb-2">
+                      Contacts can belong to multiple communities based on their characteristics
                     </div>
-                  ))}
+                    {memberships.slice(0, 20).map((membership) => (
+                      <div
+                        key={membership.contactId}
+                        className="p-3 rounded-lg border bg-card"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="font-medium mb-1">{membership.contactName}</div>
+                            <div className="flex flex-wrap gap-1">
+                              {membership.communities.map((comm) => (
+                                <Badge 
+                                  key={comm.communityId} 
+                                  variant="secondary"
+                                  className="text-xs"
+                                >
+                                  {comm.communityLabel}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="ml-2">
+                            {membership.communities.length} {membership.communities.length === 1 ? 'community' : 'communities'}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>

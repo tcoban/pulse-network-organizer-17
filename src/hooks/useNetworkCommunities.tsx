@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { NetworkGraph, NetworkNode } from './useNetworkGraph';
+import { Contact } from '@/types/contact';
 
 export interface Community {
-  id: number;
+  id: string;
+  type: 'company' | 'affiliation' | 'tag' | 'network_cluster';
   members: string[];
   size: number;
   density: number;
@@ -11,27 +13,194 @@ export interface Community {
     companies?: string[];
     affiliations?: string[];
     industries?: string[];
+    tags?: string[];
   };
 }
 
+export interface ContactCommunityMembership {
+  contactId: string;
+  contactName: string;
+  communities: Array<{
+    communityId: string;
+    communityLabel: string;
+    communityType: string;
+  }>;
+}
+
 /**
- * Advanced community detection using Louvain-like algorithm
- * Identifies clusters of closely connected contacts
+ * Multi-dimensional community detection supporting overlapping memberships
+ * Identifies communities based on: company, affiliation, tags, and network clusters
  */
-export const useNetworkCommunities = (graph: NetworkGraph) => {
+export const useNetworkCommunities = (graph: NetworkGraph, contacts: Contact[]) => {
   const [loading, setLoading] = useState(false);
   
-  const communities = useMemo(() => {
+  const { communities, memberships } = useMemo(() => {
     setLoading(true);
-    const result = detectCommunities(graph);
+    const result = detectMultiCommunities(graph, contacts);
     setLoading(false);
     return result;
-  }, [graph]);
+  }, [graph, contacts]);
 
-  return { communities, loading };
+  return { communities, memberships, loading };
 };
 
-function detectCommunities(graph: NetworkGraph): Community[] {
+function detectMultiCommunities(
+  graph: NetworkGraph, 
+  contacts: Contact[]
+): { communities: Community[]; memberships: ContactCommunityMembership[] } {
+  const communities: Community[] = [];
+  const contactIdToContact = new Map<string, Contact>();
+  
+  // Build contact lookup
+  contacts.forEach(c => contactIdToContact.set(c.id, c));
+  
+  // 1. Company-based communities
+  const companyCommunities = buildCompanyCommunities(graph, contactIdToContact);
+  communities.push(...companyCommunities);
+  
+  // 2. Affiliation-based communities
+  const affiliationCommunities = buildAffiliationCommunities(graph, contactIdToContact);
+  communities.push(...affiliationCommunities);
+  
+  // 3. Tag-based communities
+  const tagCommunities = buildTagCommunities(graph, contactIdToContact);
+  communities.push(...tagCommunities);
+  
+  // 4. Network cluster communities (traditional algorithm)
+  const clusterCommunities = buildNetworkClusters(graph);
+  communities.push(...clusterCommunities);
+  
+  // Build membership map
+  const memberships = buildMembershipMap(communities, graph);
+  
+  return { communities, memberships };
+}
+
+function buildCompanyCommunities(
+  graph: NetworkGraph,
+  contactMap: Map<string, Contact>
+): Community[] {
+  const companyGroups = new Map<string, Set<string>>();
+  
+  graph.nodes.forEach((node) => {
+    const contact = contactMap.get(node.id);
+    if (contact?.company) {
+      if (!companyGroups.has(contact.company)) {
+        companyGroups.set(contact.company, new Set());
+      }
+      companyGroups.get(contact.company)!.add(node.id);
+    }
+  });
+  
+  const communities: Community[] = [];
+  companyGroups.forEach((members, company) => {
+    if (members.size >= 2) { // At least 2 people from same company
+      const density = calculateDensity(members, graph);
+      communities.push({
+        id: `company_${company.toLowerCase().replace(/\s+/g, '_')}`,
+        type: 'company',
+        label: `${company} Network`,
+        members: Array.from(members),
+        size: members.size,
+        density,
+        commonCharacteristics: { companies: [company] },
+      });
+    }
+  });
+  
+  return communities;
+}
+
+function buildAffiliationCommunities(
+  graph: NetworkGraph,
+  contactMap: Map<string, Contact>
+): Community[] {
+  const affiliationGroups = new Map<string, Set<string>>();
+  
+  graph.nodes.forEach((node) => {
+    const contact = contactMap.get(node.id);
+    if (contact?.affiliation) {
+      if (!affiliationGroups.has(contact.affiliation)) {
+        affiliationGroups.set(contact.affiliation, new Set());
+      }
+      affiliationGroups.get(contact.affiliation)!.add(node.id);
+    }
+  });
+  
+  const communities: Community[] = [];
+  affiliationGroups.forEach((members, affiliation) => {
+    if (members.size >= 2) {
+      const density = calculateDensity(members, graph);
+      communities.push({
+        id: `affiliation_${affiliation.toLowerCase().replace(/\s+/g, '_')}`,
+        type: 'affiliation',
+        label: `${affiliation} Circle`,
+        members: Array.from(members),
+        size: members.size,
+        density,
+        commonCharacteristics: { affiliations: [affiliation] },
+      });
+    }
+  });
+  
+  return communities;
+}
+
+function buildTagCommunities(
+  graph: NetworkGraph,
+  contactMap: Map<string, Contact>
+): Community[] {
+  const tagGroups = new Map<string, Set<string>>();
+  
+  graph.nodes.forEach((node) => {
+    const contact = contactMap.get(node.id);
+    if (contact?.tags && contact.tags.length > 0) {
+      contact.tags.forEach(tag => {
+        if (!tagGroups.has(tag)) {
+          tagGroups.set(tag, new Set());
+        }
+        tagGroups.get(tag)!.add(node.id);
+      });
+    }
+  });
+  
+  const communities: Community[] = [];
+  tagGroups.forEach((members, tag) => {
+    if (members.size >= 3) { // At least 3 people with same tag
+      const density = calculateDensity(members, graph);
+      communities.push({
+        id: `tag_${tag.toLowerCase().replace(/\s+/g, '_')}`,
+        type: 'tag',
+        label: `${tag}`,
+        members: Array.from(members),
+        size: members.size,
+        density,
+        commonCharacteristics: { tags: [tag] },
+      });
+    }
+  });
+  
+  return communities;
+}
+
+function calculateDensity(members: Set<string>, graph: NetworkGraph): number {
+  let internalEdges = 0;
+  
+  members.forEach(id => {
+    const neighbors = graph.adjacencyList.get(id) || new Set();
+    neighbors.forEach(neighbor => {
+      if (members.has(neighbor)) {
+        internalEdges++;
+      }
+    });
+  });
+  
+  internalEdges = internalEdges / 2; // Each edge counted twice
+  const maxPossibleEdges = (members.size * (members.size - 1)) / 2;
+  return maxPossibleEdges > 0 ? internalEdges / maxPossibleEdges : 0;
+}
+
+function buildNetworkClusters(graph: NetworkGraph): Community[] {
   const communities: Map<string, Set<string>> = new Map();
   const nodeToComm: Map<string, string> = new Map();
   
@@ -173,7 +342,8 @@ function detectCommunities(graph: NetworkGraph): Community[] {
     }
 
     result.push({
-      id: commIndex++,
+      id: `cluster_${commIndex++}`,
+      type: 'network_cluster',
       members,
       size: memberIds.size,
       density,
@@ -184,4 +354,38 @@ function detectCommunities(graph: NetworkGraph): Community[] {
 
   // Sort by size (largest first)
   return result.sort((a, b) => b.size - a.size);
+}
+
+function buildMembershipMap(
+  communities: Community[],
+  graph: NetworkGraph
+): ContactCommunityMembership[] {
+  const membershipMap = new Map<string, ContactCommunityMembership>();
+  
+  // Build membership for each contact
+  graph.nodes.forEach((node) => {
+    membershipMap.set(node.id, {
+      contactId: node.id,
+      contactName: node.name,
+      communities: [],
+    });
+  });
+  
+  // Add community memberships
+  communities.forEach((community) => {
+    community.members.forEach(contactId => {
+      const membership = membershipMap.get(contactId);
+      if (membership) {
+        membership.communities.push({
+          communityId: community.id,
+          communityLabel: community.label,
+          communityType: community.type,
+        });
+      }
+    });
+  });
+  
+  return Array.from(membershipMap.values())
+    .filter(m => m.communities.length > 0)
+    .sort((a, b) => b.communities.length - a.communities.length);
 }
