@@ -55,7 +55,12 @@ export const WarmIntroductionFinder = ({
         ? findAllIntroductionPaths(graph, fromId, targetContactId, 4, 3)
         : [];
       
-      paths.push(...foundPaths);
+      // Filter out any invalid paths where target appears as intermediary
+      const validPaths = foundPaths.filter(path => 
+        !path.intermediaries.some(intermediary => intermediary.id === targetContactId)
+      );
+      
+      paths.push(...validPaths);
     });
 
     // Sort by warmth score

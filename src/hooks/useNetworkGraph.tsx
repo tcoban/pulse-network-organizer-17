@@ -307,19 +307,21 @@ export function findAllIntroductionPaths(
 
   function dfs(nodeId: string, path: string[], depth: number) {
     if (depth >= maxDepth || allPaths.length >= maxPaths) return;
-    
-    if (nodeId === toId) {
-      allPaths.push([...path, toId]);
-      return;
-    }
 
     visited.add(nodeId);
     const neighbors = graph.adjacencyList.get(nodeId) || new Set();
 
     for (const neighborId of neighbors) {
-      if (!visited.has(neighborId)) {
-        dfs(neighborId, [...path, neighborId], depth + 1);
+      if (visited.has(neighborId)) continue;
+      
+      // If neighbor is target, add complete path directly (don't recurse)
+      if (neighborId === toId) {
+        allPaths.push([...path, toId]);
+        continue;
       }
+      
+      // Otherwise, explore this neighbor
+      dfs(neighborId, [...path, neighborId], depth + 1);
     }
 
     visited.delete(nodeId);
