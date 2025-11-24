@@ -62,18 +62,24 @@ function detectMultiCommunities(
   const affiliationCommunities = buildAffiliationCommunities(graph, contactIdToContact);
   communities.push(...affiliationCommunities);
   
-  // 3. Tag-based communities
+  // 3. Tag-based communities (normalized)
   const tagCommunities = buildTagCommunities(graph, contactIdToContact);
   communities.push(...tagCommunities);
   
-  // 4. Network cluster communities (traditional algorithm)
-  const clusterCommunities = buildNetworkClusters(graph);
+  // 4. Network cluster communities (only if not covered by explicit attributes)
+  const existingLabels = new Set(
+    communities.map(c => c.label.toLowerCase().trim())
+  );
+  const clusterCommunities = buildNetworkClusters(graph, contactIdToContact, existingLabels);
   communities.push(...clusterCommunities);
   
-  // Build membership map
-  const memberships = buildMembershipMap(communities, graph);
+  // Deduplicate similar communities
+  const deduplicated = deduplicateCommunities(communities);
   
-  return { communities, memberships };
+  // Build membership map
+  const memberships = buildMembershipMap(deduplicated, graph);
+  
+  return { communities: deduplicated, memberships };
 }
 
 function buildCompanyCommunities(
@@ -99,7 +105,7 @@ function buildCompanyCommunities(
       communities.push({
         id: `company_${company.toLowerCase().replace(/\s+/g, '_')}`,
         type: 'company',
-        label: `${company} Network`,
+        label: company,
         members: Array.from(members),
         size: members.size,
         density,
@@ -134,7 +140,7 @@ function buildAffiliationCommunities(
       communities.push({
         id: `affiliation_${affiliation.toLowerCase().replace(/\s+/g, '_')}`,
         type: 'affiliation',
-        label: `${affiliation} Circle`,
+        label: affiliation,
         members: Array.from(members),
         size: members.size,
         density,
@@ -156,26 +162,30 @@ function buildTagCommunities(
     const contact = contactMap.get(node.id);
     if (contact?.tags && contact.tags.length > 0) {
       contact.tags.forEach(tag => {
-        if (!tagGroups.has(tag)) {
-          tagGroups.set(tag, new Set());
+        // Normalize tag to lowercase for grouping
+        const normalizedTag = tag.trim().toLowerCase();
+        if (!tagGroups.has(normalizedTag)) {
+          tagGroups.set(normalizedTag, new Set());
         }
-        tagGroups.get(tag)!.add(node.id);
+        tagGroups.get(normalizedTag)!.add(node.id);
       });
     }
   });
   
   const communities: Community[] = [];
-  tagGroups.forEach((members, tag) => {
+  tagGroups.forEach((members, normalizedTag) => {
     if (members.size >= 3) { // At least 3 people with same tag
       const density = calculateDensity(members, graph);
+      // Capitalize first letter for display
+      const displayLabel = normalizedTag.charAt(0).toUpperCase() + normalizedTag.slice(1);
       communities.push({
-        id: `tag_${tag.toLowerCase().replace(/\s+/g, '_')}`,
+        id: `tag_${normalizedTag.replace(/\s+/g, '_')}`,
         type: 'tag',
-        label: `${tag}`,
+        label: displayLabel,
         members: Array.from(members),
         size: members.size,
         density,
-        commonCharacteristics: { tags: [tag] },
+        commonCharacteristics: { tags: [displayLabel] },
       });
     }
   });
@@ -200,7 +210,11 @@ function calculateDensity(members: Set<string>, graph: NetworkGraph): number {
   return maxPossibleEdges > 0 ? internalEdges / maxPossibleEdges : 0;
 }
 
-function buildNetworkClusters(graph: NetworkGraph): Community[] {
+function buildNetworkClusters(
+  graph: NetworkGraph,
+  contactMap: Map<string, Contact>,
+  existingLabels: Set<string>
+): Community[] {
   const communities: Map<string, Set<string>> = new Map();
   const nodeToComm: Map<string, string> = new Map();
   
@@ -315,16 +329,30 @@ function buildNetworkClusters(graph: NetworkGraph): Community[] {
     const sortedCompanies = Array.from(companies.entries())
       .sort((a, b) => b[1] - a[1]);
     if (sortedCompanies.length > 0 && sortedCompanies[0][1] / members.length > 0.3) {
-      label = `${sortedCompanies[0][0]} Network`;
-      commonCharacteristics.companies = sortedCompanies.slice(0, 3).map(([name]) => name);
+      const companyName = sortedCompanies[0][0];
+      // Check if this company already has a community
+      if (!existingLabels.has(companyName.toLowerCase())) {
+        label = companyName;
+        commonCharacteristics.companies = sortedCompanies.slice(0, 3).map(([name]) => name);
+      } else {
+        // Skip this cluster, already covered
+        return;
+      }
     }
     // Otherwise find dominant affiliation
     else {
       const sortedAffiliations = Array.from(affiliations.entries())
         .sort((a, b) => b[1] - a[1]);
       if (sortedAffiliations.length > 0 && sortedAffiliations[0][1] / members.length > 0.3) {
-        label = `${sortedAffiliations[0][0]} Circle`;
-        commonCharacteristics.affiliations = sortedAffiliations.slice(0, 3).map(([name]) => name);
+        const affiliationName = sortedAffiliations[0][0];
+        // Check if this affiliation already has a community
+        if (!existingLabels.has(affiliationName.toLowerCase())) {
+          label = affiliationName;
+          commonCharacteristics.affiliations = sortedAffiliations.slice(0, 3).map(([name]) => name);
+        } else {
+          // Skip this cluster, already covered
+          return;
+        }
       }
       // Otherwise use dominant industry/role
       else {
@@ -388,4 +416,57 @@ function buildMembershipMap(
   return Array.from(membershipMap.values())
     .filter(m => m.communities.length > 0)
     .sort((a, b) => b.communities.length - a.communities.length);
+}
+
+/**
+ * Deduplicate communities with very similar labels
+ */
+function deduplicateCommunities(communities: Community[]): Community[] {
+  const labelMap = new Map<string, Community>();
+  
+  communities.forEach(community => {
+    const normalizedLabel = community.label.toLowerCase().trim();
+    
+    // Check if we already have a similar community
+    const existing = labelMap.get(normalizedLabel);
+    
+    if (existing) {
+      // Merge members if same normalized label
+      const mergedMembers = new Set([...existing.members, ...community.members]);
+      existing.members = Array.from(mergedMembers);
+      existing.size = mergedMembers.size;
+      
+      // Recalculate density if needed
+      // Keep the more specific type if different
+      if (community.type !== 'network_cluster' && existing.type === 'network_cluster') {
+        existing.type = community.type;
+        existing.id = community.id;
+      }
+      
+      // Merge common characteristics
+      if (community.commonCharacteristics.companies) {
+        existing.commonCharacteristics.companies = [
+          ...(existing.commonCharacteristics.companies || []),
+          ...community.commonCharacteristics.companies
+        ];
+      }
+      if (community.commonCharacteristics.affiliations) {
+        existing.commonCharacteristics.affiliations = [
+          ...(existing.commonCharacteristics.affiliations || []),
+          ...community.commonCharacteristics.affiliations
+        ];
+      }
+      if (community.commonCharacteristics.tags) {
+        existing.commonCharacteristics.tags = [
+          ...(existing.commonCharacteristics.tags || []),
+          ...community.commonCharacteristics.tags
+        ];
+      }
+    } else {
+      labelMap.set(normalizedLabel, { ...community });
+    }
+  });
+  
+  return Array.from(labelMap.values())
+    .sort((a, b) => b.size - a.size);
 }
