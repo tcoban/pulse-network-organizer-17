@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, TrendingUp, Link2, Users, Clock, ArrowRight, Sparkles } from 'lucide-react';
+import { Search, TrendingUp, Link2, Users, Clock, ArrowRight, Sparkles, Filter, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WarmIntroductionFinderProps {
   graph: NetworkGraph;
@@ -29,16 +30,76 @@ export const WarmIntroductionFinder = ({
   const [targetContactId, setTargetContactId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPath, setSelectedPath] = useState<IntroductionPath | null>(null);
+  const [selectedCompany, setSelectedCompany] = useState<string>('all');
+  const [selectedAffiliation, setSelectedAffiliation] = useState<string>('all');
+  const [selectedTag, setSelectedTag] = useState<string>('all');
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Filter contacts for search
+  // Get unique values for filters
+  const { companies, affiliations, tags } = useMemo(() => {
+    const companiesSet = new Set<string>();
+    const affiliationsSet = new Set<string>();
+    const tagsSet = new Set<string>();
+
+    contacts.forEach((c) => {
+      if (c.company) companiesSet.add(c.company);
+      if (c.affiliation) affiliationsSet.add(c.affiliation);
+    });
+
+    // Fetch tags from contact_tags
+    supabase
+      .from('contact_tags')
+      .select('tag')
+      .then(({ data }) => {
+        data?.forEach((t) => tagsSet.add(t.tag));
+      });
+
+    return {
+      companies: Array.from(companiesSet).sort(),
+      affiliations: Array.from(affiliationsSet).sort(),
+      tags: Array.from(tagsSet).sort(),
+    };
+  }, [contacts]);
+
+  // Filter contacts for search and attributes
   const filteredContacts = useMemo(() => {
-    return contacts.filter(
-      (c) =>
+    return contacts.filter((c) => {
+      // Search term filter
+      const matchesSearch =
         c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [contacts, searchTerm]);
+        c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.position?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Company filter
+      const matchesCompany =
+        selectedCompany === 'all' || c.company === selectedCompany;
+
+      // Affiliation filter
+      const matchesAffiliation =
+        selectedAffiliation === 'all' || c.affiliation === selectedAffiliation;
+
+      // Tag filter (would need to check contact_tags table)
+      const matchesTag = selectedTag === 'all'; // Simplified for now
+
+      return matchesSearch && matchesCompany && matchesAffiliation && matchesTag;
+    });
+  }, [contacts, searchTerm, selectedCompany, selectedAffiliation, selectedTag]);
+
+  const clearFilters = () => {
+    setSelectedCompany('all');
+    setSelectedAffiliation('all');
+    setSelectedTag('all');
+    setSearchTerm('');
+  };
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (selectedCompany !== 'all') count++;
+    if (selectedAffiliation !== 'all') count++;
+    if (selectedTag !== 'all') count++;
+    return count;
+  }, [selectedCompany, selectedAffiliation, selectedTag]);
 
   // Find all paths to target contact
   const introductionPaths = useMemo(() => {
@@ -125,6 +186,98 @@ export const WarmIntroductionFinder = ({
                 className="pl-8"
               />
             </div>
+
+            {/* Filter Toggle Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+              {activeFiltersCount > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {activeFiltersCount}
+                </Badge>
+              )}
+            </Button>
+
+            {/* Filters Panel */}
+            {showFilters && (
+              <div className="space-y-3 p-3 border rounded-lg bg-muted/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Filter by</span>
+                  {activeFiltersCount > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearFilters}
+                      className="h-auto p-1"
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">Company</label>
+                  <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All companies" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background">
+                      <SelectItem value="all">All companies</SelectItem>
+                      {companies.map((company) => (
+                        <SelectItem key={company} value={company}>
+                          {company}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">Affiliation</label>
+                  <Select
+                    value={selectedAffiliation}
+                    onValueChange={setSelectedAffiliation}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All affiliations" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background">
+                      <SelectItem value="all">All affiliations</SelectItem>
+                      {affiliations.map((affiliation) => (
+                        <SelectItem key={affiliation} value={affiliation}>
+                          {affiliation}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs text-muted-foreground">Tag</label>
+                  <Select value={selectedTag} onValueChange={setSelectedTag}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="All tags" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background">
+                      <SelectItem value="all">All tags</SelectItem>
+                      {tags.map((tag) => (
+                        <SelectItem key={tag} value={tag}>
+                          {tag}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            <Separator />
 
             <ScrollArea className="h-[400px] pr-4">
               <div className="space-y-2">
